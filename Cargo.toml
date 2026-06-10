@@ -1,0 +1,42 @@
+[package]
+name = "as2mca-api"
+version = "0.1.0"
+edition = "2024"
+authors = ["Falldot <fe.offep@gmail.com>"]
+readme = "README.md"
+description = "Aplication Server 2MCA API HTTP Client for Rust"
+license = "MIT"
+homepage = "https://github.com/plp-lang/as2mca-api-rs"
+repository = "https://github.com/plp-lang/as2mca-api-rs"
+categories = [
+  "web-programming::http-client"
+]
+keywords = [
+  "api"
+]
+
+[lints.clippy]
+complexity = { level = "deny", priority = -1 }
+suspicious =  { level = "deny", priority = -1 }
+correctness =  { level = "deny", priority = -1 }
+
+perf =  { level = "warn", priority = -1 }
+cargo =  { level = "warn", priority = -1 }
+style =  { level = "warn", priority = -1 }
+nursery =  { level = "warn", priority = -1 }
+pedantic =  { level = "warn", priority = -1 }
+
+multiple_crate_versions = "allow"
+match_wildcard_for_single_variants = "allow"
+
+[dependencies]
+tokio = { version = "1.52.3", features = ["full"] }
+quick-xml = { version = "0.40.1", features = ["serialize"] }
+reqwest = { version = "0.13.4", features = ["cookies"] }
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.18"
+url = "2.5.8"
+cookie = "0.18.1"
+
+[dev-dependencies]
+regex = "1.12.4"

@@ -1,0 +1,7 @@
+# Rust
+.cargo
+/target
+
+# IDE
+.vscode
+.zed
