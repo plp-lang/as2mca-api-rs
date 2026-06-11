@@ -8,8 +8,34 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  SystemSettingsGet {
+    #[serde(rename = "@SessionID")]
+    session_id: String,
+  },
+  SystemCoreInfoGet {
+    #[serde(rename = "@SessionID")]
+    session_id: String,
+  },
+  SystemServerVersionGet {
+    #[serde(rename = "@SessionID")]
+    session_id: String,
+  },
+  TypesGet(TypesGet),
+  GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize)]
+pub struct TypesGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GuidesGroupsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: String,
 }
 
 #[derive(Debug, Serialize)]

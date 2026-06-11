@@ -1,4 +1,4 @@
-use as2mca_api::{api::session::Credentials, client::Client};
+use as2mca_api::{client::Client, client::Credentials};
 use regex::Regex;
 
 #[tokio::test]
@@ -9,10 +9,10 @@ async fn auth() {
 
   let client = Client::builder().base_url(api_url).build().unwrap();
 
-  let res = client.session().authbasic(&Credentials { username, password }).await;
+  let res = client.authbasic(&Credentials { username, password }).await;
   assert!(res.is_ok());
 
-  let res = client.session().init(true).await;
+  let res = client.session_init(true).await;
   assert!(res.is_ok());
 
   let session = res.unwrap();
@@ -31,6 +31,6 @@ async fn auth() {
     session.debug_pipe_name
   );
 
-  let res = client.session().deinit().await;
+  let res = client.session_deinit().await;
   assert!(res.is_ok());
 }
