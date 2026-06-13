@@ -1,35 +1,28 @@
-use std::{sync::Mutex, time::Duration};
+use std::time::Duration;
 
 use cookie::Cookie;
 use reqwest::{
   Url,
   header::{CONTENT_TYPE, HeaderMap},
 };
+use tracing::instrument;
 
 use crate::{
   error::{Error, Result},
   models::{
-    requests::{Disconnect, GuidesGroupsGet, Request, RequestKind, SessionInit, TypesGet},
-    responses::{Class, CoreInfo, GuidesGroup, Response, ResponseKind, ServerInfo, Setting},
+    Credentials, SessionId,
+    requests::{
+      Disconnect, GuidesGroupsGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemServerVersionGet,
+      SystemSettingsGet, TypesGet, XML_HEADER,
+    },
+    responses::{CoreInfo, Done, GuidesGroups, Response, ResponseBody, ServerInfo, Session, Setting, Types},
   },
 };
 
-#[derive(Debug)]
-pub struct Credentials {
-  pub username: String,
-  pub password: String,
-}
-
-#[derive(Debug)]
-pub struct Session {
-  pub session_id: String,
-  pub debug_pipe_name: String,
-}
-
+#[derive(Clone)]
 pub struct Client {
   pub(crate) cl: reqwest::Client,
   pub(crate) base_url: Url,
-  pub(crate) jsession_id: Mutex<Option<String>>,
 }
 
 impl Client {
@@ -39,29 +32,93 @@ impl Client {
     ClientBuilder::default()
   }
 
-  /// # Panics
-  #[inline]
-  #[must_use]
-  pub fn jsession_id(&self) -> Option<String> {
-    self.jsession_id.lock().unwrap().clone()
-  }
-
-  #[inline]
-  pub(crate) fn set_jsession_id(&self, new_id: String) {
-    *self.jsession_id.lock().unwrap() = Some(new_id);
-  }
-
-  #[inline]
-  pub(crate) fn endpoint(&self, path: &str) -> Result<Url> {
-    let base = self.base_url.as_str().trim_end_matches('/');
-    let path = path.trim_start_matches('/');
-    let full_url = format!("{base}/{path}");
-    Ok(Url::parse(&full_url)?)
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "session_init"))]
+  pub async fn session_init(&self, alive_active_session: bool) -> Result<Session> {
+    self
+      .api(&Request {
+        body: RequestKind::SessionInit(SessionInit { alive_active_session }),
+      })
+      .await
   }
 
   /// # Errors
-  pub async fn authbasic(&self, Credentials { username, password }: &Credentials) -> Result<()> {
+  #[instrument(skip(self), err, fields(method = "session_deinit"))]
+  pub async fn session_deinit(&self, session_id: &SessionId) -> Result<Done> {
+    self
+      .api(&Request {
+        body: RequestKind::Disconnect(Disconnect {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_server_version_get"))]
+  pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<ServerInfo> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemServerVersionGet(SystemServerVersionGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_core_info_get"))]
+  pub async fn system_core_info_get(&self, session_id: &SessionId) -> Result<CoreInfo> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemCoreInfoGet(SystemCoreInfoGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_settings_get"))]
+  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemSettingsGet(SystemSettingsGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "types_get"))]
+  pub async fn types_get(&self, session_id: &SessionId) -> Result<Types> {
+    self
+      .api(&Request {
+        body: RequestKind::TypesGet(TypesGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
+  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<GuidesGroups> {
+    self
+      .api(&Request {
+        body: RequestKind::GuidesGroupsGet(GuidesGroupsGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "authbasic"))]
+  pub async fn authbasic(&self, Credentials { username, password }: &Credentials) -> Result<SessionId> {
     let url = self.endpoint("/authbasic")?;
+    tracing::debug!(url = url.to_string(), "-> started processing request");
 
     let response = self
       .cl
@@ -71,141 +128,53 @@ impl Client {
       .await?
       .error_for_status()?;
 
-    if let Some(id) = extract_jsession_from_headers(response.headers()) {
-      self.set_jsession_id(id);
-    }
+    let session_id = extract_sessionid_from_headers(response.headers()).ok_or(Error::NotFoundSessionId)?;
 
-    Ok(())
+    tracing::debug!(session_id = session_id, "<- finished processing request");
+
+    Ok(SessionId::new(session_id))
   }
 
-  pub(crate) async fn api<T: serde::Serialize + Sync>(&self, payload: &T) -> Result<Response> {
+  #[inline]
+  pub(crate) fn endpoint(&self, path: &str) -> Result<Url> {
+    let base = self.base_url.as_str().trim_end_matches('/');
+    let p = path.trim_start_matches('/');
+    let full_url = format!("{base}/{p}");
+    Ok(Url::parse(&full_url)?)
+  }
+
+  #[instrument(skip(self, payload), err)]
+  pub(crate) async fn api<T, U>(&self, payload: &T) -> Result<U>
+  where
+    T: serde::Serialize + Sync,
+    U: serde::de::DeserializeOwned + Clone,
+  {
     let url = self.endpoint("/api")?;
-    let body = format!(
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>{}",
-      quick_xml::se::to_string(payload)?
+    let body = format!("{}{}", XML_HEADER, quick_xml::se::to_string(payload)?);
+    tracing::debug!(
+      url = url.to_string(),
+      len = body.len(),
+      request = body,
+      "-> started processing request"
     );
 
     let response = self.cl.post(url).body(body).send().await?.error_for_status()?;
     let status_code = response.status();
     let response_text = response.text().await?;
 
-    let parsed: Response = quick_xml::de::from_str(&response_text)?;
+    tracing::debug!(
+      len = response_text.len(),
+      response = response_text,
+      "<- finished processing request"
+    );
+    let parsed: Response<U> = quick_xml::de::from_str(&response_text)?;
     match &parsed.body {
-      ResponseKind::Error(error) => Err(Error::Api {
+      ResponseBody::Ok(body) => Ok(body.clone()),
+      ResponseBody::Error(body) => Err(Error::Api {
         status_code,
-        message: error.text.clone(),
-        details: error.body.text.clone(),
+        message: body.text.clone(),
+        details: body.body.text.clone(),
       }),
-      _ => Ok(parsed),
-    }
-  }
-
-  /// # Errors
-  pub async fn session_init(&self, alive_active_session: bool) -> Result<Session> {
-    let payload = Request {
-      body: RequestKind::SessionInit(SessionInit {
-        alive_active_session: alive_active_session.to_string(),
-      }),
-    };
-
-    let response = self.api(&payload).await?;
-
-    match response.body {
-      ResponseKind::Session(session) => Ok(Session {
-        session_id: session.id,
-        debug_pipe_name: session.debug_pipe_name,
-      }),
-      _ => Err(Error::UnexpectedResponse("Expected Session Init response".into())),
-    }
-  }
-
-  /// # Errors
-  pub async fn session_deinit(&self) -> Result<()> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::Disconnect(Disconnect { session_id }),
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::Done(_) => Ok(()),
-      _ => Err(Error::UnexpectedResponse("Expected Session Deinit response".into())),
-    }
-  }
-
-  /// # Errors
-  pub async fn system_server_version_get(&self) -> Result<ServerInfo> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::SystemServerVersionGet { session_id },
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::ServerInfo(server_info) => Ok(server_info),
-      _ => Err(Error::UnexpectedResponse(
-        "Expected system server version get response".into(),
-      )),
-    }
-  }
-
-  /// # Errors
-  pub async fn system_core_info_get(&self) -> Result<CoreInfo> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::SystemCoreInfoGet { session_id },
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::CoreInfo(core_info) => Ok(core_info),
-      _ => Err(Error::UnexpectedResponse(
-        "Expected system core info get response".into(),
-      )),
-    }
-  }
-
-  /// # Errors
-  pub async fn system_settings_get(&self) -> Result<Vec<Setting>> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::SystemSettingsGet { session_id },
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::Settings { body } => Ok(body),
-      _ => Err(Error::UnexpectedResponse(
-        "Expected system settings get response".into(),
-      )),
-    }
-  }
-
-  /// # Errors
-  pub async fn types_get(&self) -> Result<Vec<Class>> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::TypesGet(TypesGet { session_id }),
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::Types(types) => Ok(types.body),
-      _ => Err(Error::UnexpectedResponse("Expected types get response".into())),
-    }
-  }
-
-  /// # Errors
-  pub async fn guides_groups_get(&self) -> Result<Vec<GuidesGroup>> {
-    let session_id = self.jsession_id().ok_or(Error::NotAuthenticated)?;
-    let payload = Request {
-      body: RequestKind::GuidesGroupsGet(GuidesGroupsGet { session_id }),
-    };
-
-    let response = self.api(&payload).await?;
-    match response.body {
-      ResponseKind::GuidesGroups { body } => Ok(body),
-      _ => Err(Error::UnexpectedResponse("Expected guides groups get response".into())),
     }
   }
 }
@@ -213,6 +182,7 @@ impl Client {
 pub struct ClientBuilder {
   base_url: String,
   timeout: Duration,
+  connect_timeout: Duration,
 }
 
 impl Default for ClientBuilder {
@@ -220,6 +190,7 @@ impl Default for ClientBuilder {
     Self {
       base_url: "https://api.example.com".to_string(),
       timeout: Duration::from_secs(30),
+      connect_timeout: Duration::from_secs(30),
     }
   }
 }
@@ -237,6 +208,12 @@ impl ClientBuilder {
     self
   }
 
+  #[must_use]
+  pub fn connect_timeout(mut self, connect_timeout: impl Into<Duration>) -> Self {
+    self.connect_timeout = connect_timeout.into();
+    self
+  }
+
   /// # Errors
   pub fn build(self) -> Result<Client> {
     let base_url = Url::parse(&self.base_url)?;
@@ -246,23 +223,20 @@ impl ClientBuilder {
     headers.insert(CONTENT_TYPE, content_type);
 
     let cl = reqwest::Client::builder()
+      .connect_timeout(self.connect_timeout)
       .timeout(self.timeout)
       .cookie_store(true)
-      .user_agent("as2mca-api-rs/0.1.0")
+      .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
       .default_headers(headers)
       .build()?;
 
-    Ok(Client {
-      cl,
-      base_url,
-      jsession_id: Mutex::new(None),
-    })
+    Ok(Client { cl, base_url })
   }
 }
 
 #[inline]
 #[must_use]
-pub(crate) fn extract_jsession_from_headers(headers: &HeaderMap) -> Option<String> {
+pub(crate) fn extract_sessionid_from_headers(headers: &HeaderMap) -> Option<String> {
   headers
     .get_all(reqwest::header::SET_COOKIE)
     .iter()

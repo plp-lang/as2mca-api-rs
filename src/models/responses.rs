@@ -1,36 +1,40 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
-pub struct Response {
+use crate::models::{DebugPipeName, SessionId};
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "Response")]
+pub struct Response<T> {
   #[serde(rename = "$value")]
-  pub body: ResponseKind,
+  pub body: ResponseBody<T>,
 }
 
-#[derive(Debug, Deserialize)]
-pub enum ResponseKind {
-  Settings {
-    #[serde(rename = "$value")]
-    body: Vec<Setting>,
-  },
-  CoreInfo(CoreInfo),
-  ServerInfo(ServerInfo),
-  Types(Types),
-  GuidesGroups {
-    #[serde(rename = "$value")]
-    body: Vec<GuidesGroup>,
-  },
-  Session(Session),
-  Done(Done),
+#[derive(Debug, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum ResponseBody<T> {
+  Ok(T),
   Error(Error),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
+pub struct Settings {
+  #[serde(rename = "$value")]
+  pub body: Vec<Setting>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct GuidesGroups {
+  #[serde(rename = "$value")]
+  pub body: Vec<GuidesGroup>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerInfo {
   #[serde(rename = "@Version")]
   pub version: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CoreInfo {
   #[serde(rename = "@Auditor")]
   pub auditor: String,
@@ -48,7 +52,7 @@ pub struct CoreInfo {
   pub aswar_date: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Setting {
   #[serde(rename = "@Name")]
   pub name: String,
@@ -56,13 +60,13 @@ pub struct Setting {
   pub value: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Types {
   #[serde(rename = "$value")]
   pub body: Vec<Class>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Class {
   #[serde(rename = "@ID")]
   pub id: String,
@@ -84,7 +88,7 @@ pub struct Class {
   pub flags: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct GuidesGroup {
   #[serde(rename = "@ID")]
   pub id: String,
@@ -92,18 +96,18 @@ pub struct GuidesGroup {
   pub name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Session {
   #[serde(rename = "@ID")]
-  pub id: String,
+  pub id: SessionId,
   #[serde(rename = "@DebugPipeName")]
-  pub debug_pipe_name: String,
+  pub debug_pipe_name: DebugPipeName,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Done {}
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Error {
   #[serde(rename = "@Text")]
   pub text: String,
@@ -111,7 +115,7 @@ pub struct Error {
   pub body: ServerErrorInfo,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ServerErrorInfo {
   #[serde(rename = "@Text")]
   pub text: String,

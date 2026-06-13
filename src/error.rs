@@ -10,14 +10,14 @@ pub enum Error {
     details: String,
   },
 
-  #[error("Not authenticated")]
-  NotAuthenticated,
-
-  #[error("Unexpected API response: {0}")]
-  UnexpectedResponse(String),
+  #[error("Not found session id")]
+  NotFoundSessionId,
 
   #[error("HTTP request failed: {0}")]
   Http(#[from] reqwest::Error),
+
+  #[error("Unexpected API response: {0}")]
+  UnexpectedResponse(String),
 
   #[error("Url parse error: {0}")]
   UrlParseError(#[from] url::ParseError),

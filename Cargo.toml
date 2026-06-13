@@ -30,6 +30,7 @@ multiple_crate_versions = "allow"
 match_wildcard_for_single_variants = "allow"
 
 [dependencies]
+tracing = { version = "0.1.44", features = ["attributes"] }
 tokio = { version = "1.52.3", features = ["full"] }
 quick-xml = { version = "0.40.1", features = ["serialize"] }
 reqwest = { version = "0.13.4", features = ["cookies"] }
@@ -40,3 +41,4 @@ cookie = "0.18.1"
 
 [dev-dependencies]
 regex = "1.12.4"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }

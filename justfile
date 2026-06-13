@@ -31,7 +31,7 @@ lint-fix: check
   cargo clippy --all-targets --all-features --fix --allow-dirty -- -D warnings
 
 test:
-  cargo test
+  cargo test -- --nocapture
 
 build: lint-fix fmt-fix test
   cargo build
