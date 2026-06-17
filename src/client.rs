@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::time::Duration;
 
 use cookie::Cookie;
@@ -15,7 +16,7 @@ use crate::{
       Disconnect, GuidesGroupsGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemServerVersionGet,
       SystemSettingsGet, TypesGet, XML_HEADER,
     },
-    responses::{CoreInfo, Done, GuidesGroups, Response, ResponseBody, ServerInfo, Session, Setting, Types},
+    responses::{CoreInfo, Done, GuidesGroups, Response, ResponseBody, ServerInfo, Session, Setting, Settings, Types},
   },
 };
 
@@ -80,7 +81,7 @@ impl Client {
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_settings_get"))]
-  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
+  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Settings> {
     self
       .api(&Request {
         body: RequestKind::SystemSettingsGet(SystemSettingsGet {
@@ -128,10 +129,18 @@ impl Client {
       .await?
       .error_for_status()?;
 
-    let session_id = extract_sessionid_from_headers(response.headers()).ok_or(Error::NotFoundSessionId)?;
+    let headers = response.headers();
 
-    tracing::debug!(session_id = session_id, "<- finished processing request");
+    tracing::debug!(
+      headers = headers.iter().fold(String::new(), |mut out, (name, value)| {
+        let value_str = value.to_str().unwrap_or("<invalid UTF-8>");
+        let _ = writeln!(out, "{name}: {value_str}");
+        out
+      }),
+      "<- finished processing request"
+    );
 
+    let session_id = extract_sessionid_from_headers(headers).ok_or(Error::NotFoundSessionId)?;
     Ok(SessionId::new(session_id))
   }
 
