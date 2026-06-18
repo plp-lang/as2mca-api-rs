@@ -17,6 +17,16 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct User {
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@ShortName")]
+  pub short_name: String,
+  #[serde(rename = "@Properties")]
+  pub properties: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
   #[serde(rename = "$value")]
   pub body: Vec<Setting>,
@@ -119,4 +129,16 @@ pub struct Error {
 pub struct ServerErrorInfo {
   #[serde(rename = "@Text")]
   pub text: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ProtocolInfo {
+  #[serde(rename = "@Version")]
+  pub version: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct AuthenticationURL {
+  #[serde(rename = "@URL")]
+  pub url: String,
 }

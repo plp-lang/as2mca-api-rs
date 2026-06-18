@@ -12,6 +12,9 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  UserInfoGet(UserInfoGet),
+  AuthenticationURLGet(AuthenticationURLGet),
+  ProtocolInfoGet(ProtocolInfoGet),
   SystemSettingsGet(SystemSettingsGet),
   SystemCoreInfoGet(SystemCoreInfoGet),
   SystemServerVersionGet(SystemServerVersionGet),
@@ -20,6 +23,18 @@ pub enum RequestKind {
   SessionInit(SessionInit),
   Disconnect(Disconnect),
 }
+
+#[derive(Debug, Serialize)]
+pub struct UserInfoGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuthenticationURLGet {}
+
+#[derive(Debug, Serialize)]
+pub struct ProtocolInfoGet {}
 
 #[derive(Debug, Serialize)]
 pub struct SystemSettingsGet {
@@ -53,8 +68,8 @@ pub struct GuidesGroupsGet {
 
 #[derive(Debug, Serialize)]
 pub struct SessionInit {
-  #[serde(rename = "@AliveActiveSession")]
-  pub alive_active_session: bool,
+  #[serde(rename = "@AliveActiveSession", skip_serializing_if = "Option::is_none")]
+  pub alive_active_session: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]

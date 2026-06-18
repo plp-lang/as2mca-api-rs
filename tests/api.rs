@@ -1,6 +1,9 @@
 use std::sync::Once;
 
-use as2mca_api::{client::Client, models::Credentials};
+use as2mca_api::{
+  client::Client,
+  models::{Credentials, responses::Session},
+};
 use regex::Regex;
 
 static INIT: Once = Once::new();
@@ -38,18 +41,37 @@ async fn auth() {
 
   // ---
 
-  let res = client.session_init(true).await;
+  let res = client.session_init(None).await;
   assert!(res.is_ok());
 
-  let debug_pipe_names = res.unwrap().debug_pipe_name;
+  let Session {
+    debug_pipe_name,
+    id: _id,
+  } = res.unwrap();
   let pipe_regex = Regex::new(r"^debug\$\d{10}$").unwrap();
   assert!(
-    pipe_regex.is_match(debug_pipe_names.as_str()),
+    pipe_regex.is_match(debug_pipe_name.as_str()),
     "debug_pipe_name '{}' does not match pattern 'debug$' + 10 digits",
-    debug_pipe_names.as_str()
+    debug_pipe_name.as_str()
   );
 
-  // ---
+  let res = client.system_core_info_get(&session_id).await;
+  assert!(res.is_ok());
+
+  let res = client.system_server_version_get(&session_id).await;
+  assert!(res.is_ok());
+
+  // let res = client.system_settings_get(&session_id).await;
+  // assert!(res.is_ok());
+
+  let res = client.protocol_info_get(&session_id).await;
+  assert!(res.is_ok());
+
+  let res = client.authentication_url_get().await;
+  assert!(res.is_ok());
+
+  let res = client.user_info_get(&session_id).await;
+  assert!(res.is_ok());
 
   let res = client.session_deinit(&session_id).await;
   assert!(res.is_ok());

@@ -13,10 +13,13 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      Disconnect, GuidesGroupsGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemServerVersionGet,
-      SystemSettingsGet, TypesGet, XML_HEADER,
+      AuthenticationURLGet, Disconnect, GuidesGroupsGet, ProtocolInfoGet, Request, RequestKind, SessionInit,
+      SystemCoreInfoGet, SystemServerVersionGet, SystemSettingsGet, TypesGet, UserInfoGet, XML_HEADER,
     },
-    responses::{CoreInfo, Done, GuidesGroups, Response, ResponseBody, ServerInfo, Session, Setting, Settings, Types},
+    responses::{
+      AuthenticationURL, CoreInfo, Done, GuidesGroups, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
+      Settings, Types, User,
+    },
   },
 };
 
@@ -34,8 +37,30 @@ impl Client {
   }
 
   /// # Errors
+  #[instrument(skip(self), err, fields(method = "user_info_get"))]
+  pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
+    self
+      .api(&Request {
+        body: RequestKind::UserInfoGet(UserInfoGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "authentication_url_get"))]
+  pub async fn authentication_url_get(&self) -> Result<AuthenticationURL> {
+    self
+      .api(&Request {
+        body: RequestKind::AuthenticationURLGet(AuthenticationURLGet {}),
+      })
+      .await
+  }
+
+  /// # Errors
   #[instrument(skip(self), err, fields(method = "session_init"))]
-  pub async fn session_init(&self, alive_active_session: bool) -> Result<Session> {
+  pub async fn session_init(&self, alive_active_session: Option<bool>) -> Result<Session> {
     self
       .api(&Request {
         body: RequestKind::SessionInit(SessionInit { alive_active_session }),
@@ -51,6 +76,16 @@ impl Client {
         body: RequestKind::Disconnect(Disconnect {
           session_id: session_id.clone(),
         }),
+      })
+      .await
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
+  pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<ProtocolInfo> {
+    self
+      .api(&Request {
+        body: RequestKind::ProtocolInfoGet(ProtocolInfoGet {}),
       })
       .await
   }
@@ -228,8 +263,7 @@ impl ClientBuilder {
     let base_url = Url::parse(&self.base_url)?;
 
     let mut headers = HeaderMap::new();
-    let content_type = "text/xml; charset=utf-8".parse()?;
-    headers.insert(CONTENT_TYPE, content_type);
+    headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse()?);
 
     let cl = reqwest::Client::builder()
       .connect_timeout(self.connect_timeout)
