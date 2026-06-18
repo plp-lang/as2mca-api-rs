@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  NovoAllowedCheck(NovoAllowedCheck),
   SystemNetAddressSet(SystemNetAddressSet),
   UserInfoGet(UserInfoGet),
   AuthenticationURLGet(AuthenticationURLGet),
@@ -23,6 +24,12 @@ pub enum RequestKind {
   GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct NovoAllowedCheck {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
 }
 
 #[derive(Debug, Serialize, Clone)]

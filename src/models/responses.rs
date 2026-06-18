@@ -17,6 +17,12 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct NovoAllowedCheckResult {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct User {
   #[serde(rename = "@Name")]
   pub name: String,

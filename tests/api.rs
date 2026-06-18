@@ -61,15 +61,6 @@ async fn auth() {
     debug_pipe_name.as_str()
   );
 
-  let res = client
-    .system_net_address_set(&SystemNetAddressSet {
-      session_id: session_id.clone(),
-      mac_address,
-      ip_address,
-    })
-    .await;
-  assert!(res.is_ok());
-
   let res = client.system_core_info_get(&session_id).await;
   assert!(res.is_ok());
 
@@ -86,6 +77,18 @@ async fn auth() {
   assert!(res.is_ok());
 
   let res = client.user_info_get(&session_id).await;
+  assert!(res.is_ok());
+
+  let res = client
+    .system_net_address_set(&SystemNetAddressSet {
+      session_id: session_id.clone(),
+      mac_address,
+      ip_address,
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client.novo_allowed_check(&session_id).await;
   assert!(res.is_ok());
 
   let res = client.session_deinit(&session_id).await;

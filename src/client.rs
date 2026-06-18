@@ -13,13 +13,13 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      AuthenticationURLGet, Disconnect, GuidesGroupsGet, ProtocolInfoGet, Request, RequestKind, SessionInit,
-      SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet, TypesGet, UserInfoGet,
-      XML_HEADER,
+      AuthenticationURLGet, Disconnect, GuidesGroupsGet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind,
+      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet, TypesGet,
+      UserInfoGet, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CoreInfo, Done, GuidesGroups, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
-      Settings, Types, User,
+      AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, ProtocolInfo, Response, ResponseBody,
+      ServerInfo, Session, Settings, Types, User,
     },
   },
 };
@@ -35,6 +35,18 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
+  pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<NovoAllowedCheckResult> {
+    self
+      .api(&Request {
+        body: RequestKind::NovoAllowedCheck(NovoAllowedCheck {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
   }
 
   /// # Errors
