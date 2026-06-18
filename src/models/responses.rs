@@ -28,8 +28,16 @@ pub struct User {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-  #[serde(rename = "$value")]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Setting>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Setting {
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@Value")]
+  pub value: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -60,14 +68,6 @@ pub struct CoreInfo {
   pub as_version: String,
   #[serde(rename = "@ASWARDate")]
   pub aswar_date: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Setting {
-  #[serde(rename = "@Name")]
-  pub name: String,
-  #[serde(rename = "@Value")]
-  pub value: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

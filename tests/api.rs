@@ -61,8 +61,8 @@ async fn auth() {
   let res = client.system_server_version_get(&session_id).await;
   assert!(res.is_ok());
 
-  // let res = client.system_settings_get(&session_id).await;
-  // assert!(res.is_ok());
+  let res = client.system_settings_get(&session_id).await;
+  assert!(res.is_ok());
 
   let res = client.protocol_info_get(&session_id).await;
   assert!(res.is_ok());
