@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  SystemNetAddressSet(SystemNetAddressSet),
   UserInfoGet(UserInfoGet),
   AuthenticationURLGet(AuthenticationURLGet),
   ProtocolInfoGet(ProtocolInfoGet),
@@ -22,6 +23,16 @@ pub enum RequestKind {
   GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct SystemNetAddressSet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@MACAddress")]
+  pub mac_address: String,
+  #[serde(rename = "@IPAddress")]
+  pub ip_address: String,
 }
 
 #[derive(Debug, Serialize)]

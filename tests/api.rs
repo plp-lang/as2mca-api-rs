@@ -2,7 +2,7 @@ use std::sync::Once;
 
 use as2mca_api::{
   client::Client,
-  models::{Credentials, responses::Session},
+  models::{Credentials, requests::SystemNetAddressSet, responses::Session},
 };
 use regex::Regex;
 
@@ -25,6 +25,12 @@ async fn auth() {
   let api_url = std::env::var("2MCA_API_URL").unwrap_or_else(|_| "http://localhost:3000/platform2mca".to_string());
   let username = std::env::var("2MCA_API_USERNAME").unwrap_or_else(|_| "test".to_string());
   let password = std::env::var("2MCA_API_PASSWORD").unwrap_or_else(|_| "test".to_string());
+
+  let ip_address = local_ip_address::local_ip().map_or_else(|_| "<unknown>".to_owned(), |ip| ip.to_string());
+  let mac_address = mac_address::get_mac_address()
+    .ok()
+    .flatten()
+    .map_or_else(|| "<unknown>".to_owned(), |m| m.to_string());
 
   let client = Client::builder().base_url(api_url).build().unwrap();
 
@@ -54,6 +60,15 @@ async fn auth() {
     "debug_pipe_name '{}' does not match pattern 'debug$' + 10 digits",
     debug_pipe_name.as_str()
   );
+
+  let res = client
+    .system_net_address_set(&SystemNetAddressSet {
+      session_id: session_id.clone(),
+      mac_address,
+      ip_address,
+    })
+    .await;
+  assert!(res.is_ok());
 
   let res = client.system_core_info_get(&session_id).await;
   assert!(res.is_ok());

@@ -42,3 +42,5 @@ cookie = "0.18.1"
 [dev-dependencies]
 regex = "1.12.4"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+mac_address = "1.1.8"
+local-ip-address = "0.6.13"

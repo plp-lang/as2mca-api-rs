@@ -14,7 +14,8 @@ use crate::{
     Credentials, SessionId,
     requests::{
       AuthenticationURLGet, Disconnect, GuidesGroupsGet, ProtocolInfoGet, Request, RequestKind, SessionInit,
-      SystemCoreInfoGet, SystemServerVersionGet, SystemSettingsGet, TypesGet, UserInfoGet, XML_HEADER,
+      SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet, TypesGet, UserInfoGet,
+      XML_HEADER,
     },
     responses::{
       AuthenticationURL, CoreInfo, Done, GuidesGroups, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
@@ -34,6 +35,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
+  pub async fn system_net_address_set(&self, system_net_address: &SystemNetAddressSet) -> Result<Done> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemNetAddressSet(system_net_address.clone()),
+      })
+      .await
   }
 
   /// # Errors
