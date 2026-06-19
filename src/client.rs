@@ -16,11 +16,11 @@ use crate::{
       AuthenticationURLGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck,
       ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
       SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
-      UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, XML_HEADER,
+      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CheckResult, CoreInfo, Done, Guides, GuidesGroups, NovoAllowedCheckResult, OptionInfo,
-      ProtocolInfo, Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged,
+      ProtocolInfo, Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserMenu, UserPrivileged,
       UserProfileProperty,
     },
   },
@@ -37,6 +37,18 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
+  pub async fn user_menu_get(&self, session_id: &SessionId) -> Result<UserMenu> {
+    self
+      .api(&Request {
+        body: RequestKind::UserMenuGet(UserMenuGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
   }
 
   /// # Errors
