@@ -17,6 +17,9 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Transitions {}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct States {}
 
 #[derive(Debug, Deserialize, Clone)]

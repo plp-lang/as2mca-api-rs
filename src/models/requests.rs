@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  ClassTransitionsGet(ClassTransitionsGet),
   ClassStatesGet(ClassStatesGet),
   ViewColumnsGet(ViewColumnsGet),
   ClassNeedCollectionIDCheck(ClassNeedCollectionIDCheck),
@@ -38,6 +39,14 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassTransitionsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
