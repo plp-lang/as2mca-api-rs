@@ -17,6 +17,9 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct MethodsGroups {}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct ChildClasses {}
 
 #[derive(Debug, Deserialize, Clone)]

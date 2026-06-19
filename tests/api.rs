@@ -5,8 +5,8 @@ use as2mca_api::{
   models::{
     Credentials,
     requests::{
-      ClassChildrenGet, ClassViewsGet, NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      UserBelongsGroupCheck, UserProfilePropertyGet,
+      ClassChildrenGet, ClassMethodsGroupsUserGet, NetworkInformationSet, SystemNetAddressSet,
+      SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet,
     },
     responses::Session,
   },
@@ -158,6 +158,14 @@ async fn auth() {
 
   let res = client
     .class_children_get(&ClassChildrenGet {
+      session_id: session_id.clone(),
+      class_id: "USER".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .class_methods_groups_user_get(&ClassMethodsGroupsUserGet {
       session_id: session_id.clone(),
       class_id: "USER".to_owned(),
     })
