@@ -18,12 +18,12 @@ use crate::{
       NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet,
       SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet,
       SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
-      ViewColumnsGet, XML_HEADER,
+      ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups, Methods,
       MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
-      Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, Views,
+      Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, ViewData, Views,
     },
   },
 };
@@ -39,6 +39,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "view_data_get_cancelable"))]
+  pub async fn view_data_get_cancelable(&self, view_data_get_cancelable: &ViewDataGetCancelable) -> Result<ViewData> {
+    self
+      .api(&Request {
+        body: RequestKind::ViewDataGetCancelable(view_data_get_cancelable.clone()),
+      })
+      .await
   }
 
   /// # Errors

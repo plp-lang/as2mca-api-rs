@@ -17,6 +17,26 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct ViewData {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<Row>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Row {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<RowItem>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct RowItem {
+  #[serde(rename = "@ColumnName")]
+  pub column_name: String,
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Transitions {}
 
 #[derive(Debug, Deserialize, Clone)]

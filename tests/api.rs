@@ -7,7 +7,7 @@ use as2mca_api::{
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
       NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck,
-      UserProfilePropertyGet, ViewColumnsGet,
+      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::{CheckResult, Session},
   },
@@ -211,6 +211,18 @@ async fn auth() {
     .class_transitions_get(&ClassTransitionsGet {
       session_id: session_id.clone(),
       class_id: "USER".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .view_data_get_cancelable(&ViewDataGetCancelable {
+      session_id: session_id.clone(),
+      view_short_name: "VW_CRIT_USER".to_string(),
+      class_id: "USER".to_string(),
+      hint: "FIRST_ROWS".to_string(),
+      allow_timestamp_milliseconds: "true".to_string(),
+      rows_limit: "10".to_string(),
     })
     .await;
   assert!(res.is_ok());

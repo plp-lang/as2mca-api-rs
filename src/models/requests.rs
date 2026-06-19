@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  ViewDataGetCancelable(ViewDataGetCancelable),
   ClassTransitionsGet(ClassTransitionsGet),
   ClassStatesGet(ClassStatesGet),
   ViewColumnsGet(ViewColumnsGet),
@@ -39,6 +40,22 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ViewDataGetCancelable {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ViewShortName")]
+  pub view_short_name: String,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@Hint")]
+  pub hint: String,
+  #[serde(rename = "@AllowTimestampMilliseconds")]
+  pub allow_timestamp_milliseconds: String,
+  #[serde(rename = "@RowsLimit")]
+  pub rows_limit: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
