@@ -4,7 +4,7 @@ use as2mca_api::{
   client::Client,
   models::{
     Credentials,
-    requests::{NetworkInformationSet, SystemNetAddressSet, UserProfilePropertyGet},
+    requests::{NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck, UserProfilePropertyGet},
     responses::Session,
   },
 };
@@ -113,6 +113,14 @@ async fn auth() {
     .user_profile_property_get(&UserProfilePropertyGet {
       session_id: session_id.clone(),
       property_name: "SHOW_LOGINS_HISTORY".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .system_option_enabled_check(&SystemOptionEnabledCheck {
+      session_id: session_id.clone(),
+      option_name: "NAV_SKIN_INTERFACE".to_owned(),
     })
     .await;
   assert!(res.is_ok());

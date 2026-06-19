@@ -14,12 +14,13 @@ use crate::{
     Credentials, SessionId,
     requests::{
       AuthenticationURLGet, Disconnect, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
-      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet,
-      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet, UserProfilePropertyGet, XML_HEADER,
+      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet,
+      UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, ProtocolInfo, Response, ResponseBody,
-      ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
+      AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response,
+      ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
     },
   },
 };
@@ -35,6 +36,19 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
+  pub async fn system_option_enabled_check(
+    &self,
+    system_option_enabled_check: &SystemOptionEnabledCheck,
+  ) -> Result<OptionInfo> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemOptionEnabledCheck(system_option_enabled_check.clone()),
+      })
+      .await
   }
 
   /// # Errors
