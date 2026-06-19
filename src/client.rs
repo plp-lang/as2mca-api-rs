@@ -13,15 +13,15 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      AuthenticationURLGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck,
-      ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+      AuthenticationURLGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet,
+      NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
       SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
       UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CheckResult, CoreInfo, Done, Guides, GuidesGroups, NovoAllowedCheckResult, OptionInfo,
       ProtocolInfo, Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserMenu, UserPrivileged,
-      UserProfileProperty,
+      UserProfileProperty, Views,
     },
   },
 };
@@ -37,6 +37,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "class_views_get"))]
+  pub async fn class_views_get(&self, class_views_get: &ClassViewsGet) -> Result<Views> {
+    self
+      .api(&Request {
+        body: RequestKind::ClassViewsGet(class_views_get.clone()),
+      })
+      .await
   }
 
   /// # Errors

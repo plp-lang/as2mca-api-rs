@@ -17,6 +17,40 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Views {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<View>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct View {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@ShortName")]
+  pub short_name: String,
+  #[serde(rename = "@IsDefault")]
+  pub is_default: String,
+  #[serde(rename = "@CellStyleScript")]
+  pub cell_style_script: Option<String>,
+  #[serde(rename = "@Properties")]
+  pub properties: String,
+  #[serde(rename = "@Distance")]
+  pub distance: String,
+  #[serde(rename = "@FilterMethodShortName")]
+  pub filter_method_short_name: Option<String>,
+  #[serde(rename = "@FilterMethodProperties")]
+  pub filter_method_properties: Option<String>,
+  #[serde(rename = "@ObjectRights")]
+  pub object_rights: String,
+  #[serde(rename = "@ToPrinter")]
+  pub to_printer: String,
+  #[serde(rename = "@ToFile")]
+  pub to_file: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct UserMenu {}
 
 #[derive(Debug, Deserialize, Clone)]

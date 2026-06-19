@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  ClassViewsGet(ClassViewsGet),
   UserMenuGet(UserMenuGet),
   GuidesGet(GuidesGet),
   GuidesGroupsGet(GuidesGroupsGet),
@@ -33,25 +34,33 @@ pub enum RequestKind {
   Disconnect(Disconnect),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassViewsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
 pub struct UserMenuGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct GuidesGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct GuidesGroupsGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct TypesGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
