@@ -13,9 +13,9 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      AuthenticationURLGet, Disconnect, GuidesGroupsGet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind,
-      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet,
-      SystemUserPrivilegedGet, TypesGet, UserInfoGet, XML_HEADER,
+      AuthenticationURLGet, Disconnect, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
+      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet,
+      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, ProtocolInfo, Response, ResponseBody,
@@ -35,6 +35,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "network_information_set"))]
+  pub async fn network_information_set(&self, network_info: &NetworkInformationSet) -> Result<Done> {
+    self
+      .api(&Request {
+        body: RequestKind::NetworkInformationSet(network_info.clone()),
+      })
+      .await
   }
 
   /// # Errors

@@ -2,7 +2,11 @@ use std::sync::Once;
 
 use as2mca_api::{
   client::Client,
-  models::{Credentials, requests::SystemNetAddressSet, responses::Session},
+  models::{
+    Credentials,
+    requests::{NetworkInformationSet, SystemNetAddressSet},
+    responses::Session,
+  },
 };
 use regex::Regex;
 
@@ -26,6 +30,8 @@ async fn auth() {
   let username = std::env::var("2MCA_API_USERNAME").unwrap_or_else(|_| "test".to_string());
   let password = std::env::var("2MCA_API_PASSWORD").unwrap_or_else(|_| "test".to_string());
 
+  let client_user = whoami::username().unwrap_or_else(|_| "<unknown>".to_string());
+  let client_name = whoami::hostname().unwrap_or_else(|_| "<unknown>".to_string());
   let ip_address = local_ip_address::local_ip().map_or_else(|_| "<unknown>".to_owned(), |ip| ip.to_string());
   let mac_address = mac_address::get_mac_address()
     .ok()
@@ -44,8 +50,6 @@ async fn auth() {
     "session_id '{}' is not a valid 32-char hex string",
     session_id.as_str()
   );
-
-  // ---
 
   let res = client.session_init(None).await;
   assert!(res.is_ok());
@@ -83,7 +87,7 @@ async fn auth() {
     .system_net_address_set(&SystemNetAddressSet {
       session_id: session_id.clone(),
       mac_address,
-      ip_address,
+      ip_address: ip_address.clone(),
     })
     .await;
   assert!(res.is_ok());
@@ -92,6 +96,17 @@ async fn auth() {
   assert!(res.is_ok());
 
   let res = client.system_user_privileged_get(&session_id).await;
+  assert!(res.is_ok());
+
+  let res = client
+    .network_information_set(&NetworkInformationSet {
+      session_id: session_id.clone(),
+      client_name,
+      client_ip: ip_address,
+      client_user,
+      module_name: "ЦФТ - Навигатор 6.0.121.84".to_owned(),
+    })
+    .await;
   assert!(res.is_ok());
 
   let res = client.session_deinit(&session_id).await;
