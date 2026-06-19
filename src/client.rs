@@ -13,11 +13,11 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassViewsGet, Disconnect,
-      GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind,
-      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
-      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet,
-      UserProfilePropertyGet, XML_HEADER,
+      AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
+      ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
+      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
+      UserMenuGet, UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CheckResult, ChildClasses, CoreInfo, Done, Guides, GuidesGroups, Methods, MethodsGroups,
@@ -38,6 +38,19 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
+  pub async fn class_need_collection_id_check(
+    &self,
+    class_need_collection_id_check: &ClassNeedCollectionIDCheck,
+  ) -> Result<CheckResult> {
+    self
+      .api(&Request {
+        body: RequestKind::ClassNeedCollectionIDCheck(class_need_collection_id_check.clone()),
+      })
+      .await
   }
 
   /// # Errors

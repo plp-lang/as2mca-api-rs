@@ -5,10 +5,10 @@ use as2mca_api::{
   models::{
     Credentials,
     requests::{
-      ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, NetworkInformationSet, SystemNetAddressSet,
-      SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet,
+      ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, NetworkInformationSet,
+      SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet,
     },
-    responses::Session,
+    responses::{CheckResult, Session},
   },
 };
 use regex::Regex;
@@ -173,13 +173,22 @@ async fn auth() {
     .await;
   assert!(res.is_ok());
 
+  // let res = client
+  //   .class_methods_get(&ClassMethodsGet {
+  //     session_id: session_id.clone(),
+  //     class_id: "USER".to_owned(),
+  //   })
+  //   .await;
+  // assert!(res.is_ok());
+
   let res = client
-    .class_methods_get(&ClassMethodsGet {
+    .class_need_collection_id_check(&ClassNeedCollectionIDCheck {
       session_id: session_id.clone(),
       class_id: "USER".to_owned(),
     })
     .await;
   assert!(res.is_ok());
+  assert_eq!(res.unwrap(), CheckResult { value: "0".to_owned() });
 
   let res = client.session_deinit(&session_id).await;
   assert!(res.is_ok());

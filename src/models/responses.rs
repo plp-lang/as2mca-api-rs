@@ -160,7 +160,7 @@ pub struct Class {
   pub flags: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename = "User")]
 pub struct CheckResult {
   #[serde(rename = "@Value")]
