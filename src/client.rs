@@ -13,14 +13,15 @@ use crate::{
   models::{
     Credentials, SessionId,
     requests::{
-      AuthenticationURLGet, Disconnect, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
-      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-      UserProfilePropertyGet, XML_HEADER,
+      AuthenticationURLGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck,
+      ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+      SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
+      UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CheckResult, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo,
-      Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
+      AuthenticationURL, CheckResult, CoreInfo, Done, Guides, GuidesGroups, NovoAllowedCheckResult, OptionInfo,
+      ProtocolInfo, Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged,
+      UserProfileProperty,
     },
   },
 };
@@ -36,6 +37,18 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "guides_get"))]
+  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Guides> {
+    self
+      .api(&Request {
+        body: RequestKind::GuidesGet(GuidesGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
   }
 
   /// # Errors

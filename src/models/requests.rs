@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  GuidesGet(GuidesGet),
   GuidesGroupsGet(GuidesGroupsGet),
   TypesGet(TypesGet),
   UserBelongsGroupCheck(UserBelongsGroupCheck),
@@ -29,6 +30,12 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize)]
+pub struct GuidesGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
 }
 
 #[derive(Debug, Serialize)]

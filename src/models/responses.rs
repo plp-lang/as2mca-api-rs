@@ -17,6 +17,33 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Guides {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<GuideClass>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "Class")]
+pub struct GuideClass {
+  #[serde(rename = "@GroupID")]
+  pub group_id: Option<String>,
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@BaseClassID")]
+  pub base_class_id: String,
+  #[serde(rename = "@EntityID")]
+  pub entity_id: String,
+  #[serde(rename = "@IsKernelType")]
+  pub is_kernel_type: String,
+  #[serde(rename = "@ClassInterface")]
+  pub class_interface: String,
+  #[serde(rename = "@Flags")]
+  pub flags: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct GuidesGroups {
   #[serde(default, rename = "$value")]
   pub body: Vec<GuidesGroup>,
