@@ -39,6 +39,18 @@ impl Client {
   }
 
   /// # Errors
+  #[instrument(skip(self), err, fields(method = "types_get"))]
+  pub async fn types_get(&self, session_id: &SessionId) -> Result<Types> {
+    self
+      .api(&Request {
+        body: RequestKind::TypesGet(TypesGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
   #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
   pub async fn user_belongs_group_check(
     &self,
@@ -205,18 +217,6 @@ impl Client {
     self
       .api(&Request {
         body: RequestKind::SystemSettingsGet(SystemSettingsGet {
-          session_id: session_id.clone(),
-        }),
-      })
-      .await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "types_get"))]
-  pub async fn types_get(&self, session_id: &SessionId) -> Result<Types> {
-    self
-      .api(&Request {
-        body: RequestKind::TypesGet(TypesGet {
           session_id: session_id.clone(),
         }),
       })

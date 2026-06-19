@@ -17,6 +17,34 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Types {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<Class>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Class {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@BaseClassID")]
+  pub base_class_id: String,
+  #[serde(rename = "@EntityID")]
+  pub entity_id: String,
+  #[serde(rename = "@MenuCaption")]
+  pub menu_caption: String,
+  #[serde(rename = "@IsKernelType")]
+  pub is_kernel_type: String,
+  #[serde(rename = "@ClassInterface")]
+  pub class_interface: String,
+  #[serde(rename = "@IsAccessible")]
+  pub is_accessible: String,
+  #[serde(rename = "@Flags")]
+  pub flags: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "User")]
 pub struct CheckResult {
   #[serde(rename = "@Value")]
@@ -102,34 +130,6 @@ pub struct CoreInfo {
   pub as_version: String,
   #[serde(rename = "@ASWARDate")]
   pub aswar_date: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Types {
-  #[serde(rename = "$value")]
-  pub body: Vec<Class>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Class {
-  #[serde(rename = "@ID")]
-  pub id: String,
-  #[serde(rename = "@Name")]
-  pub name: String,
-  #[serde(rename = "@BaseClassID")]
-  pub base_class_id: String,
-  #[serde(rename = "@EntityID")]
-  pub entity_id: String,
-  #[serde(rename = "@MenuCaption")]
-  pub menu_caption: String,
-  #[serde(rename = "@IsKernelType")]
-  pub is_kernel_type: String,
-  #[serde(rename = "@ClassInterface")]
-  pub class_interface: String,
-  #[serde(rename = "@IsAccessible")]
-  pub is_accessible: String,
-  #[serde(rename = "@Flags")]
-  pub flags: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
