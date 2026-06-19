@@ -6,7 +6,7 @@ use as2mca_api::{
     Credentials,
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, NetworkInformationSet,
-      SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet,
+      SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
     },
     responses::{CheckResult, Session},
   },
@@ -189,6 +189,14 @@ async fn auth() {
     .await;
   assert!(res.is_ok());
   assert_eq!(res.unwrap(), CheckResult { value: "0".to_owned() });
+
+  let res = client
+    .view_columns_get(&ViewColumnsGet {
+      session_id: session_id.clone(),
+      view_id: "4384".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
 
   let res = client.session_deinit(&session_id).await;
   assert!(res.is_ok());

@@ -17,12 +17,12 @@ use crate::{
       ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
       Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
       SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-      UserMenuGet, UserProfilePropertyGet, XML_HEADER,
+      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CheckResult, ChildClasses, CoreInfo, Done, Guides, GuidesGroups, Methods, MethodsGroups,
-      NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo, Session, Settings, Types,
-      User, UserMenu, UserPrivileged, UserProfileProperty, Views,
+      AuthenticationURL, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups, Methods,
+      MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
+      Settings, Types, User, UserMenu, UserPrivileged, UserProfileProperty, Views,
     },
   },
 };
@@ -38,6 +38,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "view_columns_get"))]
+  pub async fn view_columns_get(&self, view_columns_get: &ViewColumnsGet) -> Result<Columns> {
+    self
+      .api(&Request {
+        body: RequestKind::ViewColumnsGet(view_columns_get.clone()),
+      })
+      .await
   }
 
   /// # Errors
