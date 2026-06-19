@@ -18,6 +18,13 @@ pub enum ResponseBody<T> {
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "User")]
+pub struct UserProfileProperty {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "User")]
 pub struct UserPrivileged {
   #[serde(rename = "@IsPrivileged")]
   pub is_privileged: String,

@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  UserProfilePropertyGet(UserProfilePropertyGet),
   NetworkInformationSet(NetworkInformationSet),
   SystemUserPrivilegedGet(SystemUserPrivilegedGet),
   NovoAllowedCheck(NovoAllowedCheck),
@@ -26,6 +27,14 @@ pub enum RequestKind {
   GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct UserProfilePropertyGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@PropertyName")]
+  pub property_name: String,
 }
 
 #[derive(Debug, Serialize, Clone)]

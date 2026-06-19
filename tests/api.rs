@@ -4,7 +4,7 @@ use as2mca_api::{
   client::Client,
   models::{
     Credentials,
-    requests::{NetworkInformationSet, SystemNetAddressSet},
+    requests::{NetworkInformationSet, SystemNetAddressSet, UserProfilePropertyGet},
     responses::Session,
   },
 };
@@ -105,6 +105,14 @@ async fn auth() {
       client_ip: ip_address,
       client_user,
       module_name: "ЦФТ - Навигатор 6.0.121.84".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .user_profile_property_get(&UserProfilePropertyGet {
+      session_id: session_id.clone(),
+      property_name: "SHOW_LOGINS_HISTORY".to_owned(),
     })
     .await;
   assert!(res.is_ok());

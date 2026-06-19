@@ -15,11 +15,11 @@ use crate::{
     requests::{
       AuthenticationURLGet, Disconnect, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
       Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet,
-      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet, XML_HEADER,
+      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet, UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, ProtocolInfo, Response, ResponseBody,
-      ServerInfo, Session, Settings, Types, User, UserPrivileged,
+      ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
     },
   },
 };
@@ -35,6 +35,19 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
+  pub async fn user_profile_property_get(
+    &self,
+    user_profile_property: &UserProfilePropertyGet,
+  ) -> Result<UserProfileProperty> {
+    self
+      .api(&Request {
+        body: RequestKind::UserProfilePropertyGet(user_profile_property.clone()),
+      })
+      .await
   }
 
   /// # Errors
