@@ -17,6 +17,38 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Methods {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<Method>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Method {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@ShortName")]
+  pub short_name: String,
+  #[serde(rename = "@Type")]
+  pub r#type: String,
+  #[serde(rename = "@FormClassID")]
+  pub form_class_id: String,
+  #[serde(rename = "@Properties")]
+  pub properties: String,
+  #[serde(rename = "@ScriptID")]
+  pub script_id: String,
+  #[serde(rename = "@ResultClassID")]
+  pub result_class_id: String,
+  #[serde(rename = "@UserDriven")]
+  pub user_driven: String,
+  #[serde(rename = "@Distance")]
+  pub distance: String,
+  #[serde(rename = "@CallableShortName")]
+  pub callable_short_name: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct MethodsGroups {}
 
 #[derive(Debug, Deserialize, Clone)]

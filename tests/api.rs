@@ -5,7 +5,7 @@ use as2mca_api::{
   models::{
     Credentials,
     requests::{
-      ClassChildrenGet, ClassMethodsGroupsUserGet, NetworkInformationSet, SystemNetAddressSet,
+      ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, NetworkInformationSet, SystemNetAddressSet,
       SystemOptionEnabledCheck, UserBelongsGroupCheck, UserProfilePropertyGet,
     },
     responses::Session,
@@ -25,6 +25,7 @@ fn setup_tracing() {
   });
 }
 
+#[allow(clippy::too_many_lines)]
 #[tokio::test]
 async fn auth() {
   setup_tracing();
@@ -166,6 +167,14 @@ async fn auth() {
 
   let res = client
     .class_methods_groups_user_get(&ClassMethodsGroupsUserGet {
+      session_id: session_id.clone(),
+      class_id: "USER".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .class_methods_get(&ClassMethodsGet {
       session_id: session_id.clone(),
       class_id: "USER".to_owned(),
     })

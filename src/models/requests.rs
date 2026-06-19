@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  ClassMethodsGet(ClassMethodsGet),
   ClassMethodsGroupsUserGet(ClassMethodsGroupsUserGet),
   ClassChildrenGet(ClassChildrenGet),
   ClassViewsGet(ClassViewsGet),
@@ -34,6 +35,14 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassMethodsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
 }
 
 #[derive(Debug, Serialize, Clone)]
