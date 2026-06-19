@@ -4,7 +4,10 @@ use as2mca_api::{
   client::Client,
   models::{
     Credentials,
-    requests::{NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck, UserProfilePropertyGet},
+    requests::{
+      NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck,
+      UserProfilePropertyGet,
+    },
     responses::Session,
   },
 };
@@ -121,6 +124,14 @@ async fn auth() {
     .system_option_enabled_check(&SystemOptionEnabledCheck {
       session_id: session_id.clone(),
       option_name: "NAV_SKIN_INTERFACE".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .user_belongs_group_check(&UserBelongsGroupCheck {
+      session_id: session_id.clone(),
+      group_id: "DVS".to_owned(),
     })
     .await;
   assert!(res.is_ok());

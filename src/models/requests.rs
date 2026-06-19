@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  UserBelongsGroupCheck(UserBelongsGroupCheck),
   SystemOptionEnabledCheck(SystemOptionEnabledCheck),
   UserProfilePropertyGet(UserProfilePropertyGet),
   NetworkInformationSet(NetworkInformationSet),
@@ -28,6 +29,14 @@ pub enum RequestKind {
   GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct UserBelongsGroupCheck {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@GroupID")]
+  pub group_id: String,
 }
 
 #[derive(Debug, Serialize, Clone)]

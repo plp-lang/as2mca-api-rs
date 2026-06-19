@@ -15,12 +15,12 @@ use crate::{
     requests::{
       AuthenticationURLGet, Disconnect, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
       Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserInfoGet,
+      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
       UserProfilePropertyGet, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response,
-      ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
+      AuthenticationURL, CheckResult, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo,
+      Response, ResponseBody, ServerInfo, Session, Settings, Types, User, UserPrivileged, UserProfileProperty,
     },
   },
 };
@@ -36,6 +36,19 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
+  pub async fn user_belongs_group_check(
+    &self,
+    user_belongs_group_check: &UserBelongsGroupCheck,
+  ) -> Result<CheckResult> {
+    self
+      .api(&Request {
+        body: RequestKind::UserBelongsGroupCheck(user_belongs_group_check.clone()),
+      })
+      .await
   }
 
   /// # Errors

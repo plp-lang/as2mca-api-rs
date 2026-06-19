@@ -18,6 +18,13 @@ pub enum ResponseBody<T> {
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "User")]
+pub struct CheckResult {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "User")]
 pub struct OptionInfo {
   #[serde(rename = "@Enabled")]
   pub enabled: String,
