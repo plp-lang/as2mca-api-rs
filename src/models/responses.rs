@@ -17,6 +17,20 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct GuidesGroups {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<GuidesGroup>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct GuidesGroup {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Types {
   #[serde(default, rename = "$value")]
   pub body: Vec<Class>,
@@ -103,12 +117,6 @@ pub struct Setting {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct GuidesGroups {
-  #[serde(rename = "$value")]
-  pub body: Vec<GuidesGroup>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
 pub struct ServerInfo {
   #[serde(rename = "@Version")]
   pub version: String,
@@ -130,14 +138,6 @@ pub struct CoreInfo {
   pub as_version: String,
   #[serde(rename = "@ASWARDate")]
   pub aswar_date: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct GuidesGroup {
-  #[serde(rename = "@ID")]
-  pub id: String,
-  #[serde(rename = "@Name")]
-  pub name: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]

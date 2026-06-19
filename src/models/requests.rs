@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  GuidesGroupsGet(GuidesGroupsGet),
   TypesGet(TypesGet),
   UserBelongsGroupCheck(UserBelongsGroupCheck),
   SystemOptionEnabledCheck(SystemOptionEnabledCheck),
@@ -26,9 +27,14 @@ pub enum RequestKind {
   SystemSettingsGet(SystemSettingsGet),
   SystemCoreInfoGet(SystemCoreInfoGet),
   SystemServerVersionGet(SystemServerVersionGet),
-  GuidesGroupsGet(GuidesGroupsGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize)]
+pub struct GuidesGroupsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
 }
 
 #[derive(Debug, Serialize)]
@@ -123,12 +129,6 @@ pub struct SystemCoreInfoGet {
 
 #[derive(Debug, Serialize)]
 pub struct SystemServerVersionGet {
-  #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
-}
-
-#[derive(Debug, Serialize)]
-pub struct GuidesGroupsGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
 }

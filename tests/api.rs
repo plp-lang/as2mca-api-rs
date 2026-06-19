@@ -139,6 +139,9 @@ async fn auth() {
   let res = client.types_get(&session_id).await;
   assert!(res.is_ok());
 
+  let res = client.guides_groups_get(&session_id).await;
+  assert!(res.is_ok());
+
   let res = client.session_deinit(&session_id).await;
   assert!(res.is_ok());
 }

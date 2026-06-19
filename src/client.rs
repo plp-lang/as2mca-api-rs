@@ -39,6 +39,18 @@ impl Client {
   }
 
   /// # Errors
+  #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
+  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<GuidesGroups> {
+    self
+      .api(&Request {
+        body: RequestKind::GuidesGroupsGet(GuidesGroupsGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
+  }
+
+  /// # Errors
   #[instrument(skip(self), err, fields(method = "types_get"))]
   pub async fn types_get(&self, session_id: &SessionId) -> Result<Types> {
     self
@@ -217,18 +229,6 @@ impl Client {
     self
       .api(&Request {
         body: RequestKind::SystemSettingsGet(SystemSettingsGet {
-          session_id: session_id.clone(),
-        }),
-      })
-      .await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
-  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<GuidesGroups> {
-    self
-      .api(&Request {
-        body: RequestKind::GuidesGroupsGet(GuidesGroupsGet {
           session_id: session_id.clone(),
         }),
       })
