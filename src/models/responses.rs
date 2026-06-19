@@ -17,6 +17,9 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct ChildClasses {}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Views {
   #[serde(default, rename = "$value")]
   pub body: Vec<View>,
