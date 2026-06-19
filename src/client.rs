@@ -14,12 +14,12 @@ use crate::{
     Credentials, SessionId,
     requests::{
       AuthenticationURLGet, Disconnect, GuidesGroupsGet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind,
-      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet, TypesGet,
-      UserInfoGet, XML_HEADER,
+      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemServerVersionGet, SystemSettingsGet,
+      SystemUserPrivilegedGet, TypesGet, UserInfoGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CoreInfo, Done, GuidesGroups, NovoAllowedCheckResult, ProtocolInfo, Response, ResponseBody,
-      ServerInfo, Session, Settings, Types, User,
+      ServerInfo, Session, Settings, Types, User, UserPrivileged,
     },
   },
 };
@@ -35,6 +35,18 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_user_privileged_get"))]
+  pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<UserPrivileged> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemUserPrivilegedGet(SystemUserPrivilegedGet {
+          session_id: session_id.clone(),
+        }),
+      })
+      .await
   }
 
   /// # Errors

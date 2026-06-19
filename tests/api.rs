@@ -91,6 +91,9 @@ async fn auth() {
   let res = client.novo_allowed_check(&session_id).await;
   assert!(res.is_ok());
 
+  let res = client.system_user_privileged_get(&session_id).await;
+  assert!(res.is_ok());
+
   let res = client.session_deinit(&session_id).await;
   assert!(res.is_ok());
 }
