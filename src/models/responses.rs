@@ -17,6 +17,9 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct States {}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct Columns {
   #[serde(default, rename = "$value")]
   pub body: Vec<Column>,

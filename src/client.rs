@@ -14,15 +14,15 @@ use crate::{
     Credentials, SessionId,
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
-      ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet,
-      Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, XML_HEADER,
+      ClassStatesGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck,
+      ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+      SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
+      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, XML_HEADER,
     },
     responses::{
       AuthenticationURL, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups, Methods,
       MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
-      Settings, Types, User, UserMenu, UserPrivileged, UserProfileProperty, Views,
+      Settings, States, Types, User, UserMenu, UserPrivileged, UserProfileProperty, Views,
     },
   },
 };
@@ -38,6 +38,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "class_states_get"))]
+  pub async fn class_states_get(&self, class_states_get: &ClassStatesGet) -> Result<States> {
+    self
+      .api(&Request {
+        body: RequestKind::ClassStatesGet(class_states_get.clone()),
+      })
+      .await
   }
 
   /// # Errors
