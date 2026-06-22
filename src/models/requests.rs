@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::models::SessionId;
+use crate::models::{DebugPipeName, SessionId};
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  PipeTextGet(PipeTextGet),
   ObjectBackwardReferencesGet(ObjectBackwardReferencesGet),
   ViewDataGetCancelable(ViewDataGetCancelable),
   ClassTransitionsGet(ClassTransitionsGet),
@@ -41,6 +42,14 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PipeTextGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@PipeName")]
+  pub pipe_name: DebugPipeName,
 }
 
 #[derive(Debug, Serialize, Clone)]

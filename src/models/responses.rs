@@ -17,6 +17,12 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct PipeText {
+  #[serde(default, rename = "@Value")]
+  pub value: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct BackwardReferences {
   #[serde(default, rename = "$value")]
   pub body: Vec<BackwardReference>,

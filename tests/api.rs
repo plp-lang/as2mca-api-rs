@@ -6,7 +6,7 @@ use as2mca_api::{
     Credentials,
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
-      NetworkInformationSet, ObjectBackwardReferencesGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
       UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::{CheckResult, Session},
@@ -232,6 +232,14 @@ async fn auth() {
       session_id: session_id.clone(),
       object_id: "2350467263".to_string(),
       class_id: "USER".to_string(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .pipe_text_get(&PipeTextGet {
+      session_id: session_id.clone(),
+      pipe_name: debug_pipe_name.clone(),
     })
     .await;
   assert!(res.is_ok());

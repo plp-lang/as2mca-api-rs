@@ -15,16 +15,16 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet,
-      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ProtocolInfoGet, Request, RequestKind,
-      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
-      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet,
-      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, PipeTextGet, ProtocolInfoGet, Request,
+      RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
+      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
       AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups,
-      Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo,
-      Session, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, ViewData,
-      Views,
+      Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody,
+      ServerInfo, Session, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty,
+      ViewData, Views,
     },
   },
 };
@@ -40,6 +40,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "pipe_text_get"))]
+  pub async fn pipe_text_get(&self, pipe_text_get: &PipeTextGet) -> Result<PipeText> {
+    self
+      .api(&Request {
+        body: RequestKind::PipeTextGet(pipe_text_get.clone()),
+      })
+      .await
   }
 
   /// # Errors
