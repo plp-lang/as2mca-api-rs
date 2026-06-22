@@ -17,14 +17,15 @@ use crate::{
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet,
       NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, PipeTextGet, ProtocolInfoGet, Request,
       RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+      SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
+      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      XML_HEADER,
     },
     responses::{
       AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups,
       Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody,
-      ServerInfo, Session, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty,
-      ViewData, Views,
+      ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
+      UserProfileProperty, ViewData, Views,
     },
   },
 };
@@ -40,6 +41,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "system_setting_get"))]
+  pub async fn system_setting_get(&self, system_setting_get: &SystemSettingGet) -> Result<Setting> {
+    self
+      .api(&Request {
+        body: RequestKind::SystemSettingGet(system_setting_get.clone()),
+      })
+      .await
   }
 
   /// # Errors
