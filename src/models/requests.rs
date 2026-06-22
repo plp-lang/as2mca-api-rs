@@ -12,6 +12,7 @@ pub struct Request {
 
 #[derive(Debug, Serialize)]
 pub enum RequestKind {
+  ObjectBackwardReferencesGet(ObjectBackwardReferencesGet),
   ViewDataGetCancelable(ViewDataGetCancelable),
   ClassTransitionsGet(ClassTransitionsGet),
   ClassStatesGet(ClassStatesGet),
@@ -40,6 +41,16 @@ pub enum RequestKind {
   SystemServerVersionGet(SystemServerVersionGet),
   SessionInit(SessionInit),
   Disconnect(Disconnect),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ObjectBackwardReferencesGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ObjectID")]
+  pub object_id: String,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
 }
 
 #[derive(Debug, Serialize, Clone)]

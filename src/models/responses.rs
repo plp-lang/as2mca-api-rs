@@ -17,6 +17,24 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct BackwardReferences {
+  #[serde(default, rename = "$value")]
+  pub body: Vec<BackwardReference>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct BackwardReference {
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@ClassName")]
+  pub class_name: String,
+  #[serde(rename = "@Qual")]
+  pub qual: String,
+  #[serde(rename = "@QualName")]
+  pub qual_name: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct ViewData {
   #[serde(default, rename = "$value")]
   pub body: Vec<Row>,

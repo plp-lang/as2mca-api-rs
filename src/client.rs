@@ -15,15 +15,16 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet,
-      NetworkInformationSet, NovoAllowedCheck, ProtocolInfoGet, Request, RequestKind, SessionInit, SystemCoreInfoGet,
-      SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingsGet,
-      SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
-      ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ProtocolInfoGet, Request, RequestKind,
+      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
+      SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet,
+      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups, Methods,
-      MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo, Session,
-      Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, ViewData, Views,
+      AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups,
+      Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, ProtocolInfo, Response, ResponseBody, ServerInfo,
+      Session, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, ViewData,
+      Views,
     },
   },
 };
@@ -39,6 +40,19 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "object_backward_references_get"))]
+  pub async fn object_backward_references_get(
+    &self,
+    object_backward_references_get: &ObjectBackwardReferencesGet,
+  ) -> Result<BackwardReferences> {
+    self
+      .api(&Request {
+        body: RequestKind::ObjectBackwardReferencesGet(object_backward_references_get.clone()),
+      })
+      .await
   }
 
   /// # Errors

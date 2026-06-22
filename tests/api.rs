@@ -6,8 +6,8 @@ use as2mca_api::{
     Credentials,
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
-      NetworkInformationSet, SystemNetAddressSet, SystemOptionEnabledCheck, UserBelongsGroupCheck,
-      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      NetworkInformationSet, ObjectBackwardReferencesGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::{CheckResult, Session},
   },
@@ -223,6 +223,15 @@ async fn auth() {
       hint: "FIRST_ROWS".to_string(),
       allow_timestamp_milliseconds: "true".to_string(),
       rows_limit: "10".to_string(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .object_backward_references_get(&ObjectBackwardReferencesGet {
+      session_id: session_id.clone(),
+      object_id: "2350467263".to_string(),
+      class_id: "USER".to_string(),
     })
     .await;
   assert!(res.is_ok());
