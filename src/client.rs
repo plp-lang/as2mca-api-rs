@@ -14,7 +14,7 @@ use crate::{
     Credentials, SessionId,
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
-      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Disconnect, GuidesGet, GuidesGroupsGet,
+      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, DebugTextGet, Disconnect, GuidesGet, GuidesGroupsGet,
       NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, PipeTextGet, ProtocolInfoGet, Request,
       RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
       SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
@@ -22,9 +22,9 @@ use crate::{
       XML_HEADER,
     },
     responses::{
-      AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, Done, Guides, GuidesGroups,
-      Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody,
-      ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
+      AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, DebugText, Done, Guides,
+      GuidesGroups, Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response,
+      ResponseBody, ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
       UserProfileProperty, ViewData, Views,
     },
   },
@@ -41,6 +41,16 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "debug_text_get"))]
+  pub async fn debug_text_get(&self, debug_text_get: &DebugTextGet) -> Result<DebugText> {
+    self
+      .api(&Request {
+        body: RequestKind::DebugTextGet(debug_text_get.clone()),
+      })
+      .await
   }
 
   /// # Errors

@@ -6,8 +6,9 @@ use as2mca_api::{
     Credentials,
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
-      NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet, SystemNetAddressSet,
+      SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
+      ViewDataGetCancelable,
     },
     responses::{CheckResult, Session},
   },
@@ -248,6 +249,14 @@ async fn auth() {
     .system_setting_get(&SystemSettingGet {
       session_id: session_id.clone(),
       name: "NOVOMON.TIMEOUT_LIMIT".to_string(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .debug_text_get(&DebugTextGet {
+      session_id: session_id.clone(),
+      direction: "B".to_string(),
     })
     .await;
   assert!(res.is_ok());
