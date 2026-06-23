@@ -343,7 +343,7 @@ pub struct CoreInfo {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Session {
   #[serde(rename = "@ID")]
-  pub id: SessionId,
+  pub session_id: SessionId,
   #[serde(rename = "@DebugPipeName")]
   pub debug_pipe_name: DebugPipeName,
 }

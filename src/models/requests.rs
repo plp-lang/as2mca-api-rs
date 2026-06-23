@@ -5,45 +5,10 @@ use crate::models::{DebugPipeName, SessionId};
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
 #[derive(Debug, Serialize)]
-pub struct Request {
+#[serde(rename = "Request")]
+pub struct Request<T> {
   #[serde(rename = "$value")]
-  pub body: RequestKind,
-}
-
-#[derive(Debug, Serialize)]
-pub enum RequestKind {
-  DebugTextGet(DebugTextGet),
-  SystemSettingGet(SystemSettingGet),
-  PipeTextGet(PipeTextGet),
-  ObjectBackwardReferencesGet(ObjectBackwardReferencesGet),
-  ViewDataGetCancelable(ViewDataGetCancelable),
-  ClassTransitionsGet(ClassTransitionsGet),
-  ClassStatesGet(ClassStatesGet),
-  ViewColumnsGet(ViewColumnsGet),
-  ClassNeedCollectionIDCheck(ClassNeedCollectionIDCheck),
-  ClassMethodsGet(ClassMethodsGet),
-  ClassMethodsGroupsUserGet(ClassMethodsGroupsUserGet),
-  ClassChildrenGet(ClassChildrenGet),
-  ClassViewsGet(ClassViewsGet),
-  UserMenuGet(UserMenuGet),
-  GuidesGet(GuidesGet),
-  GuidesGroupsGet(GuidesGroupsGet),
-  TypesGet(TypesGet),
-  UserBelongsGroupCheck(UserBelongsGroupCheck),
-  SystemOptionEnabledCheck(SystemOptionEnabledCheck),
-  UserProfilePropertyGet(UserProfilePropertyGet),
-  NetworkInformationSet(NetworkInformationSet),
-  SystemUserPrivilegedGet(SystemUserPrivilegedGet),
-  NovoAllowedCheck(NovoAllowedCheck),
-  SystemNetAddressSet(SystemNetAddressSet),
-  UserInfoGet(UserInfoGet),
-  AuthenticationURLGet(AuthenticationURLGet),
-  ProtocolInfoGet(ProtocolInfoGet),
-  SystemSettingsGet(SystemSettingsGet),
-  SystemCoreInfoGet(SystemCoreInfoGet),
-  SystemServerVersionGet(SystemServerVersionGet),
-  SessionInit(SessionInit),
-  Disconnect(Disconnect),
+  pub body: T,
 }
 
 #[derive(Debug, Serialize, Clone)]

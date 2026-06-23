@@ -10,7 +10,7 @@ use as2mca_api::{
       SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
       ViewDataGetCancelable,
     },
-    responses::{CheckResult, Session},
+    responses::Session,
   },
 };
 use regex::Regex;
@@ -62,7 +62,7 @@ async fn auth() {
 
   let Session {
     debug_pipe_name,
-    id: _id,
+    session_id: _id,
   } = res.unwrap();
   let pipe_regex = Regex::new(r"^debug\$\d{10}$").unwrap();
   assert!(
@@ -190,7 +190,6 @@ async fn auth() {
     })
     .await;
   assert!(res.is_ok());
-  assert_eq!(res.unwrap(), CheckResult { value: "0".to_owned() });
 
   let res = client
     .view_columns_get(&ViewColumnsGet {

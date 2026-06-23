@@ -16,16 +16,16 @@ use crate::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, DebugTextGet, Disconnect, GuidesGet, GuidesGroupsGet,
       NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, PipeTextGet, ProtocolInfoGet, Request,
-      RequestKind, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
-      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
-      XML_HEADER,
+      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
+      SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
+      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, BackwardReferences, CheckResult, ChildClasses, Columns, CoreInfo, DebugText, Done, Guides,
-      GuidesGroups, Methods, MethodsGroups, NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response,
-      ResponseBody, ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
-      UserProfileProperty, ViewData, Views,
+      AuthenticationURL, BackwardReference, BackwardReferences, CheckResult, ChildClasses, Class, Column, Columns,
+      CoreInfo, DebugText, Done, GuideClass, Guides, GuidesGroup, GuidesGroups, Method, Methods, MethodsGroups,
+      NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody, Row, ServerInfo, Session,
+      Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, View,
+      ViewData, Views,
     },
   },
 };
@@ -45,362 +45,257 @@ impl Client {
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "debug_text_get"))]
-  pub async fn debug_text_get(&self, debug_text_get: &DebugTextGet) -> Result<DebugText> {
-    self
-      .api(&Request {
-        body: RequestKind::DebugTextGet(debug_text_get.clone()),
-      })
-      .await
+  pub async fn debug_text_get(&self, req: &DebugTextGet) -> Result<String> {
+    self.api::<_, DebugText>(req).await.map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_setting_get"))]
-  pub async fn system_setting_get(&self, system_setting_get: &SystemSettingGet) -> Result<Setting> {
-    self
-      .api(&Request {
-        body: RequestKind::SystemSettingGet(system_setting_get.clone()),
-      })
-      .await
+  pub async fn system_setting_get(&self, req: &SystemSettingGet) -> Result<Setting> {
+    self.api(&req).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "pipe_text_get"))]
-  pub async fn pipe_text_get(&self, pipe_text_get: &PipeTextGet) -> Result<PipeText> {
-    self
-      .api(&Request {
-        body: RequestKind::PipeTextGet(pipe_text_get.clone()),
-      })
-      .await
+  pub async fn pipe_text_get(&self, req: &PipeTextGet) -> Result<String> {
+    self.api::<_, PipeText>(req).await.map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "object_backward_references_get"))]
   pub async fn object_backward_references_get(
     &self,
-    object_backward_references_get: &ObjectBackwardReferencesGet,
-  ) -> Result<BackwardReferences> {
-    self
-      .api(&Request {
-        body: RequestKind::ObjectBackwardReferencesGet(object_backward_references_get.clone()),
-      })
-      .await
+    req: &ObjectBackwardReferencesGet,
+  ) -> Result<Vec<BackwardReference>> {
+    self.api::<_, BackwardReferences>(&req).await.map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "view_data_get_cancelable"))]
-  pub async fn view_data_get_cancelable(&self, view_data_get_cancelable: &ViewDataGetCancelable) -> Result<ViewData> {
-    self
-      .api(&Request {
-        body: RequestKind::ViewDataGetCancelable(view_data_get_cancelable.clone()),
-      })
-      .await
+  pub async fn view_data_get_cancelable(&self, req: &ViewDataGetCancelable) -> Result<Vec<Row>> {
+    self.api::<_, ViewData>(&req).await.map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_transitions_get"))]
-  pub async fn class_transitions_get(&self, class_transitions_get: &ClassTransitionsGet) -> Result<Transitions> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassTransitionsGet(class_transitions_get.clone()),
-      })
-      .await
+  pub async fn class_transitions_get(&self, req: &ClassTransitionsGet) -> Result<Transitions> {
+    self.api::<_, Transitions>(&req).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_states_get"))]
-  pub async fn class_states_get(&self, class_states_get: &ClassStatesGet) -> Result<States> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassStatesGet(class_states_get.clone()),
-      })
-      .await
+  pub async fn class_states_get(&self, req: &ClassStatesGet) -> Result<States> {
+    self.api::<_, States>(&req).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "view_columns_get"))]
-  pub async fn view_columns_get(&self, view_columns_get: &ViewColumnsGet) -> Result<Columns> {
-    self
-      .api(&Request {
-        body: RequestKind::ViewColumnsGet(view_columns_get.clone()),
-      })
-      .await
+  pub async fn view_columns_get(&self, req: &ViewColumnsGet) -> Result<Vec<Column>> {
+    self.api::<_, Columns>(&req).await.map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
-  pub async fn class_need_collection_id_check(
-    &self,
-    class_need_collection_id_check: &ClassNeedCollectionIDCheck,
-  ) -> Result<CheckResult> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassNeedCollectionIDCheck(class_need_collection_id_check.clone()),
-      })
-      .await
+  pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<String> {
+    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_methods_get"))]
-  pub async fn class_methods_get(&self, class_methods_get: &ClassMethodsGet) -> Result<Methods> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassMethodsGet(class_methods_get.clone()),
-      })
-      .await
+  pub async fn class_methods_get(&self, req: &ClassMethodsGet) -> Result<Vec<Method>> {
+    self.api::<_, Methods>(&req).await.map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
-  pub async fn class_methods_groups_user_get(
-    &self,
-    class_methods_groups_user_get: &ClassMethodsGroupsUserGet,
-  ) -> Result<MethodsGroups> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassMethodsGroupsUserGet(class_methods_groups_user_get.clone()),
-      })
-      .await
+  pub async fn class_methods_groups_user_get(&self, req: &ClassMethodsGroupsUserGet) -> Result<MethodsGroups> {
+    self.api::<_, MethodsGroups>(&req).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_children_get"))]
-  pub async fn class_children_get(&self, class_children_get: &ClassChildrenGet) -> Result<ChildClasses> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassChildrenGet(class_children_get.clone()),
-      })
-      .await
+  pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
+    self.api::<_, ChildClasses>(&req).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "class_views_get"))]
-  pub async fn class_views_get(&self, class_views_get: &ClassViewsGet) -> Result<Views> {
-    self
-      .api(&Request {
-        body: RequestKind::ClassViewsGet(class_views_get.clone()),
-      })
-      .await
+  pub async fn class_views_get(&self, req: &ClassViewsGet) -> Result<Vec<View>> {
+    self.api::<_, Views>(&req).await.map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "user_menu_get"))]
   pub async fn user_menu_get(&self, session_id: &SessionId) -> Result<UserMenu> {
     self
-      .api(&Request {
-        body: RequestKind::UserMenuGet(UserMenuGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, UserMenu>(&UserMenuGet {
+        session_id: session_id.clone(),
       })
       .await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "guides_get"))]
-  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Guides> {
+  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<GuideClass>> {
     self
-      .api(&Request {
-        body: RequestKind::GuidesGet(GuidesGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, Guides>(&GuidesGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
-  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<GuidesGroups> {
+  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<Vec<GuidesGroup>> {
     self
-      .api(&Request {
-        body: RequestKind::GuidesGroupsGet(GuidesGroupsGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, GuidesGroups>(&GuidesGroupsGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "types_get"))]
-  pub async fn types_get(&self, session_id: &SessionId) -> Result<Types> {
+  pub async fn types_get(&self, session_id: &SessionId) -> Result<Vec<Class>> {
     self
-      .api(&Request {
-        body: RequestKind::TypesGet(TypesGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, Types>(&TypesGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.body)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
-  pub async fn user_belongs_group_check(
-    &self,
-    user_belongs_group_check: &UserBelongsGroupCheck,
-  ) -> Result<CheckResult> {
-    self
-      .api(&Request {
-        body: RequestKind::UserBelongsGroupCheck(user_belongs_group_check.clone()),
-      })
-      .await
+  pub async fn user_belongs_group_check(&self, req: &UserBelongsGroupCheck) -> Result<String> {
+    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
-  pub async fn system_option_enabled_check(
-    &self,
-    system_option_enabled_check: &SystemOptionEnabledCheck,
-  ) -> Result<OptionInfo> {
-    self
-      .api(&Request {
-        body: RequestKind::SystemOptionEnabledCheck(system_option_enabled_check.clone()),
-      })
-      .await
+  pub async fn system_option_enabled_check(&self, req: &SystemOptionEnabledCheck) -> Result<String> {
+    self.api::<_, OptionInfo>(&req).await.map(|v| v.enabled)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
-  pub async fn user_profile_property_get(
-    &self,
-    user_profile_property: &UserProfilePropertyGet,
-  ) -> Result<UserProfileProperty> {
-    self
-      .api(&Request {
-        body: RequestKind::UserProfilePropertyGet(user_profile_property.clone()),
-      })
-      .await
+  pub async fn user_profile_property_get(&self, req: &UserProfilePropertyGet) -> Result<String> {
+    self.api::<_, UserProfileProperty>(&req).await.map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "network_information_set"))]
-  pub async fn network_information_set(&self, network_info: &NetworkInformationSet) -> Result<Done> {
-    self
-      .api(&Request {
-        body: RequestKind::NetworkInformationSet(network_info.clone()),
-      })
-      .await
+  pub async fn network_information_set(&self, req: &NetworkInformationSet) -> Result<()> {
+    self.api::<_, Done>(&req).await?;
+    Ok(())
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_user_privileged_get"))]
-  pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<UserPrivileged> {
+  pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<String> {
     self
-      .api(&Request {
-        body: RequestKind::SystemUserPrivilegedGet(SystemUserPrivilegedGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, UserPrivileged>(&SystemUserPrivilegedGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.is_privileged)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
-  pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<NovoAllowedCheckResult> {
+  pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<String> {
     self
-      .api(&Request {
-        body: RequestKind::NovoAllowedCheck(NovoAllowedCheck {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, NovoAllowedCheckResult>(&NovoAllowedCheck {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.value)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
-  pub async fn system_net_address_set(&self, system_net_address: &SystemNetAddressSet) -> Result<Done> {
-    self
-      .api(&Request {
-        body: RequestKind::SystemNetAddressSet(system_net_address.clone()),
-      })
-      .await
+  pub async fn system_net_address_set(&self, req: &SystemNetAddressSet) -> Result<()> {
+    self.api::<_, Done>(&req).await?;
+    Ok(())
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "user_info_get"))]
   pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
     self
-      .api(&Request {
-        body: RequestKind::UserInfoGet(UserInfoGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, User>(&UserInfoGet {
+        session_id: session_id.clone(),
       })
       .await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "authentication_url_get"))]
-  pub async fn authentication_url_get(&self) -> Result<AuthenticationURL> {
+  pub async fn authentication_url_get(&self) -> Result<String> {
     self
-      .api(&Request {
-        body: RequestKind::AuthenticationURLGet(AuthenticationURLGet {}),
-      })
+      .api::<_, AuthenticationURL>(&AuthenticationURLGet {})
       .await
+      .map(|v| v.url)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "session_init"))]
   pub async fn session_init(&self, alive_active_session: Option<bool>) -> Result<Session> {
-    self
-      .api(&Request {
-        body: RequestKind::SessionInit(SessionInit { alive_active_session }),
-      })
-      .await
+    self.api(&SessionInit { alive_active_session }).await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "session_deinit"))]
-  pub async fn session_deinit(&self, session_id: &SessionId) -> Result<Done> {
+  pub async fn session_deinit(&self, session_id: &SessionId) -> Result<()> {
     self
-      .api(&Request {
-        body: RequestKind::Disconnect(Disconnect {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, Done>(&Disconnect {
+        session_id: session_id.clone(),
       })
-      .await
+      .await?;
+    Ok(())
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
-  pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<ProtocolInfo> {
+  pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<String> {
     self
-      .api(&Request {
-        body: RequestKind::ProtocolInfoGet(ProtocolInfoGet {}),
-      })
+      .api::<_, ProtocolInfo>(&ProtocolInfoGet {})
       .await
+      .map(|v| v.version)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_server_version_get"))]
-  pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<ServerInfo> {
+  pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<String> {
     self
-      .api(&Request {
-        body: RequestKind::SystemServerVersionGet(SystemServerVersionGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, ServerInfo>(&SystemServerVersionGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.version)
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_core_info_get"))]
   pub async fn system_core_info_get(&self, session_id: &SessionId) -> Result<CoreInfo> {
     self
-      .api(&Request {
-        body: RequestKind::SystemCoreInfoGet(SystemCoreInfoGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, CoreInfo>(&SystemCoreInfoGet {
+        session_id: session_id.clone(),
       })
       .await
   }
 
   /// # Errors
   #[instrument(skip(self), err, fields(method = "system_settings_get"))]
-  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Settings> {
+  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
     self
-      .api(&Request {
-        body: RequestKind::SystemSettingsGet(SystemSettingsGet {
-          session_id: session_id.clone(),
-        }),
+      .api::<_, Settings>(&SystemSettingsGet {
+        session_id: session_id.clone(),
       })
       .await
+      .map(|v| v.body)
   }
 
   /// # Errors
@@ -440,14 +335,14 @@ impl Client {
     Ok(Url::parse(&full_url)?)
   }
 
-  #[instrument(skip(self, payload), err)]
-  pub(crate) async fn api<T, U>(&self, payload: &T) -> Result<U>
+  #[instrument(skip(self, body), err)]
+  pub(crate) async fn api<T, U>(&self, body: &T) -> Result<U>
   where
     T: serde::Serialize + Sync,
     U: serde::de::DeserializeOwned + Clone,
   {
     let url = self.endpoint("/api")?;
-    let body = format!("{}{}", XML_HEADER, quick_xml::se::to_string(payload)?);
+    let body = format!("{}{}", XML_HEADER, quick_xml::se::to_string(&Request { body })?);
     tracing::debug!(
       url = url.to_string(),
       len = body.len(),
