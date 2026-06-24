@@ -78,40 +78,79 @@ pub struct Columns {
   pub body: Vec<Column>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Column {
   #[serde(rename = "@Name")]
   pub name: String,
+
   #[serde(rename = "@Width")]
-  pub width: String,
+  pub width: u32,
+
+  /// TODO: Left = 0, Center = 1, Right = 2
   #[serde(rename = "@Align")]
-  pub align: String,
+  pub align: u8,
+
   #[serde(rename = "@Position")]
-  pub position: String,
+  pub position: u32,
+
   #[serde(rename = "@Qual")]
   pub qual: String,
+
   #[serde(rename = "@Alias")]
   pub alias: String,
+
   #[serde(rename = "@Base")]
-  pub base: String,
-  #[serde(rename = "@IsEditable")]
-  pub is_editable: Option<String>,
-  #[serde(rename = "@IsSizeable")]
-  pub is_sizeable: String,
-  #[serde(rename = "@IsCellStyle")]
-  pub is_cell_style: String,
+  pub base: ColumnBase,
+
+  #[serde(rename = "@IsEditable", with = "option_bool_as_str")]
+  pub is_editable: Option<bool>,
+
+  #[serde(rename = "@IsSizeable", with = "bool_as_str")]
+  pub is_sizeable: bool,
+
+  #[serde(rename = "@IsCellStyle", with = "bool_as_str")]
+  pub is_cell_style: bool,
+
+  /// TODO: Visible = 0, Hidden = 2
   #[serde(rename = "@IsInvisible")]
-  pub is_invisible: String,
-  #[serde(rename = "@TargetClassID")]
+  pub is_invisible: u8,
+
+  #[serde(rename = "@TargetClassID", skip_serializing_if = "Option::is_none")]
   pub target_class_id: Option<String>,
-  #[serde(rename = "@ReferenceType")]
-  pub reference_type: Option<String>,
-  #[serde(rename = "@Logging")]
-  pub logging: Option<String>,
-  #[serde(rename = "@AbilityPerformOperation")]
-  pub ability_perform_operation: Option<String>,
-  #[serde(rename = "@ReferenceID")]
+
+  #[serde(
+    rename = "@ReferenceType",
+    with = "option_bool_as_str",
+    skip_serializing_if = "Option::is_none"
+  )]
+  pub reference_type: Option<bool>,
+
+  #[serde(rename = "@Logging", skip_serializing_if = "Option::is_none")]
+  pub logging: Option<Logging>,
+
+  #[serde(rename = "@AbilityPerformOperation", skip_serializing_if = "Option::is_none")]
+  pub ability_perform_operation: Option<bool>,
+
+  #[serde(rename = "@ReferenceID", skip_serializing_if = "Option::is_none")]
   pub reference_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ColumnBase {
+  String,
+  Number,
+  Date,
+  Reference,
+  Collection,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Logging {
+  #[serde(rename = "0")]
+  None,
+  #[serde(rename = "D")]
+  Delete,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -441,6 +480,45 @@ pub mod bool_as_str {
       "1" => Ok(true),
       "0" => Ok(false),
       _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+    }
+  }
+}
+
+pub mod option_bool_as_str {
+  use serde::{self, Deserialize, Deserializer, Serializer};
+
+  /// Сериализация: Option<bool> -> "1" / "0"
+  ///
+  /// # Errors
+  /// [`serde::ser::Error`]
+  pub fn serialize<S>(value: &Option<bool>, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    match value {
+      Some(true) => serializer.serialize_str("1"),
+      Some(false) => serializer.serialize_str("0"),
+      None => serializer.serialize_none(),
+    }
+  }
+
+  /// Десериализация: "1" / "0" -> Option<bool>
+  ///
+  /// # Errors
+  /// [`serde::de::Error`]
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let value = Option::<String>::deserialize(deserializer)?;
+
+    match value.as_deref() {
+      Some("1") => Ok(Some(true)),
+      Some("0") => Ok(Some(false)),
+      None => Ok(None),
+      Some(other) => Err(serde::de::Error::custom(format!(
+        "expected '1' or '0', received '{other}'"
+      ))),
     }
   }
 }
