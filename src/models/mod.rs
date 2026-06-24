@@ -2,6 +2,7 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
+pub mod flags;
 pub mod requests;
 pub mod responses;
 

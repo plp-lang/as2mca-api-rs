@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::{DebugPipeName, SessionId};
+use crate::models::{DebugPipeName, SessionId, flags::Flags};
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "Response")]
@@ -169,8 +169,7 @@ pub struct View {
   #[serde(rename = "@ShortName")]
   pub short_name: String,
 
-  // IsDefault принимает значения "1" или "0"
-  #[serde(rename = "@IsDefault", deserialize_with = "deserialize_bool_from_str")]
+  #[serde(rename = "@IsDefault", with = "bool_as_str")]
   pub is_default: bool,
 
   #[serde(rename = "@CellStyleScript")]
@@ -191,19 +190,17 @@ pub struct View {
   #[serde(rename = "@ObjectRights")]
   pub object_rights: u32,
 
-  // ToPrinter принимает значения "1" или "0"
-  #[serde(rename = "@ToPrinter", deserialize_with = "deserialize_bool_from_str")]
+  #[serde(rename = "@ToPrinter", with = "bool_as_str")]
   pub to_printer: bool,
 
-  // ToFile принимает значения "1" или "0"
-  #[serde(rename = "@ToFile", deserialize_with = "deserialize_bool_from_str")]
+  #[serde(rename = "@ToFile", with = "bool_as_str")]
   pub to_file: bool,
 
   #[serde(rename = "@Hints")]
-  pub hints: Option<String>, // Встречается редко замечено значение "DBI_READY"
+  pub hints: Option<String>,
 
   #[serde(rename = "@OrderBy")]
-  pub order_by: Option<String>, // содержит SQL/PL+ код
+  pub order_by: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -233,7 +230,7 @@ pub struct GuideClass {
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
   #[serde(rename = "@Flags")]
-  pub flags: String,
+  pub flags: Flags,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -260,22 +257,42 @@ pub struct Types {
 pub struct Class {
   #[serde(rename = "@ID")]
   pub id: String,
+
   #[serde(rename = "@Name")]
   pub name: String,
+
   #[serde(rename = "@BaseClassID")]
   pub base_class_id: String,
+
   #[serde(rename = "@EntityID")]
   pub entity_id: String,
+
   #[serde(rename = "@MenuCaption")]
   pub menu_caption: String,
-  #[serde(rename = "@IsKernelType")]
-  pub is_kernel_type: String,
+
+  #[serde(rename = "@IsKernelType", with = "bool_as_str")]
+  pub is_kernel_type: bool,
+
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
-  #[serde(rename = "@IsAccessible")]
-  pub is_accessible: String,
+
+  #[serde(rename = "@IsAccessible", with = "bool_as_str")]
+  pub is_accessible: bool,
+
   #[serde(rename = "@Flags")]
-  pub flags: String,
+  pub flags: Flags,
+
+  #[serde(rename = "@PadLength")]
+  pub pad_length: Option<u32>,
+
+  #[serde(rename = "@DataSize")]
+  pub data_size: Option<u32>,
+
+  #[serde(rename = "@DataPrecision")]
+  pub data_precision: Option<u32>,
+
+  #[serde(rename = "@Properties")]
+  pub properties: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -397,15 +414,33 @@ pub struct AuthenticationURL {
   pub url: String,
 }
 
-// Кастомный десериализатор для преобразования строк "1"/"0" в bool
-fn deserialize_bool_from_str<'de, D>(deserializer: D) -> Result<bool, D::Error>
-where
-  D: serde::Deserializer<'de>,
-{
-  let s: String = String::deserialize(deserializer)?;
-  match s.as_str() {
-    "1" | "true" | "Y" => Ok(true),
-    "0" | "false" | "N" => Ok(false),
-    _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+pub mod bool_as_str {
+  use serde::{self, Deserialize, Deserializer, Serializer};
+
+  /// Сериализация: bool -> "1" / "0"
+  ///
+  /// # Errors
+  /// [`serde::ser::Error`]
+  pub fn serialize<S>(value: &bool, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    serializer.serialize_str(if *value { "1" } else { "0" })
+  }
+
+  /// Десериализация: "1" / "0" -> bool
+  ///
+  /// # Errors
+  /// [`serde::de::Error`]
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+      "1" => Ok(true),
+      "0" => Ok(false),
+      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+    }
   }
 }

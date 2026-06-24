@@ -5,10 +5,10 @@ use as2mca_api::{
   models::{
     Credentials,
     requests::{
-      ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
-      ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet,
-      SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
-      ViewColumnsGet, ViewDataGetCancelable,
+      ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
+      ClassTransitionsGet, ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet,
+      PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck,
+      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::Session,
   },
@@ -139,14 +139,14 @@ async fn auth() {
     .await;
   assert!(res.is_ok());
 
-  // let res = client.types_get(&session_id).await;
-  // assert!(res.is_ok());
+  let res = client.types_get(&session_id).await;
+  assert!(res.is_ok());
 
-  // let res = client.guides_groups_get(&session_id).await;
-  // assert!(res.is_ok());
+  let res = client.guides_groups_get(&session_id).await;
+  assert!(res.is_ok());
 
-  // let res = client.guides_get(&session_id).await;
-  // assert!(res.is_ok());
+  let res = client.guides_get(&session_id).await;
+  assert!(res.is_ok());
 
   let res = client.user_menu_get(&session_id).await;
   assert!(res.is_ok());
@@ -175,13 +175,13 @@ async fn auth() {
     .await;
   assert!(res.is_ok());
 
-  // let res = client
-  //   .class_methods_get(&ClassMethodsGet {
-  //     session_id: session_id.clone(),
-  //     class_id: "USER".to_owned(),
-  //   })
-  //   .await;
-  // assert!(res.is_ok());
+  let res = client
+    .class_methods_get(&ClassMethodsGet {
+      session_id: session_id.clone(),
+      class_id: "USER".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
 
   let res = client
     .class_need_collection_id_check(&ClassNeedCollectionIDCheck {
