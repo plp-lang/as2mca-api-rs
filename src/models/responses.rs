@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::models::{DebugPipeName, SessionId};
 
@@ -158,32 +158,52 @@ pub struct Views {
   pub body: Vec<View>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct View {
   #[serde(rename = "@ID")]
-  pub id: String,
+  pub id: u64,
+
   #[serde(rename = "@Name")]
   pub name: String,
+
   #[serde(rename = "@ShortName")]
   pub short_name: String,
-  #[serde(rename = "@IsDefault")]
-  pub is_default: String,
+
+  // IsDefault принимает значения "1" или "0"
+  #[serde(rename = "@IsDefault", deserialize_with = "deserialize_bool_from_str")]
+  pub is_default: bool,
+
   #[serde(rename = "@CellStyleScript")]
   pub cell_style_script: Option<String>,
+
   #[serde(rename = "@Properties")]
   pub properties: String,
+
   #[serde(rename = "@Distance")]
-  pub distance: String,
+  pub distance: u32,
+
   #[serde(rename = "@FilterMethodShortName")]
   pub filter_method_short_name: Option<String>,
+
   #[serde(rename = "@FilterMethodProperties")]
   pub filter_method_properties: Option<String>,
+
   #[serde(rename = "@ObjectRights")]
-  pub object_rights: String,
-  #[serde(rename = "@ToPrinter")]
-  pub to_printer: String,
-  #[serde(rename = "@ToFile")]
-  pub to_file: String,
+  pub object_rights: u32,
+
+  // ToPrinter принимает значения "1" или "0"
+  #[serde(rename = "@ToPrinter", deserialize_with = "deserialize_bool_from_str")]
+  pub to_printer: bool,
+
+  // ToFile принимает значения "1" или "0"
+  #[serde(rename = "@ToFile", deserialize_with = "deserialize_bool_from_str")]
+  pub to_file: bool,
+
+  #[serde(rename = "@Hints")]
+  pub hints: Option<String>, // Встречается редко замечено значение "DBI_READY"
+
+  #[serde(rename = "@OrderBy")]
+  pub order_by: Option<String>, // содержит SQL/PL+ код
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -375,4 +395,17 @@ pub struct ProtocolInfo {
 pub struct AuthenticationURL {
   #[serde(rename = "@URL")]
   pub url: String,
+}
+
+// Кастомный десериализатор для преобразования строк "1"/"0" в bool
+fn deserialize_bool_from_str<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+  D: serde::Deserializer<'de>,
+{
+  let s: String = String::deserialize(deserializer)?;
+  match s.as_str() {
+    "1" | "true" | "Y" => Ok(true),
+    "0" | "false" | "N" => Ok(false),
+    _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+  }
 }

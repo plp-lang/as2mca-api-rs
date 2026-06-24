@@ -6,9 +6,9 @@ use as2mca_api::{
     Credentials,
     requests::{
       ClassChildrenGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet,
-      DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet, SystemNetAddressSet,
-      SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
-      ViewDataGetCancelable,
+      ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet, PipeTextGet,
+      SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
+      ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::Session,
   },
@@ -151,13 +151,13 @@ async fn auth() {
   let res = client.user_menu_get(&session_id).await;
   assert!(res.is_ok());
 
-  // let res = client
-  //   .class_views_get(&ClassViewsGet {
-  //     session_id: session_id.clone(),
-  //     class_id: "USER".to_owned(),
-  //   })
-  //   .await;
-  // assert!(res.is_ok());
+  let res = client
+    .class_views_get(&ClassViewsGet {
+      session_id: session_id.clone(),
+      class_id: "USER".to_owned(),
+    })
+    .await;
+  assert!(res.is_ok());
 
   let res = client
     .class_children_get(&ClassChildrenGet {
