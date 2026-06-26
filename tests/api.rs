@@ -7,8 +7,8 @@ use as2mca_api::{
     requests::{
       ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
       ClassTransitionsGet, ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet,
-      PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck,
-      UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      ObjectClassAndArchiveKeyGet, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet,
+      UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::Session,
   },
@@ -221,8 +221,8 @@ async fn auth() {
       view_short_name: "VW_CRIT_USER".to_string(),
       class_id: "USER".to_string(),
       hint: "FIRST_ROWS".to_string(),
-      allow_timestamp_milliseconds: "true".to_string(),
-      rows_limit: "10".to_string(),
+      allow_timestamp_milliseconds: true,
+      rows_limit: 10,
     })
     .await;
   assert!(res.is_ok());
@@ -256,6 +256,15 @@ async fn auth() {
     .debug_text_get(&DebugTextGet {
       session_id: session_id.clone(),
       direction: "B".to_string(),
+    })
+    .await;
+  assert!(res.is_ok());
+
+  let res = client
+    .object_class_and_archive_key_get(&ObjectClassAndArchiveKeyGet {
+      session_id: session_id.clone(),
+      object_id: 22_738_256,
+      base_class_id: "USER".to_string(),
     })
     .await;
   assert!(res.is_ok());

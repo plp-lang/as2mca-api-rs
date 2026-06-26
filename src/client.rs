@@ -15,17 +15,18 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, DebugTextGet, Disconnect, GuidesGet, GuidesGroupsGet,
-      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, PipeTextGet, ProtocolInfoGet, Request,
-      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
-      SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, PipeTextGet,
+      ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
+      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      XML_HEADER,
     },
     responses::{
       AuthenticationURL, BackwardReference, BackwardReferences, CheckResult, ChildClasses, Class, Column, Columns,
       CoreInfo, DebugText, Done, GuideClass, Guides, GuidesGroup, GuidesGroups, Method, Methods, MethodsGroups,
-      NovoAllowedCheckResult, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody, Row, ServerInfo, Session,
-      Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged, UserProfileProperty, View,
-      ViewData, Views,
+      NovoAllowedCheckResult, ObjectClassAndArchiveKey, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody,
+      Row, ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
+      UserProfileProperty, View, ViewData, Views,
     },
   },
 };
@@ -41,6 +42,15 @@ impl Client {
   #[must_use]
   pub fn builder() -> ClientBuilder {
     ClientBuilder::default()
+  }
+
+  /// # Errors
+  #[instrument(skip(self), err, fields(method = "object_class_and_archive_key_get"))]
+  pub async fn object_class_and_archive_key_get(
+    &self,
+    req: &ObjectClassAndArchiveKeyGet,
+  ) -> Result<ObjectClassAndArchiveKey> {
+    self.api::<_, ObjectClassAndArchiveKey>(req).await
   }
 
   /// # Errors

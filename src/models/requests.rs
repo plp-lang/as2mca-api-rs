@@ -12,6 +12,16 @@ pub struct Request<T> {
 }
 
 #[derive(Debug, Serialize, Clone)]
+pub struct ObjectClassAndArchiveKeyGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ObjectID")]
+  pub object_id: i64,
+  #[serde(rename = "@BaseClassID")]
+  pub base_class_id: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
 pub struct DebugTextGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
@@ -56,9 +66,9 @@ pub struct ViewDataGetCancelable {
   #[serde(rename = "@Hint")]
   pub hint: String,
   #[serde(rename = "@AllowTimestampMilliseconds")]
-  pub allow_timestamp_milliseconds: String,
+  pub allow_timestamp_milliseconds: bool,
   #[serde(rename = "@RowsLimit")]
-  pub rows_limit: String,
+  pub rows_limit: i64,
 }
 
 #[derive(Debug, Serialize, Clone)]

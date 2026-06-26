@@ -17,6 +17,14 @@ pub enum ResponseBody<T> {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct ObjectClassAndArchiveKey {
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@ArchiveKey")]
+  pub archive_key: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct DebugText {
   #[serde(default, rename = "@Value")]
   pub value: String,
@@ -220,11 +228,17 @@ pub struct View {
   #[serde(rename = "@Distance")]
   pub distance: u32,
 
+  #[serde(rename = "@SourceID", skip_serializing_if = "Option::is_none")]
+  pub source_id: Option<i64>,
+
   #[serde(rename = "@FilterMethodShortName")]
   pub filter_method_short_name: Option<String>,
 
   #[serde(rename = "@FilterMethodProperties")]
   pub filter_method_properties: Option<String>,
+
+  #[serde(rename = "@ExtensionID", skip_serializing_if = "Option::is_none")]
+  pub extension_id: Option<i64>,
 
   #[serde(rename = "@ObjectRights")]
   pub object_rights: u32,
