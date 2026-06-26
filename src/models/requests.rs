@@ -67,8 +67,16 @@ pub struct ViewDataGetCancelable {
   pub hint: String,
   #[serde(rename = "@AllowTimestampMilliseconds")]
   pub allow_timestamp_milliseconds: bool,
-  #[serde(rename = "@RowsLimit")]
-  pub rows_limit: i64,
+  #[serde(rename = "@RowsLimit", skip_serializing_if = "Option::is_none")]
+  pub rows_limit: Option<i64>,
+  #[serde(rename = "$value")]
+  pub body: Option<ObjectFilter>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ObjectFilter {
+  #[serde(rename = "@ObjectID")]
+  pub object_id: i64,
 }
 
 #[derive(Debug, Serialize, Clone)]

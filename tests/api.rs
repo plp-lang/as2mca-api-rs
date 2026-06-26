@@ -7,8 +7,8 @@ use as2mca_api::{
     requests::{
       ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
       ClassTransitionsGet, ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet,
-      ObjectClassAndArchiveKeyGet, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet,
-      UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+      ObjectClassAndArchiveKeyGet, ObjectFilter, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+      SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     },
     responses::Session,
   },
@@ -222,7 +222,8 @@ async fn auth() {
       class_id: "USER".to_string(),
       hint: "FIRST_ROWS".to_string(),
       allow_timestamp_milliseconds: true,
-      rows_limit: 10,
+      rows_limit: None,
+      body: Some(ObjectFilter { object_id: 22_738_256 }),
     })
     .await;
   assert!(res.is_ok());
