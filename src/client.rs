@@ -1,7 +1,6 @@
 use std::fmt::Write;
 use std::time::Duration;
 
-use cookie::Cookie;
 use reqwest::{
   Url,
   header::{CONTENT_TYPE, HeaderMap},
@@ -33,15 +32,81 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Client {
-  pub(crate) cl: reqwest::Client,
+  pub(crate) client: reqwest::Client,
   pub(crate) base_url: Url,
 }
 
 impl Client {
-  #[inline]
-  #[must_use]
-  pub fn builder() -> ClientBuilder {
-    ClientBuilder::default()
+  /// Создает новый экземпляр клиента подключения к серверу.
+  ///
+  /// По умолчанию настраиваются:
+  /// - `Content-Type: text/xml; charset=utf-8`
+  /// - Включенное хранилище cookie
+  /// - Таймауты по 30 секунд
+  /// - User-Agent из env `$CARGO_PKG_NAME/$CARGO_PKG_VERSION`
+  ///
+  /// # Errors
+  /// Возвращает ошибку, если `base_url` невалиден или если не удается собрать `reqwest::Client`.
+  pub fn new(base_url: impl AsRef<str>) -> Result<Self> {
+    let mut base_url = Url::parse(base_url.as_ref()).map_err(|e| Error::UrlParseError(e.to_string()))?;
+
+    if !base_url.path().ends_with('/') {
+      let mut path = base_url.path().to_string();
+      path.push('/');
+      base_url.set_path(&path);
+    }
+
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse()?);
+
+    let client = reqwest::Client::builder()
+      .connect_timeout(Duration::from_secs(30))
+      .timeout(Duration::from_secs(30))
+      .cookie_store(true)
+      .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+      .default_headers(headers)
+      .build()?;
+
+    Ok(Self { client, base_url })
+  }
+
+  /// Создает новый экземпляр клиента с пользовательским `reqwest::Client`.
+  ///
+  /// *Важно:* При передаче своего клиента, убедитесь, что вы добавили заголовок
+  /// `Content-Type: text/xml; charset=utf-8` в `default_headers` и включили хранилище cookie.
+  ///
+  /// # Examples
+  ///
+  /// ```rust
+  ///  use std::time::Duration;
+  ///  use reqwest::header::{CONTENT_TYPE, HeaderMap};
+  ///  use as2mca_api::client::Client;
+  ///
+  ///  let mut headers = HeaderMap::new();
+  ///  headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse().unwrap());
+  ///
+  ///  let client = reqwest::Client::builder()
+  ///    .connect_timeout(Duration::from_secs(60))
+  ///    .cookie_store(true)
+  ///    .default_headers(headers)
+  ///    .build()
+  ///    .unwrap();
+  ///
+  ///  let client = Client::with_client("http://localhost:3000/platform2mca", client).unwrap();
+  /// ```
+  ///
+  /// # Errors
+  /// Возвращает ошибку, если `base_url` невалиден.
+  pub fn with_client(base_url: impl Into<String>, client: reqwest::Client) -> Result<Self> {
+    let mut base_url = Url::parse(&base_url.into()).map_err(|e| Error::UrlParseError(e.to_string()))?;
+
+    if !base_url.path().ends_with('/') {
+      let mut path = base_url.path().to_string();
+      path.push('/');
+      base_url.set_path(&path);
+    }
+
+    Ok(Self { client, base_url })
   }
 
   /// # Errors
@@ -312,10 +377,11 @@ impl Client {
   #[instrument(skip(self), err, fields(method = "authbasic"))]
   pub async fn authbasic(&self, Credentials { username, password }: &Credentials) -> Result<SessionId> {
     let url = self.endpoint("/authbasic")?;
+
     tracing::debug!(url = url.to_string(), "-> started processing request");
 
     let response = self
-      .cl
+      .client
       .get(url)
       .basic_auth(username, Some(password))
       .send()
@@ -323,8 +389,25 @@ impl Client {
       .error_for_status()?;
 
     let headers = response.headers();
+    let session_id = headers
+      .get_all(reqwest::header::SET_COOKIE)
+      .iter()
+      .filter_map(|h| h.to_str().ok())
+      .find_map(|cookie_str| {
+        cookie_str.split(';').find_map(|part| {
+          let mut kv = part.splitn(2, '=');
+          let key = kv.next()?.trim();
+          if key.eq_ignore_ascii_case("JSESSIONID") {
+            Some(kv.next()?.trim().to_string())
+          } else {
+            None
+          }
+        })
+      })
+      .ok_or(Error::NotFoundSessionId)?;
 
     tracing::debug!(
+      session_id = session_id,
       headers = headers.iter().fold(String::new(), |mut out, (name, value)| {
         let value_str = value.to_str().unwrap_or("<invalid UTF-8>");
         let _ = writeln!(out, "{name}: {value_str}");
@@ -333,16 +416,15 @@ impl Client {
       "<- finished processing request"
     );
 
-    let session_id = extract_sessionid_from_headers(headers).ok_or(Error::NotFoundSessionId)?;
     Ok(SessionId::new(session_id))
   }
 
   #[inline]
   pub(crate) fn endpoint(&self, path: &str) -> Result<Url> {
-    let base = self.base_url.as_str().trim_end_matches('/');
-    let p = path.trim_start_matches('/');
-    let full_url = format!("{base}/{p}");
-    Ok(Url::parse(&full_url)?)
+    self
+      .base_url
+      .join(path.trim_start_matches('/'))
+      .map_err(|e| Error::UrlParseError(e.to_string()))
   }
 
   #[instrument(skip(self, body), err)]
@@ -352,24 +434,37 @@ impl Client {
     U: serde::de::DeserializeOwned + Clone,
   {
     let url = self.endpoint("/api")?;
-    let body = format!("{}{}", XML_HEADER, quick_xml::se::to_string(&Request { body })?);
+
+    let xml_body = quick_xml::se::to_string(&Request { body })?;
+
+    let mut body_bytes = Vec::with_capacity(XML_HEADER.len() + xml_body.len());
+    body_bytes.extend_from_slice(XML_HEADER.as_bytes());
+    body_bytes.extend_from_slice(xml_body.as_bytes());
+
     tracing::debug!(
       url = url.to_string(),
-      len = body.len(),
-      request = body,
+      len = body_bytes.len(),
+      request = %String::from_utf8_lossy(&body_bytes),
       "-> started processing request"
     );
 
-    let response = self.cl.post(url).body(body).send().await?.error_for_status()?;
+    let response = self
+      .client
+      .post(url)
+      .body(body_bytes)
+      .send()
+      .await?
+      .error_for_status()?;
     let status_code = response.status();
-    let response_text = response.text().await?;
+    let response_bytes = response.bytes().await?;
 
     tracing::debug!(
-      len = response_text.len(),
-      response = response_text,
+      len = response_bytes.len(),
+      response = %String::from_utf8_lossy(&response_bytes),
       "<- finished processing request"
     );
-    let parsed: Response<U> = quick_xml::de::from_str(&response_text)?;
+
+    let parsed: Response<U> = quick_xml::de::from_reader(response_bytes.as_ref())?;
     match &parsed.body {
       ResponseBody::Ok(body) => Ok(body.clone()),
       ResponseBody::Error(body) => Err(Error::Api {
@@ -379,73 +474,4 @@ impl Client {
       }),
     }
   }
-}
-
-pub struct ClientBuilder {
-  base_url: String,
-  timeout: Duration,
-  connect_timeout: Duration,
-}
-
-impl Default for ClientBuilder {
-  fn default() -> Self {
-    Self {
-      base_url: "https://api.example.com".to_string(),
-      timeout: Duration::from_secs(30),
-      connect_timeout: Duration::from_secs(30),
-    }
-  }
-}
-
-impl ClientBuilder {
-  #[must_use]
-  pub fn base_url(mut self, url: impl Into<String>) -> Self {
-    self.base_url = url.into();
-    self
-  }
-
-  #[must_use]
-  pub fn timeout(mut self, timeout: impl Into<Duration>) -> Self {
-    self.timeout = timeout.into();
-    self
-  }
-
-  #[must_use]
-  pub fn connect_timeout(mut self, connect_timeout: impl Into<Duration>) -> Self {
-    self.connect_timeout = connect_timeout.into();
-    self
-  }
-
-  /// # Errors
-  pub fn build(self) -> Result<Client> {
-    let base_url = Url::parse(&self.base_url)?;
-
-    let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse()?);
-
-    let cl = reqwest::Client::builder()
-      .connect_timeout(self.connect_timeout)
-      .timeout(self.timeout)
-      .cookie_store(true)
-      .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
-      .default_headers(headers)
-      .build()?;
-
-    Ok(Client { cl, base_url })
-  }
-}
-
-#[inline]
-#[must_use]
-pub(crate) fn extract_sessionid_from_headers(headers: &HeaderMap) -> Option<String> {
-  headers
-    .get_all(reqwest::header::SET_COOKIE)
-    .iter()
-    .filter_map(|h| h.to_str().ok())
-    .find_map(|cookie_str| {
-      Cookie::parse_encoded(cookie_str)
-        .ok()
-        .filter(|c| c.name() == "JSESSIONID")
-        .map(|c| c.value().to_string())
-    })
 }

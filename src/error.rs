@@ -20,7 +20,7 @@ pub enum Error {
   UnexpectedResponse(String),
 
   #[error("Url parse error: {0}")]
-  UrlParseError(#[from] url::ParseError),
+  UrlParseError(String),
 
   #[error("Header value error: {0}")]
   InvalidHeaderValue(#[from] InvalidHeaderValue),

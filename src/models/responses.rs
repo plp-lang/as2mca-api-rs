@@ -501,7 +501,7 @@ pub mod bool_as_str {
 pub mod option_bool_as_str {
   use serde::{self, Deserialize, Deserializer, Serializer};
 
-  /// Сериализация: Option<bool> -> "1" / "0"
+  /// Сериализация: `Option<bool>` -> "1" / "0"
   ///
   /// # Errors
   /// [`serde::ser::Error`]
@@ -516,7 +516,7 @@ pub mod option_bool_as_str {
     }
   }
 
-  /// Десериализация: "1" / "0" -> Option<bool>
+  /// Десериализация: "1" / "0" -> `Option<bool>`
   ///
   /// # Errors
   /// [`serde::de::Error`]

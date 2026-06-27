@@ -32,7 +32,7 @@ fn setup_tracing() {
 async fn auth() {
   setup_tracing();
 
-  let api_url = std::env::var("2MCA_API_URL").unwrap_or_else(|_| "http://localhost:3000/platform2mca".to_string());
+  let api_url = std::env::var("2MCA_API_URL").unwrap_or_else(|_| "http://localhost:3000/platform2mca/".to_string());
   let username = std::env::var("2MCA_API_USERNAME").unwrap_or_else(|_| "test".to_string());
   let password = std::env::var("2MCA_API_PASSWORD").unwrap_or_else(|_| "test".to_string());
 
@@ -44,7 +44,7 @@ async fn auth() {
     .flatten()
     .map_or_else(|| "<unknown>".to_owned(), |m| m.to_string());
 
-  let client = Client::builder().base_url(api_url).build().unwrap();
+  let client = Client::new(api_url).unwrap();
 
   let res = client.authbasic(&Credentials { username, password }).await;
   assert!(res.is_ok());

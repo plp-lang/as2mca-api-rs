@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------------------------------------------------
 
 prepare:
-  cargo install --locked cargo-edit watchexec-cli
+  cargo install --locked cargo-edit
 
 update:
   cargo update
@@ -31,10 +31,16 @@ lint-fix: check
   cargo clippy --all-targets --all-features --fix --allow-dirty -- -D warnings
 
 test:
-  cargo test -- --nocapture
+  cargo test
 
 build: lint-fix fmt-fix test
   cargo build
+
+doc:
+  cargo doc --no-deps
+
+doc-open:
+  cargo doc --no-deps --open
 
 clean:
   cargo clean
