@@ -16,9 +16,6 @@ pub enum Error {
   #[error("HTTP request failed: {0}")]
   Http(#[from] reqwest::Error),
 
-  #[error("Unexpected API response: {0}")]
-  UnexpectedResponse(String),
-
   #[error("Url parse error: {0}")]
   UrlParseError(String),
 

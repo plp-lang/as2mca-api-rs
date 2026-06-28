@@ -10,15 +10,14 @@ use tracing::instrument;
 use crate::{
   error::{Error, Result},
   models::{
-    Credentials, SessionId,
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
-      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, DebugTextGet, Disconnect, GuidesGet, GuidesGroupsGet,
-      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, PipeTextGet,
-      ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
-      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
-      XML_HEADER,
+      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
+      GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
+      ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet,
+      SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
+      SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
+      ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
       AuthenticationURL, BackwardReference, BackwardReferences, CheckResult, ChildClasses, Class, Column, Columns,
@@ -76,8 +75,7 @@ impl Client {
   /// `Content-Type: text/xml; charset=utf-8` в `default_headers` и включили хранилище cookie.
   ///
   /// # Examples
-  ///
-  /// ```rust
+  /// ```no_run
   ///  use std::time::Duration;
   ///  use reqwest::header::{CONTENT_TYPE, HeaderMap};
   ///  use as2mca_api::client::Client;
@@ -109,271 +107,18 @@ impl Client {
     Ok(Self { client, base_url })
   }
 
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "object_class_and_archive_key_get"))]
-  pub async fn object_class_and_archive_key_get(
-    &self,
-    req: &ObjectClassAndArchiveKeyGet,
-  ) -> Result<ObjectClassAndArchiveKey> {
-    self.api::<_, ObjectClassAndArchiveKey>(req).await
-  }
+  //====================================================================================================================
+  // Сессия
+  //====================================================================================================================
 
+  /// Авторизация в системе методом Basic Auth.
+  ///
+  /// Сервер устанавливает в cookies `JSESSIONID`, вне зависимости от валидности авторизационных данных.
+  ///
   /// # Errors
-  #[instrument(skip(self), err, fields(method = "debug_text_get"))]
-  pub async fn debug_text_get(&self, req: &DebugTextGet) -> Result<String> {
-    self.api::<_, DebugText>(req).await.map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_setting_get"))]
-  pub async fn system_setting_get(&self, req: &SystemSettingGet) -> Result<Setting> {
-    self.api(&req).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "pipe_text_get"))]
-  pub async fn pipe_text_get(&self, req: &PipeTextGet) -> Result<String> {
-    self.api::<_, PipeText>(req).await.map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "object_backward_references_get"))]
-  pub async fn object_backward_references_get(
-    &self,
-    req: &ObjectBackwardReferencesGet,
-  ) -> Result<Vec<BackwardReference>> {
-    self.api::<_, BackwardReferences>(&req).await.map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "view_data_get_cancelable"))]
-  pub async fn view_data_get_cancelable(&self, req: &ViewDataGetCancelable) -> Result<Vec<Row>> {
-    self.api::<_, ViewData>(&req).await.map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_transitions_get"))]
-  pub async fn class_transitions_get(&self, req: &ClassTransitionsGet) -> Result<Transitions> {
-    self.api::<_, Transitions>(&req).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_states_get"))]
-  pub async fn class_states_get(&self, req: &ClassStatesGet) -> Result<States> {
-    self.api::<_, States>(&req).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "view_columns_get"))]
-  pub async fn view_columns_get(&self, req: &ViewColumnsGet) -> Result<Vec<Column>> {
-    self.api::<_, Columns>(&req).await.map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
-  pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<String> {
-    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_methods_get"))]
-  pub async fn class_methods_get(&self, req: &ClassMethodsGet) -> Result<Vec<Method>> {
-    self.api::<_, Methods>(&req).await.map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
-  pub async fn class_methods_groups_user_get(&self, req: &ClassMethodsGroupsUserGet) -> Result<MethodsGroups> {
-    self.api::<_, MethodsGroups>(&req).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_children_get"))]
-  pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
-    self.api::<_, ChildClasses>(&req).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "class_views_get"))]
-  pub async fn class_views_get(&self, req: &ClassViewsGet) -> Result<Vec<View>> {
-    self.api::<_, Views>(&req).await.map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
-  pub async fn user_menu_get(&self, session_id: &SessionId) -> Result<UserMenu> {
-    self
-      .api::<_, UserMenu>(&UserMenuGet {
-        session_id: session_id.clone(),
-      })
-      .await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "guides_get"))]
-  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<GuideClass>> {
-    self
-      .api::<_, Guides>(&GuidesGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
-  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<Vec<GuidesGroup>> {
-    self
-      .api::<_, GuidesGroups>(&GuidesGroupsGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "types_get"))]
-  pub async fn types_get(&self, session_id: &SessionId) -> Result<Vec<Class>> {
-    self
-      .api::<_, Types>(&TypesGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.body)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
-  pub async fn user_belongs_group_check(&self, req: &UserBelongsGroupCheck) -> Result<String> {
-    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
-  pub async fn system_option_enabled_check(&self, req: &SystemOptionEnabledCheck) -> Result<String> {
-    self.api::<_, OptionInfo>(&req).await.map(|v| v.enabled)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
-  pub async fn user_profile_property_get(&self, req: &UserProfilePropertyGet) -> Result<String> {
-    self.api::<_, UserProfileProperty>(&req).await.map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "network_information_set"))]
-  pub async fn network_information_set(&self, req: &NetworkInformationSet) -> Result<()> {
-    self.api::<_, Done>(&req).await?;
-    Ok(())
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_user_privileged_get"))]
-  pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, UserPrivileged>(&SystemUserPrivilegedGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.is_privileged)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
-  pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, NovoAllowedCheckResult>(&NovoAllowedCheck {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.value)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
-  pub async fn system_net_address_set(&self, req: &SystemNetAddressSet) -> Result<()> {
-    self.api::<_, Done>(&req).await?;
-    Ok(())
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "user_info_get"))]
-  pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
-    self
-      .api::<_, User>(&UserInfoGet {
-        session_id: session_id.clone(),
-      })
-      .await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "authentication_url_get"))]
-  pub async fn authentication_url_get(&self) -> Result<String> {
-    self
-      .api::<_, AuthenticationURL>(&AuthenticationURLGet {})
-      .await
-      .map(|v| v.url)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "session_init"))]
-  pub async fn session_init(&self, alive_active_session: Option<bool>) -> Result<Session> {
-    self.api(&SessionInit { alive_active_session }).await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "session_deinit"))]
-  pub async fn session_deinit(&self, session_id: &SessionId) -> Result<()> {
-    self
-      .api::<_, Done>(&Disconnect {
-        session_id: session_id.clone(),
-      })
-      .await?;
-    Ok(())
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
-  pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, ProtocolInfo>(&ProtocolInfoGet {})
-      .await
-      .map(|v| v.version)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_server_version_get"))]
-  pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, ServerInfo>(&SystemServerVersionGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.version)
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_core_info_get"))]
-  pub async fn system_core_info_get(&self, session_id: &SessionId) -> Result<CoreInfo> {
-    self
-      .api::<_, CoreInfo>(&SystemCoreInfoGet {
-        session_id: session_id.clone(),
-      })
-      .await
-  }
-
-  /// # Errors
-  #[instrument(skip(self), err, fields(method = "system_settings_get"))]
-  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
-    self
-      .api::<_, Settings>(&SystemSettingsGet {
-        session_id: session_id.clone(),
-      })
-      .await
-      .map(|v| v.body)
-  }
-
-  /// # Errors
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::NotFoundSessionId`], если сервер не установил cookie `JSESSIONID` в ответе.
   #[instrument(skip(self), err, fields(method = "authbasic"))]
   pub async fn authbasic(&self, Credentials { username, password }: &Credentials) -> Result<SessionId> {
     let url = self.endpoint("/authbasic")?;
@@ -417,6 +162,555 @@ impl Client {
     );
 
     Ok(SessionId::new(session_id))
+  }
+
+  /// Активация сессии.
+  ///
+  /// Сервер валидирует авторизационные данные переданные в [`Client::authbasic`] и возвращает
+  /// наименование отладочного канала [`DebugPipeName`].
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Узнать что делает `alive_active_session`
+  #[instrument(skip(self), err, fields(method = "session_init"))]
+  pub async fn session_init(&self, alive_active_session: Option<bool>) -> Result<Session> {
+    self.api(&SessionInit { alive_active_session }).await
+  }
+
+  /// Деативирует сессию, делая её невалидной для последующих запросов.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "session_deinit"))]
+  pub async fn session_deinit(&self, session_id: &SessionId) -> Result<()> {
+    self
+      .api::<_, Done>(&Disconnect {
+        session_id: session_id.clone(),
+      })
+      .await?;
+    Ok(())
+  }
+
+  /// Устанавливает для сессии пользователя следующую информацию:
+  /// - `client_name` - hostname устройства пользователя;
+  /// - `client_ip` - локальный ip-адрес устройства пользователя;
+  /// - `client_user` - username пользователя, например `echo $USER` в Linux;
+  /// - `module_name` - наименование клиентского приложения, например `ЦФТ - Навигатор 6.0.121.84`.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Узнать разницу между ip_address из SystemNetAddressSet
+  #[instrument(skip(self), err, fields(method = "network_information_set"))]
+  pub async fn network_information_set(&self, req: &NetworkInformationSet) -> Result<()> {
+    self.api::<_, Done>(&req).await?;
+    Ok(())
+  }
+
+  /// Устанавливает для сессии пользователя следующую информацию:
+  /// - `mac_address` - mac-адрес устройства пользователя;
+  /// - `ip_address` - локальный ip-адрес устройства пользователя.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Узнать разницу между ip_address из NetworkInformationSet
+  #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
+  pub async fn system_net_address_set(&self, req: &SystemNetAddressSet) -> Result<()> {
+    self.api::<_, Done>(&req).await?;
+    Ok(())
+  }
+
+  //====================================================================================================================
+  // Получение информации о системе
+  //====================================================================================================================
+
+  /// Возвращает версию протокола обмена запросами с API сервера приложений
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  ///
+  /// # Notes
+  /// Библиотека протестирована с версией протокола `9.54`.
+  /// Открытая спецификация различий между версиями протокола отсутствует.
+  /// Если вам известна специфика работы с другими версиями, пожалуйста, поделитесь информацией в Issue или Pull Request.
+  #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
+  pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<String> {
+    self
+      .api::<_, ProtocolInfo>(&ProtocolInfoGet {})
+      .await
+      .map(|v| v.version)
+  }
+
+  /// Возвращает версию сервера приложений.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "system_server_version_get"))]
+  pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<String> {
+    self
+      .api::<_, ServerInfo>(&SystemServerVersionGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.version)
+  }
+
+  /// Возвращает информацию о ядре системы (ТЯ).
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Детализировать описание возвращаемых полей и их назначение.
+  #[instrument(skip(self), err, fields(method = "system_core_info_get"))]
+  pub async fn system_core_info_get(&self, session_id: &SessionId) -> Result<CoreInfo> {
+    self
+      .api::<_, CoreInfo>(&SystemCoreInfoGet {
+        session_id: session_id.clone(),
+      })
+      .await
+  }
+
+  /// Возвращает весь настройки системы в формате ключ-значение.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
+  #[instrument(skip(self), err, fields(method = "system_settings_get"))]
+  pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
+    self
+      .api::<_, Settings>(&SystemSettingsGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.body)
+  }
+
+  /// Возвращает значение конкретной настройки системы по её ключу.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
+  #[instrument(skip(self), err, fields(method = "system_setting_get"))]
+  pub async fn system_setting_get(&self, req: &SystemSettingGet) -> Result<Option<String>> {
+    self.api::<_, Setting>(&req).await.map(|s| s.value)
+  }
+
+  /// Возвращает относительный URL до эндпоинта авторизации.
+  ///
+  /// Например, ответ может выглядеть следующим образом: `/platform2mca/authbasic`.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "authentication_url_get"))]
+  pub async fn authentication_url_get(&self) -> Result<String> {
+    self
+      .api::<_, AuthenticationURL>(&AuthenticationURLGet {})
+      .await
+      .map(|v| v.url)
+  }
+
+  /// Проверяет доступность функционала NOVO для текущей сессии.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Уточнить, что именно означает возвращаемое значение?
+  #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
+  pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<String> {
+    self
+      .api::<_, NovoAllowedCheckResult>(&NovoAllowedCheck {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.value)
+  }
+
+  /// Проверяет, включена ли указанная системная опция.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Объяснить, откуда берутся опции и как они конфигурируются на сервере
+  #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
+  pub async fn system_option_enabled_check(&self, req: &SystemOptionEnabledCheck) -> Result<bool> {
+    self.api::<_, OptionInfo>(&req).await.map(|v| v.enabled)
+  }
+
+  //====================================================================================================================
+  // Получение информации о пользователе
+  //====================================================================================================================
+
+  /// Узнать является ли пользователь привелигированным.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "system_user_privileged_get"))]
+  pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<bool> {
+    self
+      .api::<_, UserPrivileged>(&SystemUserPrivilegedGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.is_privileged)
+  }
+
+  /// Возвращает следующую информацию о пользователе:
+  /// - `name` - полное имя пользователя, например ФИО;
+  /// - `short_name` - короткое имя пользователя в системе;
+  /// - `properties` - параметры пользователя, перечесление строк с разделителем `|`, например `|ADMIN|CONTEXT|PICKER|PROFILE DEFAULT|SESSION|`
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
+  #[instrument(skip(self), err, fields(method = "user_info_get"))]
+  pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
+    self
+      .api::<_, User>(&UserInfoGet {
+        session_id: session_id.clone(),
+      })
+      .await
+  }
+
+  /// Возвращает значение конкретной настройки пользователя по её ключу.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
+  #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
+  pub async fn user_profile_property_get(&self, req: &UserProfilePropertyGet) -> Result<String> {
+    self.api::<_, UserProfileProperty>(&req).await.map(|v| v.value)
+  }
+
+  /// Проверяет, входит ли пользователь в указанную группу.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
+  pub async fn user_belongs_group_check(&self, req: &UserBelongsGroupCheck) -> Result<String> {
+    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
+  }
+
+  //====================================================================================================================
+  // Отладка
+  //====================================================================================================================
+
+  /// Получить текст сгенерированный сервером по наименованию канала.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "pipe_text_get"))]
+  pub async fn pipe_text_get(&self, req: &PipeTextGet) -> Result<String> {
+    self.api::<_, PipeText>(req).await.map(|v| v.value)
+  }
+
+  /// Получить отладочную информацию.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  // TODO: Найти где и как эта информация используется и генерируется.
+  #[instrument(skip(self), err, fields(method = "debug_text_get"))]
+  pub async fn debug_text_get(&self, req: &DebugTextGet) -> Result<String> {
+    self.api::<_, DebugText>(req).await.map(|v| v.value)
+  }
+
+  //====================================================================================================================
+  // Метаданные классов и объектов
+  //====================================================================================================================
+
+  /// Возвращает короткое имя базового ТБП и ключ архива для указанного экземпляра.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "object_class_and_archive_key_get"))]
+  pub async fn object_class_and_archive_key_get(
+    &self,
+    req: &ObjectClassAndArchiveKeyGet,
+  ) -> Result<ObjectClassAndArchiveKey> {
+    self.api::<_, ObjectClassAndArchiveKey>(req).await
+  }
+
+  /// Возвращает список обратных ссылок на указанный экземпляр (которые ссылаются на экземпляр).
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "object_backward_references_get"))]
+  pub async fn object_backward_references_get(
+    &self,
+    req: &ObjectBackwardReferencesGet,
+  ) -> Result<Vec<BackwardReference>> {
+    self.api::<_, BackwardReferences>(&req).await.map(|v| v.body)
+  }
+
+  /// Возвращает информацию о возможных переходах между состояниями для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_transitions_get"))]
+  pub async fn class_transitions_get(&self, req: &ClassTransitionsGet) -> Result<Transitions> {
+    self.api::<_, Transitions>(&req).await
+  }
+
+  /// Возвращает список состояний для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_states_get"))]
+  pub async fn class_states_get(&self, req: &ClassStatesGet) -> Result<States> {
+    self.api::<_, States>(&req).await
+  }
+
+  /// Проверяет, требуется ли указывать `collectionid` для ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
+  pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<String> {
+    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
+  }
+
+  /// Возвращает список операций, доступных для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_methods_get"))]
+  pub async fn class_methods_get(&self, req: &ClassMethodsGet) -> Result<Vec<Method>> {
+    self.api::<_, Methods>(&req).await.map(|v| v.body)
+  }
+
+  /// Возвращает группы операций пользователя для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
+  pub async fn class_methods_groups_user_get(&self, req: &ClassMethodsGroupsUserGet) -> Result<MethodsGroups> {
+    self.api::<_, MethodsGroups>(&req).await
+  }
+
+  /// Возвращает список дочерних ТБП для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_children_get"))]
+  pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
+    self.api::<_, ChildClasses>(&req).await
+  }
+
+  //====================================================================================================================
+  // Представления и данные
+  //====================================================================================================================
+
+  /// Получает данные представления.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "view_data_get_cancelable"))]
+  pub async fn view_data_get_cancelable(&self, req: &ViewDataGetCancelable) -> Result<Vec<Row>> {
+    self.api::<_, ViewData>(&req).await.map(|v| v.body)
+  }
+
+  /// Возвращает список колонок для указанного представления.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "view_columns_get"))]
+  pub async fn view_columns_get(&self, req: &ViewColumnsGet) -> Result<Vec<Column>> {
+    self.api::<_, Columns>(&req).await.map(|v| v.body)
+  }
+
+  /// Возвращает список представлений, доступных для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "class_views_get"))]
+  pub async fn class_views_get(&self, req: &ClassViewsGet) -> Result<Vec<View>> {
+    self.api::<_, Views>(&req).await.map(|v| v.body)
+  }
+
+  //====================================================================================================================
+  // Навигация, справочники и меню
+  //====================================================================================================================
+
+  /// Возвращает структуру пользовательского меню.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
+  pub async fn user_menu_get(&self, session_id: &SessionId) -> Result<UserMenu> {
+    self
+      .api::<_, UserMenu>(&UserMenuGet {
+        session_id: session_id.clone(),
+      })
+      .await
+  }
+
+  /// Возвращает список справочников, доступных пользователю.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "guides_get"))]
+  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<GuideClass>> {
+    self
+      .api::<_, Guides>(&GuidesGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.body)
+  }
+
+  /// Возвращает список групп справочников.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
+  pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<Vec<GuidesGroup>> {
+    self
+      .api::<_, GuidesGroups>(&GuidesGroupsGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.body)
+  }
+
+  /// Возвращает список всех доступных ТБП (не справочников).
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  #[instrument(skip(self), err, fields(method = "types_get"))]
+  pub async fn types_get(&self, session_id: &SessionId) -> Result<Vec<Class>> {
+    self
+      .api::<_, Types>(&TypesGet {
+        session_id: session_id.clone(),
+      })
+      .await
+      .map(|v| v.body)
   }
 
   #[inline]
