@@ -27,32 +27,7 @@ impl From<Flags> for String {
   }
 }
 
-/// Модуль для сериализации `bool` в строки `"1"` / `"0"` и обратно.
-pub mod bool_as_str {
-  use serde::{self, Deserialize, Deserializer, Serializer};
-
-  #[allow(clippy::trivially_copy_pass_by_ref)]
-  pub fn serialize<S>(value: &bool, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-  {
-    serializer.serialize_str(if *value { "1" } else { "0" })
-  }
-
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    match s.as_str() {
-      "1" => Ok(true),
-      "0" => Ok(false),
-      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
-    }
-  }
-}
-
-/// Модуль для сериализации `bool` в строки `"true"` / `"false"` и обратно.
+/// Модуль для десериализации строк `"true"` / `"false"` в `bool`.
 pub mod bool_as_bool {
   use serde::{self, Deserialize, Deserializer};
 
@@ -66,39 +41,6 @@ pub mod bool_as_bool {
       "false" => Ok(false),
       _ => Err(serde::de::Error::custom(format!(
         "expected 'true' or 'false', received '{s}'"
-      ))),
-    }
-  }
-}
-
-/// Модуль для сериализации `Option<bool>` в строки `"1"` / `"0"` и обратно.
-pub mod option_bool_as_str {
-  use serde::{self, Deserialize, Deserializer, Serializer};
-
-  #[allow(clippy::ref_option)]
-  #[allow(clippy::trivially_copy_pass_by_ref)]
-  pub fn serialize<S>(value: &Option<bool>, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-  {
-    match value {
-      Some(true) => serializer.serialize_str("1"),
-      Some(false) => serializer.serialize_str("0"),
-      None => serializer.serialize_none(),
-    }
-  }
-
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let value = Option::<String>::deserialize(deserializer)?;
-    match value.as_deref() {
-      Some("1") => Ok(Some(true)),
-      Some("0") => Ok(Some(false)),
-      None => Ok(None),
-      Some(other) => Err(serde::de::Error::custom(format!(
-        "expected '1' or '0', received '{other}'"
       ))),
     }
   }

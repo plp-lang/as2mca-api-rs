@@ -10,6 +10,11 @@ pub enum Error {
     details: String,
   },
 
+  #[error(
+    "Unexpected server response (expected: {expected}). The server API has changed and is incompatible with the current library version. Please open an issue in the project repository and include the details below. Received data: {actual}"
+  )]
+  UnexpectedResponse { expected: String, actual: String },
+
   #[error("Not found session id")]
   NotFoundSessionId,
 

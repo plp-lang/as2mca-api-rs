@@ -20,11 +20,9 @@ use crate::{
       ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
-      AuthenticationURL, BackwardReference, BackwardReferences, CheckResult, ChildClasses, Class, Column, Columns,
-      CoreInfo, DebugText, Done, GuideClass, Guides, GuidesGroup, GuidesGroups, Method, Methods, MethodsGroups,
-      NovoAllowedCheckResult, ObjectClassAndArchiveKey, OptionInfo, PipeText, ProtocolInfo, Response, ResponseBody,
-      Row, ServerInfo, Session, Setting, Settings, States, Transitions, Types, User, UserMenu, UserPrivileged,
-      UserProfileProperty, View, ViewData, Views,
+      BackwardReference, ChildClasses, Class, Column, CoreInfo, GuideClass, GuidesGroup, Method, MethodsGroups,
+      ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, States, Transitions, User, UserContent,
+      UserMenu, View,
     },
   },
 };
@@ -174,11 +172,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Узнать что делает `alive_active_session`
   #[instrument(skip(self), err, fields(method = "session_init"))]
   pub async fn session_init(&self, alive_active_session: Option<bool>) -> Result<Session> {
-    self.api(&SessionInit { alive_active_session }).await
+    let body = self.api(&SessionInit { alive_active_session }).await?;
+    match body {
+      ResponseBody::Session(session) => Ok(session),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Session".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Деативирует сессию, делая её невалидной для последующих запросов.
@@ -188,15 +194,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "session_deinit"))]
   pub async fn session_deinit(&self, session_id: &SessionId) -> Result<()> {
-    self
-      .api::<_, Done>(&Disconnect {
+    let body = self
+      .api(&Disconnect {
         session_id: session_id.clone(),
       })
       .await?;
-    Ok(())
+    match body {
+      ResponseBody::Done(_) => Ok(()),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Done".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Устанавливает для сессии пользователя следующую информацию:
@@ -210,12 +223,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Узнать разницу между ip_address из SystemNetAddressSet
   #[instrument(skip(self), err, fields(method = "network_information_set"))]
   pub async fn network_information_set(&self, req: &NetworkInformationSet) -> Result<()> {
-    self.api::<_, Done>(&req).await?;
-    Ok(())
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Done(_) => Ok(()),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Done".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Устанавливает для сессии пользователя следующую информацию:
@@ -227,12 +247,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Узнать разницу между ip_address из NetworkInformationSet
   #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
   pub async fn system_net_address_set(&self, req: &SystemNetAddressSet) -> Result<()> {
-    self.api::<_, Done>(&req).await?;
-    Ok(())
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Done(_) => Ok(()),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Done".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -246,7 +273,8 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   ///
   /// # Notes
   /// Библиотека протестирована с версией протокола `9.54`.
@@ -254,10 +282,14 @@ impl Client {
   /// Если вам известна специфика работы с другими версиями, пожалуйста, поделитесь информацией в Issue или Pull Request.
   #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
   pub async fn protocol_info_get(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, ProtocolInfo>(&ProtocolInfoGet {})
-      .await
-      .map(|v| v.version)
+    let body = self.api(&ProtocolInfoGet {}).await?;
+    match body {
+      ResponseBody::ProtocolInfo(info) => Ok(info.version),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ProtocolInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает версию сервера приложений.
@@ -267,15 +299,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "system_server_version_get"))]
   pub async fn system_server_version_get(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, ServerInfo>(&SystemServerVersionGet {
+    let body = self
+      .api(&SystemServerVersionGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.version)
+      .await?;
+    match body {
+      ResponseBody::ServerInfo(info) => Ok(info.version),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ServerInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает информацию о ядре системы (ТЯ).
@@ -285,15 +324,23 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Детализировать описание возвращаемых полей и их назначение.
   #[instrument(skip(self), err, fields(method = "system_core_info_get"))]
   pub async fn system_core_info_get(&self, session_id: &SessionId) -> Result<CoreInfo> {
-    self
-      .api::<_, CoreInfo>(&SystemCoreInfoGet {
+    let body = self
+      .api(&SystemCoreInfoGet {
         session_id: session_id.clone(),
       })
-      .await
+      .await?;
+    match body {
+      ResponseBody::CoreInfo(info) => Ok(info),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CoreInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает весь настройки системы в формате ключ-значение.
@@ -303,16 +350,23 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "system_settings_get"))]
   pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
-    self
-      .api::<_, Settings>(&SystemSettingsGet {
+    let body = self
+      .api(&SystemSettingsGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.body)
+      .await?;
+    match body {
+      ResponseBody::Settings(settings) => Ok(settings.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Settings".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает значение конкретной настройки системы по её ключу.
@@ -322,11 +376,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "system_setting_get"))]
   pub async fn system_setting_get(&self, req: &SystemSettingGet) -> Result<Option<String>> {
-    self.api::<_, Setting>(&req).await.map(|s| s.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Setting(setting) => Ok(setting.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Setting".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает относительный URL до эндпоинта авторизации.
@@ -338,13 +400,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "authentication_url_get"))]
   pub async fn authentication_url_get(&self) -> Result<String> {
-    self
-      .api::<_, AuthenticationURL>(&AuthenticationURLGet {})
-      .await
-      .map(|v| v.url)
+    let body = self.api(&AuthenticationURLGet {}).await?;
+    match body {
+      ResponseBody::AuthenticationURL(url) => Ok(url.url),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "AuthenticationURL".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Проверяет доступность функционала NOVO для текущей сессии.
@@ -354,16 +421,23 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Уточнить, что именно означает возвращаемое значение?
   #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
   pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<String> {
-    self
-      .api::<_, NovoAllowedCheckResult>(&NovoAllowedCheck {
+    let body = self
+      .api(&NovoAllowedCheck {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.value)
+      .await?;
+    match body {
+      ResponseBody::NovoAllowedCheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "NovoAllowedCheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Проверяет, включена ли указанная системная опция.
@@ -373,11 +447,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Объяснить, откуда берутся опции и как они конфигурируются на сервере
   #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
   pub async fn system_option_enabled_check(&self, req: &SystemOptionEnabledCheck) -> Result<bool> {
-    self.api::<_, OptionInfo>(&req).await.map(|v| v.enabled)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::OptionInfo(info) => Ok(info.enabled),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "OptionInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -391,15 +473,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "system_user_privileged_get"))]
   pub async fn system_user_privileged_get(&self, session_id: &SessionId) -> Result<bool> {
-    self
-      .api::<_, UserPrivileged>(&SystemUserPrivilegedGet {
+    let body = self
+      .api(&SystemUserPrivilegedGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.is_privileged)
+      .await?;
+    match body {
+      ResponseBody::User(UserContent::Privileged(u)) => Ok(u.is_privileged),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "User".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает следующую информацию о пользователе:
@@ -412,15 +501,23 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "user_info_get"))]
   pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
-    self
-      .api::<_, User>(&UserInfoGet {
+    let body = self
+      .api(&UserInfoGet {
         session_id: session_id.clone(),
       })
-      .await
+      .await?;
+    match body {
+      ResponseBody::User(UserContent::Info(user)) => Ok(user),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "User".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает значение конкретной настройки пользователя по её ключу.
@@ -430,11 +527,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
   pub async fn user_profile_property_get(&self, req: &UserProfilePropertyGet) -> Result<String> {
-    self.api::<_, UserProfileProperty>(&req).await.map(|v| v.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::UserProfileProperty(u) => Ok(u.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "UserProfileProperty".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Проверяет, входит ли пользователь в указанную группу.
@@ -444,10 +549,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
   pub async fn user_belongs_group_check(&self, req: &UserBelongsGroupCheck) -> Result<String> {
-    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -461,10 +574,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "pipe_text_get"))]
   pub async fn pipe_text_get(&self, req: &PipeTextGet) -> Result<String> {
-    self.api::<_, PipeText>(req).await.map(|v| v.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::PipeText(text) => Ok(text.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "PipeText".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Получить отладочную информацию.
@@ -474,11 +595,19 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   // TODO: Найти где и как эта информация используется и генерируется.
   #[instrument(skip(self), err, fields(method = "debug_text_get"))]
   pub async fn debug_text_get(&self, req: &DebugTextGet) -> Result<String> {
-    self.api::<_, DebugText>(req).await.map(|v| v.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::DebugText(text) => Ok(text.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "DebugText".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -492,13 +621,21 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "object_class_and_archive_key_get"))]
   pub async fn object_class_and_archive_key_get(
     &self,
     req: &ObjectClassAndArchiveKeyGet,
   ) -> Result<ObjectClassAndArchiveKey> {
-    self.api::<_, ObjectClassAndArchiveKey>(req).await
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::ObjectClassAndArchiveKey(key) => Ok(key),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ObjectClassAndArchiveKey".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список обратных ссылок на указанный экземпляр (которые ссылаются на экземпляр).
@@ -508,13 +645,21 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "object_backward_references_get"))]
   pub async fn object_backward_references_get(
     &self,
     req: &ObjectBackwardReferencesGet,
   ) -> Result<Vec<BackwardReference>> {
-    self.api::<_, BackwardReferences>(&req).await.map(|v| v.body)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::BackwardReferences(refs) => Ok(refs.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "BackwardReferences".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает информацию о возможных переходах между состояниями для указанного ТБП.
@@ -524,10 +669,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_transitions_get"))]
   pub async fn class_transitions_get(&self, req: &ClassTransitionsGet) -> Result<Transitions> {
-    self.api::<_, Transitions>(&req).await
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Transitions(transitions) => Ok(transitions),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Transitions".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список состояний для указанного ТБП.
@@ -537,10 +690,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_states_get"))]
   pub async fn class_states_get(&self, req: &ClassStatesGet) -> Result<States> {
-    self.api::<_, States>(&req).await
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::States(states) => Ok(states),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "States".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Проверяет, требуется ли указывать `collectionid` для ТБП.
@@ -550,10 +711,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
   pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<String> {
-    self.api::<_, CheckResult>(&req).await.map(|v| v.value)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список операций, доступных для указанного ТБП.
@@ -563,10 +732,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_methods_get"))]
   pub async fn class_methods_get(&self, req: &ClassMethodsGet) -> Result<Vec<Method>> {
-    self.api::<_, Methods>(&req).await.map(|v| v.body)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Methods(methods) => Ok(methods.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Methods".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает группы операций пользователя для указанного ТБП.
@@ -576,10 +753,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
   pub async fn class_methods_groups_user_get(&self, req: &ClassMethodsGroupsUserGet) -> Result<MethodsGroups> {
-    self.api::<_, MethodsGroups>(&req).await
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::MethodsGroups(groups) => Ok(groups),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "MethodsGroups".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список дочерних ТБП для указанного ТБП.
@@ -589,10 +774,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_children_get"))]
   pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
-    self.api::<_, ChildClasses>(&req).await
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::ChildClasses(children) => Ok(children),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ChildClasses".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -606,10 +799,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "view_data_get_cancelable"))]
   pub async fn view_data_get_cancelable(&self, req: &ViewDataGetCancelable) -> Result<Vec<Row>> {
-    self.api::<_, ViewData>(&req).await.map(|v| v.body)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::ViewData(data) => Ok(data.row),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ViewData".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список колонок для указанного представления.
@@ -619,10 +820,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "view_columns_get"))]
   pub async fn view_columns_get(&self, req: &ViewColumnsGet) -> Result<Vec<Column>> {
-    self.api::<_, Columns>(&req).await.map(|v| v.body)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Columns(columns) => Ok(columns.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Columns".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список представлений, доступных для указанного ТБП.
@@ -632,10 +841,18 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_views_get"))]
   pub async fn class_views_get(&self, req: &ClassViewsGet) -> Result<Vec<View>> {
-    self.api::<_, Views>(&req).await.map(|v| v.body)
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Views(views) => Ok(views.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Views".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   //====================================================================================================================
@@ -649,14 +866,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "user_menu_get"))]
   pub async fn user_menu_get(&self, session_id: &SessionId) -> Result<UserMenu> {
-    self
-      .api::<_, UserMenu>(&UserMenuGet {
+    let body = self
+      .api(&UserMenuGet {
         session_id: session_id.clone(),
       })
-      .await
+      .await?;
+    match body {
+      ResponseBody::UserMenu(menu) => Ok(menu),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "UserMenu".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список справочников, доступных пользователю.
@@ -666,15 +891,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "guides_get"))]
   pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<GuideClass>> {
-    self
-      .api::<_, Guides>(&GuidesGet {
+    let body = self
+      .api(&GuidesGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.body)
+      .await?;
+    match body {
+      ResponseBody::Guides(guides) => Ok(guides.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Guides".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список групп справочников.
@@ -684,15 +916,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "guides_groups_get"))]
   pub async fn guides_groups_get(&self, session_id: &SessionId) -> Result<Vec<GuidesGroup>> {
-    self
-      .api::<_, GuidesGroups>(&GuidesGroupsGet {
+    let body = self
+      .api(&GuidesGroupsGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.body)
+      .await?;
+    match body {
+      ResponseBody::GuidesGroups(groups) => Ok(groups.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "GuidesGroups".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   /// Возвращает список всех доступных ТБП (не справочников).
@@ -702,15 +941,22 @@ impl Client {
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа.
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "types_get"))]
   pub async fn types_get(&self, session_id: &SessionId) -> Result<Vec<Class>> {
-    self
-      .api::<_, Types>(&TypesGet {
+    let body = self
+      .api(&TypesGet {
         session_id: session_id.clone(),
       })
-      .await
-      .map(|v| v.body)
+      .await?;
+    match body {
+      ResponseBody::Types(types) => Ok(types.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Types".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
   }
 
   #[inline]
@@ -722,10 +968,9 @@ impl Client {
   }
 
   #[instrument(skip(self, body), err)]
-  pub(crate) async fn api<T, U>(&self, body: &T) -> Result<U>
+  pub(crate) async fn api<T>(&self, body: &T) -> Result<ResponseBody>
   where
     T: serde::Serialize + Sync,
-    U: serde::de::DeserializeOwned + Clone,
   {
     let url = self.endpoint("/api")?;
 
@@ -758,14 +1003,14 @@ impl Client {
       "<- finished processing request"
     );
 
-    let parsed: Response<U> = quick_xml::de::from_reader(response_bytes.as_ref())?;
-    match &parsed.body {
-      ResponseBody::Ok(body) => Ok(body.clone()),
-      ResponseBody::Error(body) => Err(Error::Api {
+    let parsed: Response = quick_xml::de::from_reader(response_bytes.as_ref())?;
+    match parsed.body {
+      ResponseBody::Error(err) => Err(Error::Api {
         status_code,
-        message: body.text.clone(),
-        details: body.body.text.clone(),
+        message: err.text,
+        details: err.body.text,
       }),
+      body => Ok(body),
     }
   }
 }

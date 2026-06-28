@@ -109,13 +109,14 @@ async fn test_class_user_data() {
 
   let class_id = "USER".to_owned();
 
-  client
+  let views = client
     .class_views_get(&ClassViewsGet {
       session_id: session_id.clone(),
       class_id: class_id.clone(),
     })
     .await
     .unwrap();
+  assert!(!views.is_empty());
 
   client
     .class_children_get(&ClassChildrenGet {
@@ -177,15 +178,16 @@ async fn test_view_user_data() {
   let view_short_name = "VW_CRIT_USER".to_string();
   let object_id = 22_738_256;
 
-  client
+  let columns = client
     .view_columns_get(&ViewColumnsGet {
       session_id: session_id.clone(),
       view_id,
     })
     .await
     .unwrap();
+  assert!(!columns.is_empty());
 
-  client
+  let data = client
     .view_data_get_cancelable(&ViewDataGetCancelable {
       session_id: session_id.clone(),
       view_short_name,
@@ -197,6 +199,7 @@ async fn test_view_user_data() {
     })
     .await
     .unwrap();
+  assert!(!data.is_empty());
 
   client
     .object_backward_references_get(&ObjectBackwardReferencesGet {

@@ -1,23 +1,60 @@
 use crate::models::{
   requests::{DebugPipeName, SessionId},
-  utils::{Flags, bool_as_bool, bool_as_str, option_bool_as_str},
+  utils::{Flags, bool_as_bool},
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "Response")]
-pub struct Response<T> {
+pub struct Response {
   #[serde(rename = "$value")]
-  pub body: ResponseBody<T>,
+  pub body: ResponseBody,
 }
 
-/// Тело ответа: либо успешные данные, либо ошибка.
+/// Тело ответа
+#[derive(Debug, Deserialize, Clone)]
+pub enum ResponseBody {
+  ObjectClassAndArchiveKey(ObjectClassAndArchiveKey),
+  DebugText(DebugText),
+  Setting(Setting),
+  PipeText(PipeText),
+  BackwardReferences(BackwardReferences),
+  ViewData(ViewData),
+  Transitions(Transitions),
+  States(States),
+  Columns(Columns),
+  Methods(Methods),
+  MethodsGroups(MethodsGroups),
+  ChildClasses(ChildClasses),
+  Views(Views),
+  UserMenu(UserMenu),
+  Guides(Guides),
+  GuidesGroups(GuidesGroups),
+  Types(Types),
+  CheckResult(CheckResult),
+  OptionInfo(OptionInfo),
+  User(UserContent),
+  UserProfileProperty(UserProfileProperty),
+  NovoAllowedCheckResult(NovoAllowedCheckResult),
+  AuthenticationURL(AuthenticationURL),
+  ProtocolInfo(ProtocolInfo),
+  Session(Session),
+  Done(Done),
+  Error(Error),
+  ServerInfo(ServerInfo),
+  CoreInfo(CoreInfo),
+  Settings(Settings),
+}
+
+/// Содержимое элемента <User> — зависит от метода API.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(untagged)]
-pub enum ResponseBody<T> {
-  Ok(T),
-  Error(Error),
+pub enum UserContent {
+  /// Ответ `UserInfoGet`: <User Name="..." ShortName="..." Properties="..."/>
+  Info(User),
+  /// Ответ `SystemUserPrivilegedGet`: <User IsPrivileged="..."/>
+  Privileged(UserPrivileged),
 }
 
 /// Пустой ответ, подтверждающий успешное выполнение действия (например, отключение сессии).
@@ -122,7 +159,6 @@ pub struct NovoAllowedCheckResult {
 
 /// Информация о включенности системной опции.
 #[derive(Debug, Deserialize, Clone)]
-#[serde(rename = "User")]
 pub struct OptionInfo {
   #[serde(rename = "@Enabled", with = "bool_as_bool")]
   pub enabled: bool,
@@ -145,7 +181,6 @@ pub struct User {
 
 /// Информация о привилегиях пользователя.
 #[derive(Debug, Deserialize, Clone)]
-#[serde(rename = "User")]
 pub struct UserPrivileged {
   #[serde(rename = "@IsPrivileged", with = "bool_as_bool")]
   pub is_privileged: bool,
@@ -153,7 +188,6 @@ pub struct UserPrivileged {
 
 /// Значение свойства профиля пользователя.
 #[derive(Debug, Deserialize, Clone)]
-#[serde(rename = "User")]
 pub struct UserProfileProperty {
   #[serde(rename = "@Value")]
   pub value: String,
@@ -161,7 +195,6 @@ pub struct UserProfileProperty {
 
 /// Универсальный результат проверки (например, вхождения в группу).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename = "User")]
 pub struct CheckResult {
   #[serde(rename = "@Value")]
   pub value: String,
@@ -278,16 +311,18 @@ pub struct ChildClasses {}
 
 /// Данные представления.
 #[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct ViewData {
   #[serde(default, rename = "$value")]
-  pub body: Vec<Row>,
+  pub row: Vec<Row>,
 }
 
 /// Строка данных представления.
 #[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct Row {
   #[serde(default, rename = "$value")]
-  pub body: Vec<RowItem>,
+  pub row_item: Vec<RowItem>,
 }
 
 /// Колонка в строке данных.
@@ -307,7 +342,7 @@ pub struct Columns {
 }
 
 /// Описание колонки представления.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Column {
   #[serde(rename = "@Name")]
   pub name: String,
@@ -323,32 +358,29 @@ pub struct Column {
   pub alias: String,
   #[serde(rename = "@Base")]
   pub base: ColumnBase,
-  #[serde(rename = "@IsEditable", with = "option_bool_as_str")]
-  pub is_editable: Option<bool>,
-  #[serde(rename = "@IsSizeable", with = "bool_as_str")]
-  pub is_sizeable: bool,
-  #[serde(rename = "@IsCellStyle", with = "bool_as_str")]
-  pub is_cell_style: bool,
+  #[serde(rename = "@IsSizeable")]
+  pub is_sizeable: u8,
+  #[serde(rename = "@IsCellStyle")]
+  pub is_cell_style: u8,
   #[serde(rename = "@IsInvisible")]
   pub is_invisible: u8, // TODO: Visible = 0, Hidden = 2
-  #[serde(rename = "@TargetClassID", skip_serializing_if = "Option::is_none")]
-  pub target_class_id: Option<String>,
-  #[serde(
-    rename = "@ReferenceType",
-    with = "option_bool_as_str",
-    skip_serializing_if = "Option::is_none"
-  )]
-  pub reference_type: Option<bool>,
-  #[serde(rename = "@Logging", skip_serializing_if = "Option::is_none")]
-  pub logging: Option<Logging>,
-  #[serde(rename = "@AbilityPerformOperation", skip_serializing_if = "Option::is_none")]
-  pub ability_perform_operation: Option<bool>,
-  #[serde(rename = "@ReferenceID", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@AbilityPerformOperation")]
+  pub ability_perform_operation: bool,
+
+  #[serde(rename = "@IsEditable", default)]
+  pub is_editable: Option<u8>,
+  #[serde(rename = "@ReferenceID", default)]
   pub reference_id: Option<String>,
+  #[serde(rename = "@TargetClassID", default)]
+  pub target_class_id: Option<String>,
+  #[serde(rename = "@ReferenceType", default)]
+  pub reference_type: Option<u8>,
+  #[serde(rename = "@Logging", default)]
+  pub logging: Option<Logging>,
 }
 
 /// Базовый тип данных колонки.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ColumnBase {
   String,
@@ -359,7 +391,7 @@ pub enum ColumnBase {
 }
 
 /// Настройка логирования для колонки.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub enum Logging {
   #[serde(rename = "0")]
   None,
@@ -375,40 +407,41 @@ pub struct Views {
 }
 
 /// Описание представления.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct View {
   #[serde(rename = "@ID")]
-  pub id: u64,
+  pub id: i64,
   #[serde(rename = "@Name")]
   pub name: String,
   #[serde(rename = "@ShortName")]
   pub short_name: String,
-  #[serde(rename = "@IsDefault", with = "bool_as_str")]
-  pub is_default: bool,
-  #[serde(rename = "@CellStyleScript")]
-  pub cell_style_script: Option<String>,
+  #[serde(rename = "@IsDefault")]
+  pub is_default: u8,
   #[serde(rename = "@Properties")]
   pub properties: String,
   #[serde(rename = "@Distance")]
-  pub distance: u32,
-  #[serde(rename = "@SourceID", skip_serializing_if = "Option::is_none")]
-  pub source_id: Option<i64>,
-  #[serde(rename = "@FilterMethodShortName")]
-  pub filter_method_short_name: Option<String>,
-  #[serde(rename = "@FilterMethodProperties")]
-  pub filter_method_properties: Option<String>,
-  #[serde(rename = "@ExtensionID", skip_serializing_if = "Option::is_none")]
-  pub extension_id: Option<i64>,
+  pub distance: u8,
   #[serde(rename = "@ObjectRights")]
-  pub object_rights: u32,
-  #[serde(rename = "@ToPrinter", with = "bool_as_str")]
-  pub to_printer: bool,
-  #[serde(rename = "@ToFile", with = "bool_as_str")]
-  pub to_file: bool,
-  #[serde(rename = "@Hints")]
-  pub hints: Option<String>,
-  #[serde(rename = "@OrderBy")]
+  pub object_rights: u8,
+  #[serde(rename = "@ToPrinter")]
+  pub to_printer: u8,
+  #[serde(rename = "@ToFile")]
+  pub to_file: u8,
+
+  #[serde(rename = "@OrderBy", default)]
   pub order_by: Option<String>,
+  #[serde(rename = "@Hints", default)]
+  pub hints: Option<String>,
+  #[serde(rename = "@CellStyleScript", default)]
+  pub cell_style_script: Option<String>,
+  #[serde(rename = "@SourceID", default)]
+  pub source_id: Option<i64>,
+  #[serde(rename = "@ExtensionID", default)]
+  pub extension_id: Option<i64>,
+  #[serde(rename = "@FilterMethodShortName", default)]
+  pub filter_method_short_name: Option<String>,
+  #[serde(rename = "@FilterMethodProperties", default)]
+  pub filter_method_properties: Option<String>,
 }
 
 //====================================================================================================================
@@ -431,22 +464,30 @@ pub struct Guides {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "Class")]
 pub struct GuideClass {
-  #[serde(rename = "@GroupID")]
-  pub group_id: Option<String>,
   #[serde(rename = "@ID")]
   pub id: String,
   #[serde(rename = "@Name")]
   pub name: String,
   #[serde(rename = "@BaseClassID")]
-  pub base_class_id: String,
+  pub base_class_id: BaseClassID,
   #[serde(rename = "@EntityID")]
   pub entity_id: String,
   #[serde(rename = "@IsKernelType")]
-  pub is_kernel_type: String,
+  pub is_kernel_type: u8,
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
   #[serde(rename = "@Flags")]
   pub flags: Flags,
+
+  #[serde(rename = "@GroupID", default)]
+  pub group_id: Option<String>,
+}
+
+/// Тип справочника.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum BaseClassID {
+  Structure,
 }
 
 /// Список групп справочников.
@@ -485,20 +526,21 @@ pub struct Class {
   pub entity_id: String,
   #[serde(rename = "@MenuCaption")]
   pub menu_caption: String,
-  #[serde(rename = "@IsKernelType", with = "bool_as_str")]
-  pub is_kernel_type: bool,
+  #[serde(rename = "@IsKernelType")]
+  pub is_kernel_type: u8,
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
-  #[serde(rename = "@IsAccessible", with = "bool_as_str")]
-  pub is_accessible: bool,
+  #[serde(rename = "@IsAccessible")]
+  pub is_accessible: u8,
   #[serde(rename = "@Flags")]
   pub flags: Flags,
-  #[serde(rename = "@PadLength")]
-  pub pad_length: Option<u32>,
-  #[serde(rename = "@DataSize")]
-  pub data_size: Option<u32>,
-  #[serde(rename = "@DataPrecision")]
-  pub data_precision: Option<u32>,
-  #[serde(rename = "@Properties")]
+
+  #[serde(rename = "@PadLength", default)]
+  pub pad_length: Option<u8>,
+  #[serde(rename = "@DataSize", default)]
+  pub data_size: Option<u8>,
+  #[serde(rename = "@DataPrecision", default)]
+  pub data_precision: Option<u8>,
+  #[serde(rename = "@Properties", default)]
   pub properties: Option<String>,
 }
