@@ -13,16 +13,16 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
-      GuidesGroupsGet, MethodBegin, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
-      ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet,
-      SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
-      SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
-      ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, NetworkInformationSet, NovoAllowedCheck,
+      ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet, Request, SessionId,
+      SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
+      SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
+      UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
-      BackwardReference, ChildClasses, Class, Column, CoreInfo, GuideClass, GuidesGroup, Method, MethodsGroups,
-      ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, States, Transitions, User, UserContent,
-      UserMenu, View,
+      BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuideClass, GuidesGroup, Method,
+      MethodParameter, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, States,
+      Transitions, User, UserContent, UserMenu, View,
     },
   },
 };
@@ -771,7 +771,7 @@ impl Client {
     }
   }
 
-  /// Возвращает .
+  /// Подготовить операцию у выполнению
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
@@ -787,6 +787,48 @@ impl Client {
       ResponseBody::MethodFrame(f) => Ok(f.frame_id),
       _ => Err(Error::UnexpectedResponse {
         expected: "MethodFrame".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Получить список параметров операции
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_parameters_get"))]
+  pub async fn method_parameters_get(&self, req: &MethodParametersGet) -> Result<Vec<MethodParameter>> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::MethodParameters(p) => Ok(p.parameters),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "MethodParameters".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// TODO
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_controls_get"))]
+  pub async fn method_controls_get(&self, req: &MethodControlsGet) -> Result<Vec<Control>> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Controls(c) => Ok(c.controls),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Controls".to_string(),
         actual: format!("{body:?}"),
       }),
     }

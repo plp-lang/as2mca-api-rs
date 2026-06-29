@@ -2,7 +2,7 @@ use crate::models::{
   requests::{DebugPipeName, SessionId},
   utils::{Flags, bool_as_bool},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
@@ -15,6 +15,8 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  Controls(Controls),
+  MethodParameters(MethodParameters),
   MethodFrame(MethodFrame),
   ObjectClassAndArchiveKey(ObjectClassAndArchiveKey),
   DebugText(DebugText),
@@ -334,6 +336,88 @@ pub enum MethodType {
   Destructor,
 }
 
+/// Спиок входных параметров операции
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodParameters {
+  #[serde(default, rename = "$value")]
+  pub parameters: Vec<MethodParameter>,
+}
+
+/// Описание входного параметра операции
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodParameter {
+  #[serde(rename = "@ShortName")]
+  pub short_name: String,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@Position")]
+  pub position: u32,
+  #[serde(rename = "@ReferenceType")]
+  pub reference_type: String,
+  #[serde(rename = "@Direction")]
+  pub direction: String,
+
+  #[serde(rename = "@DefaultValue", default)]
+  pub default_value: Option<String>,
+}
+
+/// Спиок элементов на форме
+#[derive(Debug, Deserialize, Clone)]
+pub struct Controls {
+  #[serde(default, rename = "$value")]
+  pub controls: Vec<Control>,
+}
+
+/// Элемент на форме
+#[derive(Debug, Deserialize, Clone)]
+pub struct Control {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@Qualifier")]
+  pub qualifier: String,
+  #[serde(rename = "@Control")]
+  pub control: ControlType,
+  #[serde(rename = "@Caption")]
+  pub caption: String,
+  #[serde(rename = "@ParentID", deserialize_with = "deserialize_optional_number")]
+  pub parent_id: Option<i64>,
+  #[serde(rename = "@Top")]
+  pub top: u32,
+  #[serde(rename = "@Left")]
+  pub left: u32,
+  #[serde(rename = "@Height")]
+  pub height: u32,
+  #[serde(rename = "@Width")]
+  pub width: u32,
+  #[serde(rename = "@TabIndex")]
+  pub tab_index: u32,
+  #[serde(rename = "@Position")]
+  pub position: u32,
+  #[serde(rename = "@ValidateName")]
+  pub validate_name: String,
+  #[serde(rename = "@ClassID", default)]
+  pub class_id: Option<String>,
+  #[serde(rename = "@Depend", default)]
+  pub depend: Option<i64>,
+  #[serde(rename = "@Properties", default)]
+  pub properties: Option<String>,
+  #[serde(rename = "@Tips", default)]
+  pub tips: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ControlType {
+  Form,
+  Label,
+  Text,
+  Object,
+  Check,
+  Button,
+}
+
 // TODO
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodFrame {
@@ -352,7 +436,6 @@ pub struct MethodsGroups {}
 
 /// Данные представления.
 #[derive(Debug, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct ViewData {
   #[serde(default, rename = "$value")]
   pub row: Vec<Row>,
@@ -360,7 +443,6 @@ pub struct ViewData {
 
 /// Строка данных представления.
 #[derive(Debug, Deserialize, Clone)]
-#[serde(rename_all = "PascalCase")]
 pub struct Row {
   #[serde(default, rename = "$value")]
   pub row_item: Vec<RowItem>,
@@ -584,4 +666,18 @@ pub struct Class {
   pub data_precision: Option<u8>,
   #[serde(rename = "@Properties", default)]
   pub properties: Option<String>,
+}
+
+fn deserialize_optional_number<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+  D: Deserializer<'de>,
+  T: std::str::FromStr,
+  T::Err: std::fmt::Display,
+{
+  let s: Option<String> = Option::deserialize(deserializer)?;
+  match s {
+    None => Ok(None),
+    Some(s) if s.is_empty() => Ok(None),
+    Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
+  }
 }

@@ -307,13 +307,31 @@ pub struct ClassMethodsGet {
   pub class_id: String,
 }
 
-/// Выполнить операцию
+/// Запрос на подготовку операции к выполнению
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodBegin {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
+}
+
+/// Запрос списка параметров операции
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodParametersGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+}
+
+/// Запрос списка элементов формы операции
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodControlsGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@FormID")]
+  pub form_id: i64,
 }
 
 /// Запрос групп операций пользователя для ТБП.
