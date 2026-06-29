@@ -771,7 +771,7 @@ impl Client {
     }
   }
 
-  /// Подготовить операцию у выполнению
+  /// Подготовить операцию к выполнению.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
@@ -792,7 +792,7 @@ impl Client {
     }
   }
 
-  /// Получить список параметров операции
+  /// Получить список входных параметров операции.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
@@ -813,7 +813,7 @@ impl Client {
     }
   }
 
-  /// TODO
+  /// Получить список элементов формы операции.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;

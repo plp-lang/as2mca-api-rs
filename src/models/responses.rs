@@ -280,17 +280,25 @@ pub struct Methods {
   pub body: Vec<Method>,
 }
 
-/// Описание операций ТБП.
+/// Структура операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Method {
+  /// ID операции.
   #[serde(rename = "@ID")]
   pub id: i64,
+
+  /// Полное наименование.
   #[serde(rename = "@Name")]
   pub name: String,
+
+  /// Короткое имя.
   #[serde(rename = "@ShortName")]
   pub short_name: String,
+
+  /// Тип операции.
   #[serde(rename = "@Type")]
   pub r#type: MethodType,
+
   #[serde(rename = "@FormClassID")]
   pub form_class_id: String,
   #[serde(rename = "@Properties")]
@@ -302,8 +310,11 @@ pub struct Method {
 
   #[serde(rename = "@ScriptID", default)]
   pub script_id: Option<String>,
+
+  /// Короткое имя возвращаемого типа операцией.
   #[serde(rename = "@ResultClassID", default)]
   pub result_class_id: Option<String>,
+
   #[serde(rename = "@UserDriven", default)]
   pub user_driven: Option<u8>,
   #[serde(rename = "@FormID", default)]
@@ -314,38 +325,40 @@ pub struct Method {
   pub report_template: Option<String>,
 }
 
+/// Тип операции.
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum MethodType {
-  /// C — конструктор
+  /// `C` — конструктор.
   #[serde(rename = "C")]
   Constructor,
-  /// G — списочная операция
+  /// `G` — списочная операция.
   #[serde(rename = "G")]
   Batch,
-  /// M — простая операция
+  /// `M` — простая операция.
   #[serde(rename = "M")]
   Method,
-  /// R — отчёт
+  /// `R` — отчёт.
   #[serde(rename = "R")]
   Report,
-  /// S — групповая операция
+  /// `S` — групповая операция.
   #[serde(rename = "S")]
   Group,
-  /// Y — деструктор
+  /// `Y` — деструктор.
   #[serde(rename = "Y")]
   Destructor,
 }
 
-/// Спиок входных параметров операции
+/// Список входных параметров операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodParameters {
   #[serde(default, rename = "$value")]
   pub parameters: Vec<MethodParameter>,
 }
 
-/// Описание входного параметра операции
+/// Описание входного параметра операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodParameter {
+  /// Короткое имя параметра.
   #[serde(rename = "@ShortName")]
   pub short_name: String,
   #[serde(rename = "@ClassID")]
@@ -353,60 +366,100 @@ pub struct MethodParameter {
   #[serde(rename = "@Position")]
   pub position: u32,
   #[serde(rename = "@ReferenceType")]
-  pub reference_type: String,
+  pub reference_type: ReferenceType,
   #[serde(rename = "@Direction")]
-  pub direction: String,
+  pub direction: Direction,
 
+  /// Значение по умолчанию.
   #[serde(rename = "@DefaultValue", default)]
   pub default_value: Option<String>,
 }
 
-/// Спиок элементов на форме
+/// Тип ссылочного типа
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+pub enum ReferenceType {
+  D,
+}
+
+/// TODO
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+  D,
+  I,
+}
+
+/// Спиcок элементов на форме.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Controls {
   #[serde(default, rename = "$value")]
   pub controls: Vec<Control>,
 }
 
-/// Элемент на форме
+/// Структура элемента на форме
 #[derive(Debug, Deserialize, Clone)]
 pub struct Control {
+  /// ID элемента.
   #[serde(rename = "@ID")]
   pub id: i64,
+
+  /// ID операции, элемент формы которой предналежит.
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
+
   #[serde(rename = "@Qualifier")]
   pub qualifier: String,
+
+  /// Тип элемента формы. Наример тестовое поле или кнопка.
   #[serde(rename = "@Control")]
   pub control: ControlType,
+
   #[serde(rename = "@Caption")]
   pub caption: String,
-  #[serde(rename = "@ParentID", deserialize_with = "deserialize_optional_number")]
-  pub parent_id: Option<i64>,
+
+  /// Кол-во пикселей отступа от верхнего края формы.
   #[serde(rename = "@Top")]
   pub top: u32,
+
+  /// Кол-во пикселей отступа от левого края формы.
   #[serde(rename = "@Left")]
   pub left: u32,
+
+  /// Высота элемента в пикселях.
   #[serde(rename = "@Height")]
   pub height: u32,
+
+  /// Ширины элемента в пикселях.
   #[serde(rename = "@Width")]
   pub width: u32,
+
   #[serde(rename = "@TabIndex")]
   pub tab_index: u32,
   #[serde(rename = "@Position")]
   pub position: u32,
+
+  /// Имя элемента по которому к нему можно обратится из кода.
   #[serde(rename = "@ValidateName")]
   pub validate_name: String,
+
+  /// ID родительского элемента на форме.
+  /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
+  #[serde(rename = "@ParentID", default, deserialize_with = "deserialize_optional_number")]
+  pub parent_id: Option<i64>,
+
+  /// Короткое имя ТБП (тип, справочник) которому соответствует значение в элементе.
   #[serde(rename = "@ClassID", default)]
   pub class_id: Option<String>,
   #[serde(rename = "@Depend", default)]
   pub depend: Option<i64>,
   #[serde(rename = "@Properties", default)]
   pub properties: Option<String>,
+
+  /// Тект, который всплывает при наведении на элемент курсором.
   #[serde(rename = "@Tips", default)]
   pub tips: Option<String>,
 }
 
+/// Тип элемента формы
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ControlType {
