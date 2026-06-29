@@ -2,7 +2,7 @@ pub mod common;
 
 use as2mca_api::models::requests::{
   ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
-  ClassTransitionsGet, ClassViewsGet, DebugTextGet, NetworkInformationSet, ObjectBackwardReferencesGet,
+  ClassTransitionsGet, ClassViewsGet, DebugTextGet, MethodBegin, NetworkInformationSet, ObjectBackwardReferencesGet,
   ObjectClassAndArchiveKeyGet, ObjectFilter, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
   SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
 };
@@ -163,6 +163,23 @@ async fn test_class_user_data() {
     .class_transitions_get(&ClassTransitionsGet {
       session_id: session_id.clone(),
       class_id: class_id.clone(),
+    })
+    .await
+    .unwrap();
+
+  client.session_deinit(&session_id).await.unwrap();
+}
+
+#[tokio::test]
+async fn test_method() {
+  let (client, session_id, ..) = setup().await;
+
+  let method_id = 311;
+
+  client
+    .method_begin(&MethodBegin {
+      session_id: session_id.clone(),
+      method_id,
     })
     .await
     .unwrap();

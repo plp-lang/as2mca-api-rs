@@ -13,7 +13,7 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
-      GuidesGroupsGet, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
+      GuidesGroupsGet, MethodBegin, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
       ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet,
       SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
       SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
@@ -766,6 +766,27 @@ impl Client {
       ResponseBody::Methods(methods) => Ok(methods.body),
       _ => Err(Error::UnexpectedResponse {
         expected: "Methods".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Возвращает .
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_begin"))]
+  pub async fn method_begin(&self, req: &MethodBegin) -> Result<i64> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::MethodFrame(f) => Ok(f.frame_id),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "MethodFrame".to_string(),
         actual: format!("{body:?}"),
       }),
     }

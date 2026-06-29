@@ -15,6 +15,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  MethodFrame(MethodFrame),
   ObjectClassAndArchiveKey(ObjectClassAndArchiveKey),
   DebugText(DebugText),
   Setting(Setting),
@@ -331,6 +332,13 @@ pub enum MethodType {
   /// Y — деструктор
   #[serde(rename = "Y")]
   Destructor,
+}
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodFrame {
+  #[serde(rename = "@FrameID")]
+  pub frame_id: i64,
 }
 
 /// Группы операций.
