@@ -165,7 +165,7 @@ impl Client {
   /// Активация сессии.
   ///
   /// Сервер валидирует авторизационные данные переданные в [`Client::authbasic`] и возвращает
-  /// наименование отладочного канала [`DebugPipeName`].
+  /// наименование отладочного канала.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
@@ -725,6 +725,31 @@ impl Client {
     }
   }
 
+  /// Возвращает список дочерних ТБП для указанного ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "class_children_get"))]
+  pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::ChildClasses(children) => Ok(children),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "ChildClasses".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  //====================================================================================================================
+  // Операции
+  //====================================================================================================================
+
   /// Возвращает список операций, доступных для указанного ТБП.
   ///
   /// # Errors
@@ -762,27 +787,6 @@ impl Client {
       ResponseBody::MethodsGroups(groups) => Ok(groups),
       _ => Err(Error::UnexpectedResponse {
         expected: "MethodsGroups".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
-  /// Возвращает список дочерних ТБП для указанного ТБП.
-  ///
-  /// # Errors
-  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
-  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
-  /// - [`Error::UrlParseError`], если не удалось собрать URL;
-  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
-  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
-  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  #[instrument(skip(self), err, fields(method = "class_children_get"))]
-  pub async fn class_children_get(&self, req: &ClassChildrenGet) -> Result<ChildClasses> {
-    let body = self.api(req).await?;
-    match body {
-      ResponseBody::ChildClasses(children) => Ok(children),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "ChildClasses".to_string(),
         actual: format!("{body:?}"),
       }),
     }

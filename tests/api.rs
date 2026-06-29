@@ -134,13 +134,14 @@ async fn test_class_user_data() {
     .await
     .unwrap();
 
-  client
+  let methods = client
     .class_methods_get(&ClassMethodsGet {
       session_id: session_id.clone(),
       class_id: class_id.clone(),
     })
     .await
     .unwrap();
+  assert!(!methods.is_empty());
 
   client
     .class_need_collection_id_check(&ClassNeedCollectionIDCheck {

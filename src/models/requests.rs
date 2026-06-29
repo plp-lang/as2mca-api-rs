@@ -285,6 +285,19 @@ pub struct ClassNeedCollectionIDCheck {
   pub class_id: String,
 }
 
+/// Запрос дочерних ТБП.
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassChildrenGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+}
+
+//======================================================================================================================
+// Операции
+//======================================================================================================================
+
 /// Запрос операций ТБП.
 #[derive(Debug, Serialize, Clone)]
 pub struct ClassMethodsGet {
@@ -297,15 +310,6 @@ pub struct ClassMethodsGet {
 /// Запрос групп операций пользователя для ТБП.
 #[derive(Debug, Serialize, Clone)]
 pub struct ClassMethodsGroupsUserGet {
-  #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
-  #[serde(rename = "@ClassID")]
-  pub class_id: String,
-}
-
-/// Запрос дочерних ТБП.
-#[derive(Debug, Serialize, Clone)]
-pub struct ClassChildrenGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
   #[serde(rename = "@ClassID")]

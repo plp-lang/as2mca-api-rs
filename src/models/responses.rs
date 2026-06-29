@@ -47,13 +47,13 @@ pub enum ResponseBody {
   Settings(Settings),
 }
 
-/// Содержимое элемента <User> — зависит от метода API.
+/// Содержимое элемента `<User>` — зависит от метода API.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum UserContent {
-  /// Ответ `UserInfoGet`: <User Name="..." ShortName="..." Properties="..."/>
+  /// Ответ `UserInfoGet`: `<User Name="..." ShortName="..." Properties="..."/>`
   Info(User),
-  /// Ответ `SystemUserPrivilegedGet`: <User IsPrivileged="..."/>
+  /// Ответ `SystemUserPrivilegedGet`: `<User IsPrivileged="..."/>`
   Privileged(UserPrivileged),
 }
 
@@ -261,6 +261,15 @@ pub struct Transitions {}
 #[derive(Debug, Deserialize, Clone)]
 pub struct States {}
 
+/// Дочерние ТБП.
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChildClasses {}
+
+//======================================================================================================================
+// Операции
+//======================================================================================================================
+
 /// Список операций ТБП.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Methods {
@@ -272,38 +281,62 @@ pub struct Methods {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Method {
   #[serde(rename = "@ID")]
-  pub id: String,
+  pub id: i64,
   #[serde(rename = "@Name")]
   pub name: String,
   #[serde(rename = "@ShortName")]
   pub short_name: String,
   #[serde(rename = "@Type")]
-  pub r#type: String,
+  pub r#type: MethodType,
   #[serde(rename = "@FormClassID")]
   pub form_class_id: String,
   #[serde(rename = "@Properties")]
   pub properties: String,
-  #[serde(rename = "@ScriptID")]
-  pub script_id: String,
-  #[serde(rename = "@ResultClassID")]
-  pub result_class_id: String,
-  #[serde(rename = "@UserDriven")]
-  pub user_driven: String,
   #[serde(rename = "@Distance")]
-  pub distance: String,
+  pub distance: u8,
   #[serde(rename = "@CallableShortName")]
   pub callable_short_name: String,
+
+  #[serde(rename = "@ScriptID", default)]
+  pub script_id: Option<String>,
+  #[serde(rename = "@ResultClassID", default)]
+  pub result_class_id: Option<String>,
+  #[serde(rename = "@UserDriven", default)]
+  pub user_driven: Option<u8>,
+  #[serde(rename = "@FormID", default)]
+  pub form_id: Option<i64>,
+  #[serde(rename = "@ReportType", default)]
+  pub report_type: Option<String>,
+  #[serde(rename = "@ReportTemplate", default)]
+  pub report_template: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+pub enum MethodType {
+  /// C — конструктор
+  #[serde(rename = "C")]
+  Constructor,
+  /// G — списочная операция
+  #[serde(rename = "G")]
+  Batch,
+  /// M — простая операция
+  #[serde(rename = "M")]
+  Method,
+  /// R — отчёт
+  #[serde(rename = "R")]
+  Report,
+  /// S — групповая операция
+  #[serde(rename = "S")]
+  Group,
+  /// Y — деструктор
+  #[serde(rename = "Y")]
+  Destructor,
 }
 
 /// Группы операций.
 // TODO
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodsGroups {}
-
-/// Дочерние ТБП.
-// TODO
-#[derive(Debug, Deserialize, Clone)]
-pub struct ChildClasses {}
 
 //====================================================================================================================
 // Представления и их строки
