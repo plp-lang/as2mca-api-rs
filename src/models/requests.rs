@@ -295,6 +295,21 @@ pub struct ClassChildrenGet {
   pub class_id: String,
 }
 
+/// Запрос на получения списка типов/ТБП.
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassesGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "$value")]
+  pub class_info: Vec<ClassInfo>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ClassInfo {
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+}
+
 //======================================================================================================================
 // Операции
 //======================================================================================================================

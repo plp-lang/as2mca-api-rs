@@ -12,7 +12,7 @@ use crate::{
   models::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
-      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
+      ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
       GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, MethodVariablesGet, NetworkInformationSet,
       NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet,
       Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
@@ -21,9 +21,9 @@ use crate::{
       XML_HEADER,
     },
     responses::{
-      BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuideClass, GuidesGroup, Method,
-      MethodParameter, MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session,
-      Setting, States, Transitions, User, UserContent, UserMenu, View,
+      BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodParameter,
+      MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, States,
+      Transitions, User, UserContent, UserMenu, View,
     },
   },
 };
@@ -612,7 +612,7 @@ impl Client {
   }
 
   //====================================================================================================================
-  // Метаданные классов и объектов
+  // ТБП и типы
   //====================================================================================================================
 
   /// Возвращает короткое имя базового ТБП и ключ архива для указанного экземпляра.
@@ -742,6 +742,27 @@ impl Client {
       ResponseBody::ChildClasses(children) => Ok(children),
       _ => Err(Error::UnexpectedResponse {
         expected: "ChildClasses".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Принимает список коротких имен типов/ТБП, возвращает список детализации по каждому типу/ТБП.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "classes_get"))]
+  pub async fn classes_get(&self, req: &ClassesGet) -> Result<Vec<Class>> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Classes(cls) => Ok(cls.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Classes".to_string(),
         actual: format!("{body:?}"),
       }),
     }
@@ -973,7 +994,7 @@ impl Client {
     }
   }
 
-  /// Возвращает список справочников, доступных пользователю.
+  /// Возвращает список типов/ТБП, доступных пользователю.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
@@ -983,7 +1004,7 @@ impl Client {
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "guides_get"))]
-  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<GuideClass>> {
+  pub async fn guides_get(&self, session_id: &SessionId) -> Result<Vec<Class>> {
     let body = self
       .api(&GuidesGet {
         session_id: session_id.clone(),

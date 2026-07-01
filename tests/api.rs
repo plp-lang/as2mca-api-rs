@@ -1,8 +1,8 @@
 pub mod common;
 
 use as2mca_api::models::requests::{
-  ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
-  ClassTransitionsGet, ClassViewsGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
+  ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
+  ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
   MethodVariablesGet, NetworkInformationSet, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter,
   PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck,
   UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
@@ -211,6 +211,23 @@ async fn test_method() {
     .await
     .unwrap();
   assert!(!variables.is_empty());
+
+  let class_info = params
+    .iter()
+    .map(|p| ClassInfo {
+      class_id: p.class_id.clone(),
+    })
+    .collect::<Vec<ClassInfo>>();
+  assert!(!class_info.is_empty());
+
+  let classes = client
+    .classes_get(&ClassesGet {
+      session_id: session_id.clone(),
+      class_info,
+    })
+    .await
+    .unwrap();
+  assert!(!classes.is_empty());
 
   client.session_deinit(&session_id).await.unwrap();
 }
