@@ -499,19 +499,7 @@ pub enum ControlType {
   Button,
 }
 
-// TODO
-#[derive(Debug, Deserialize, Clone)]
-pub struct MethodFrame {
-  #[serde(rename = "@FrameID")]
-  pub frame_id: i64,
-}
-
-/// Группы операций.
-// TODO
-#[derive(Debug, Deserialize, Clone)]
-pub struct MethodsGroups {}
-
-// TODO
+/// Результат выполнения блока `Validate` операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Validate {
   #[serde(rename = "@DebugText")]
@@ -520,14 +508,14 @@ pub struct Validate {
   pub controls_states: ControlsStates,
 }
 
-// TODO
+/// Список значений элементов формы операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct ControlsStates {
   #[serde(default, rename = "$value")]
   pub controls_states: Vec<ControlsState>,
 }
 
-// TODO
+/// Значение элемента формы операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct ControlsState {
   #[serde(rename = "@ID")]
@@ -535,6 +523,17 @@ pub struct ControlsState {
   #[serde(rename = "@Value")]
   pub value: String,
 }
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodFrame {
+  #[serde(rename = "@FrameID")]
+  pub frame_id: i64,
+}
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodsGroups {}
 
 //====================================================================================================================
 // Представления и их строки
@@ -578,7 +577,7 @@ pub struct Column {
   #[serde(rename = "@Width")]
   pub width: u32,
   #[serde(rename = "@Align")]
-  pub align: u8, // TODO: Left = 0, Center = 1, Right = 2
+  pub align: Align,
   #[serde(rename = "@Position")]
   pub position: u32,
   #[serde(rename = "@Qual")]
@@ -592,7 +591,7 @@ pub struct Column {
   #[serde(rename = "@IsCellStyle")]
   pub is_cell_style: u8,
   #[serde(rename = "@IsInvisible")]
-  pub is_invisible: u8, // TODO: Visible = 0, Hidden = 2
+  pub is_invisible: Invisible,
   #[serde(rename = "@AbilityPerformOperation")]
   pub ability_perform_operation: bool,
 
@@ -606,6 +605,26 @@ pub struct Column {
   pub reference_type: Option<u8>,
   #[serde(rename = "@Logging", default)]
   pub logging: Option<Logging>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[repr(u8)]
+pub enum Align {
+  #[serde(rename = "0")]
+  Left = 0,
+  #[serde(rename = "1")]
+  Center = 1,
+  #[serde(rename = "2")]
+  Right = 2,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[repr(u8)]
+pub enum Invisible {
+  #[serde(rename = "0")]
+  Visible = 0,
+  #[serde(rename = "2")]
+  Hidden = 2,
 }
 
 /// Базовый тип данных колонки.

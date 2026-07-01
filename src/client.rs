@@ -899,6 +899,7 @@ impl Client {
   }
 
   /// Вызов блока `Validate` операции.
+  /// Возвращает список значений элементов формы и текст отладки, после выполнения блока `Validate`.
   ///
   /// # Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
