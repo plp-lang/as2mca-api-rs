@@ -15,6 +15,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  LockResult(LockResult),
   Classes(Classes),
   MethodVariables(MethodVariables),
   Controls(Controls),
@@ -731,6 +732,17 @@ pub struct Class {
   pub properties: Option<String>,
   #[serde(rename = "@GroupID", default)]
   pub group_id: Option<String>,
+}
+
+//====================================================================================================================
+// Блокировки
+//====================================================================================================================
+
+/// Результат блокировки экземпляра
+#[derive(Debug, Deserialize, Clone)]
+pub struct LockResult {
+  #[serde(rename = "@Message", default)]
+  pub message: Option<String>,
 }
 
 fn deserialize_optional_number<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>

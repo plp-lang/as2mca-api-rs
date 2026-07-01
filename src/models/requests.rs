@@ -447,3 +447,24 @@ pub struct TypesGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
 }
+
+//====================================================================================================================
+// Блокировки
+//====================================================================================================================
+
+/// Запрос на блокировку экземпляра
+#[derive(Debug, Serialize, Clone)]
+pub struct ObjectsLock {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "$value")]
+  pub objects: Vec<Object>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct Object {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+}

@@ -14,11 +14,11 @@ use crate::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
       GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, MethodVariablesGet, NetworkInformationSet,
-      NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, PipeTextGet, ProtocolInfoGet,
-      Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-      SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
-      UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
-      XML_HEADER,
+      NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, PipeTextGet,
+      ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+      SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
+      TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet,
+      ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
       BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodParameter,
@@ -1064,6 +1064,34 @@ impl Client {
       ResponseBody::Types(types) => Ok(types.body),
       _ => Err(Error::UnexpectedResponse {
         expected: "Types".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  //====================================================================================================================
+  // Блокировки
+  //====================================================================================================================
+
+  /// Блокирововать экземпляр.
+  ///
+  /// Если ответ пустой экземпляр успешно заблокирован,
+  /// иначе в ответе будет текст сообщения о причине провала.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "objects_lock"))]
+  pub async fn objects_lock(&self, req: &ObjectsLock) -> Result<Option<String>> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::LockResult(r) => Ok(r.message),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "LockResult".to_string(),
         actual: format!("{body:?}"),
       }),
     }
