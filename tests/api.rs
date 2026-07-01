@@ -3,9 +3,9 @@ pub mod common;
 use as2mca_api::models::requests::{
   ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
   ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
-  MethodVariablesGet, NetworkInformationSet, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet,
-  ObjectFilter, ObjectsLock, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet,
-  UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+  MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object, ObjectBackwardReferencesGet,
+  ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+  SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -228,6 +228,22 @@ async fn test_method() {
     .await
     .unwrap();
   assert!(!classes.is_empty());
+
+  client
+    .method_validate_default(&MethodValidateDefault {
+      session_id: session_id.clone(),
+      method_id,
+      info: String::new(),
+      do_commit: true,
+      object_id: 22_738_256,
+      class_id: "USER".to_string(),
+      debug_level: 10,
+      is_called_from_another_method: true,
+      read_only: false,
+      get_debug_text: true,
+    })
+    .await
+    .unwrap();
 
   client.session_deinit(&session_id).await.unwrap();
 }

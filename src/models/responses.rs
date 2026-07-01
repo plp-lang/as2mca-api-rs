@@ -15,6 +15,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  Validate(Validate),
   LockResult(LockResult),
   Classes(Classes),
   MethodVariables(MethodVariables),
@@ -509,6 +510,31 @@ pub struct MethodFrame {
 // TODO
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodsGroups {}
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct Validate {
+  #[serde(rename = "@DebugText")]
+  pub debug_text: String,
+  #[serde(rename = "$value")]
+  pub controls_states: ControlsStates,
+}
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct ControlsStates {
+  #[serde(default, rename = "$value")]
+  pub controls_states: Vec<ControlsState>,
+}
+
+// TODO
+#[derive(Debug, Deserialize, Clone)]
+pub struct ControlsState {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
 
 //====================================================================================================================
 // Представления и их строки

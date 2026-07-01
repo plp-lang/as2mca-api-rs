@@ -13,9 +13,9 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
-      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, MethodVariablesGet, NetworkInformationSet,
-      NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, PipeTextGet,
-      ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, MethodValidateDefault, MethodVariablesGet,
+      NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock,
+      PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
       SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
       TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet,
       ViewDataGetCancelable, XML_HEADER,
@@ -23,7 +23,7 @@ use crate::{
     responses::{
       BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodParameter,
       MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, States,
-      Transitions, User, UserContent, UserMenu, View,
+      Transitions, User, UserContent, UserMenu, Validate, View,
     },
   },
 };
@@ -893,6 +893,27 @@ impl Client {
       ResponseBody::MethodsGroups(groups) => Ok(groups),
       _ => Err(Error::UnexpectedResponse {
         expected: "MethodsGroups".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Вызов блока `Validate` операции.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_validate_default"))]
+  pub async fn method_validate_default(&self, req: &MethodValidateDefault) -> Result<Validate> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Validate(validate) => Ok(validate),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Validate".to_string(),
         actual: format!("{body:?}"),
       }),
     }
