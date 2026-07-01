@@ -3,9 +3,9 @@ pub mod common;
 use as2mca_api::models::requests::{
   ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
   ClassTransitionsGet, ClassViewsGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
-  NetworkInformationSet, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter, PipeTextGet,
-  SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
-  ViewColumnsGet, ViewDataGetCancelable,
+  MethodVariablesGet, NetworkInformationSet, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter,
+  PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck,
+  UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -202,6 +202,15 @@ async fn test_method() {
     .await
     .unwrap();
   assert!(!controls.is_empty());
+
+  let variables = client
+    .method_variables_get(&MethodVariablesGet {
+      session_id: session_id.clone(),
+      method_id: 2_544_731_869,
+    })
+    .await
+    .unwrap();
+  assert!(!variables.is_empty());
 
   client.session_deinit(&session_id).await.unwrap();
 }

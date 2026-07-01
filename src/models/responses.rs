@@ -15,6 +15,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  MethodVariables(MethodVariables),
   Controls(Controls),
   MethodParameters(MethodParameters),
   MethodFrame(MethodFrame),
@@ -375,10 +376,34 @@ pub struct MethodParameter {
   pub default_value: Option<String>,
 }
 
+/// Список публичных переменных операции.
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodVariables {
+  #[serde(default, rename = "$value")]
+  pub variables: Vec<MethodVariable>,
+}
+
+/// Описание публичной переменной операции.
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodVariable {
+  /// Имя переменной.
+  #[serde(rename = "@ShortName")]
+  pub short_name: String,
+  /// Тип переменной.
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@Position")]
+  pub position: u32,
+  #[serde(rename = "@ReferenceType")]
+  pub reference_type: ReferenceType,
+}
+
 /// Тип ссылочного типа
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum ReferenceType {
   D,
+  /// `table of`?
+  T,
 }
 
 /// TODO

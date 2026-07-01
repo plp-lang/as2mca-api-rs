@@ -317,9 +317,18 @@ pub struct MethodBegin {
   pub method_id: i64,
 }
 
-/// Запрос списка параметров операции
+/// Запрос списка входных параметров операции
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodParametersGet {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+}
+
+/// Запрос списка публичных переменных операции
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodVariablesGet {
   #[serde(rename = "@SessionID")]
   pub session_id: SessionId,
   #[serde(rename = "@MethodID")]
