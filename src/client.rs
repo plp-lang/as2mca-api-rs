@@ -13,7 +13,7 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
-      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodParametersGet, MethodValidate,
+      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodExecute, MethodParametersGet, MethodValidate,
       MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
       ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionId,
       SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
@@ -22,8 +22,8 @@ use crate::{
     },
     responses::{
       BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame,
-      MethodParameter, MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session,
-      Setting, States, Transitions, User, UserContent, UserMenu, Validate, View,
+      MethodParameter, MethodResult, MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody,
+      Row, Session, Setting, States, Transitions, User, UserContent, UserMenu, Validate, View,
     },
   },
 };
@@ -959,6 +959,27 @@ impl Client {
       ResponseBody::Validate(validate) => Ok(validate),
       _ => Err(Error::UnexpectedResponse {
         expected: "Validate".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Вызов блока `Execute` операции.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_execute"))]
+  pub async fn method_execute(&self, req: &MethodExecute) -> Result<MethodResult> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Result(result) => Ok(result),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Result".to_string(),
         actual: format!("{body:?}"),
       }),
     }

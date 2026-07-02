@@ -173,6 +173,7 @@ async fn test_class_user_data() {
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines)]
 async fn test_method() {
   let (client, session_id, ..) = setup().await;
 
@@ -247,7 +248,7 @@ async fn test_method() {
       method_id,
       info: String::new(),
       do_commit: true,
-      object_id: 22_738_256,
+      object_id: 581_076_650,
       class_id: "USER".to_string(),
       debug_level: 10,
       is_called_from_another_method: true,
@@ -269,6 +270,35 @@ async fn test_method() {
     })
     .await
     .unwrap();
+
+  // client
+  //   .method_execute(&MethodExecute {
+  //     session_id: session_id.clone(),
+  //     method_id,
+  //     do_commit: true,
+  //     optimized_grid_updates: true,
+  //     controls_states: ControlsStates {
+  //       controls_states: vec![
+  //         ControlState {
+  //           id: 14_682_339,
+  //           value: "TEST".to_string(),
+  //         },
+  //         ControlState {
+  //           id: 14_682_337,
+  //           value: "Test testovich".to_string(),
+  //         },
+  //         ControlState {
+  //           id: 14_682_340,
+  //           value: "8935433".to_string(),
+  //         },
+  //       ],
+  //     },
+  //     plpcall_parameters: PLPCallParameters {
+  //       plpcall_parameters: vec![],
+  //     },
+  //   })
+  //   .await
+  //   .unwrap();
 
   client
     .method_end(&MethodEnd {
@@ -296,7 +326,7 @@ async fn test_view_user_data() {
   let class_id = "USER".to_string();
   let view_id = 4384;
   let view_short_name = "VW_CRIT_USER".to_string();
-  let object_id = 22_738_256;
+  let object_id = 581_076_650;
 
   let columns = client
     .view_columns_get(&ViewColumnsGet {
@@ -314,7 +344,7 @@ async fn test_view_user_data() {
       class_id: class_id.clone(),
       hint: "FIRST_ROWS".to_string(),
       allow_timestamp_milliseconds: true,
-      rows_limit: None,
+      rows_limit: Some(10),
       body: Some(ObjectFilter { object_id }),
     })
     .await

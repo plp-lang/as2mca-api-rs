@@ -419,6 +419,45 @@ pub enum ValidateType {
   Validate,
 }
 
+/// Запрос на вызов блока `Execute` операции.
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodExecute {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@DoCommit")]
+  pub do_commit: bool,
+  #[serde(rename = "@OptimizedGridUpdates")]
+  pub optimized_grid_updates: bool,
+  #[serde(rename = "ControlsStates")]
+  pub controls_states: ControlsStates,
+  #[serde(rename = "PLPCallParameters")]
+  pub plpcall_parameters: PLPCallParameters,
+}
+
+/// Список значений элементов формы операции.
+#[derive(Debug, Serialize, Clone)]
+pub struct ControlsStates {
+  #[serde(rename = "$value", default)]
+  pub controls_states: Vec<ControlState>,
+}
+
+/// Значение элемента формы операции.
+#[derive(Debug, Serialize, Clone)]
+pub struct ControlState {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+/// Список значений элементов формы операции.
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPCallParameters {
+  pub plpcall_parameters: Vec<()>,
+}
+
 /// Запрос на завершение выполнения операции.
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodEnd {

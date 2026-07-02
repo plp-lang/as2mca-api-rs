@@ -15,6 +15,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  Result(MethodResult),
   Validate(Validate),
   LockResult(LockResult),
   Classes(Classes),
@@ -62,6 +63,16 @@ pub enum UserContent {
   Info(User),
   /// Ответ `SystemUserPrivilegedGet`: `<User IsPrivileged="..."/>`
   Privileged(UserPrivileged),
+}
+
+/// Результат выполнения операции.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "@Result")]
+pub struct MethodResult {
+  #[serde(rename = "@Value")]
+  pub value: i64,
+  #[serde(rename = "$value")]
+  pub controls_states: ControlsStates,
 }
 
 /// Пустой ответ, подтверждающий успешное выполнение действия (например, отключение сессии).
