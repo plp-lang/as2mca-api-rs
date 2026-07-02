@@ -394,6 +394,15 @@ pub struct MethodValidateDefault {
   pub get_debug_text: bool,
 }
 
+/// Запрос на завершение выполнения операции.
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodEnd {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@FrameID")]
+  pub frame_id: i64,
+}
+
 //====================================================================================================================
 // Представления и данные
 //====================================================================================================================

@@ -527,8 +527,8 @@ pub struct ControlsState {
 // TODO
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodFrame {
-  #[serde(rename = "@FrameID")]
-  pub frame_id: i64,
+  #[serde(rename = "@FrameID", default)]
+  pub frame_id: Option<i64>,
 }
 
 // TODO

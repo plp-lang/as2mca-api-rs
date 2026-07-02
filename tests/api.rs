@@ -2,11 +2,11 @@ pub mod common;
 
 use as2mca_api::models::requests::{
   ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
-  ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
-  MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object, ObjectBackwardReferencesGet,
-  ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, ObjectsUnlock, PipeTextGet, SystemNetAddressSet,
-  SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
-  ViewDataGetCancelable,
+  ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodEnd,
+  MethodParametersGet, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object,
+  ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, ObjectsUnlock, PipeTextGet,
+  SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
+  ViewColumnsGet, ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -179,6 +179,17 @@ async fn test_method() {
   let method_id = 311;
 
   client
+    .objects_lock(&ObjectsLock {
+      session_id: session_id.clone(),
+      objects: vec![Object {
+        id: 22_738_256,
+        class_id: "USER".to_string(),
+      }],
+    })
+    .await
+    .unwrap();
+
+  let frame_id = client
     .method_begin(&MethodBegin {
       session_id: session_id.clone(),
       method_id,
@@ -242,6 +253,22 @@ async fn test_method() {
       is_called_from_another_method: true,
       read_only: false,
       get_debug_text: true,
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_end(&MethodEnd {
+      session_id: session_id.clone(),
+      frame_id,
+    })
+    .await
+    .unwrap();
+
+  client
+    .objects_unlock(&ObjectsUnlock {
+      session_id: session_id.clone(),
+      clear_all_locks: true,
     })
     .await
     .unwrap();
@@ -318,32 +345,6 @@ async fn test_pipe_and_debug() {
     .debug_text_get(&DebugTextGet {
       session_id: session_id.clone(),
       direction: "B".to_string(),
-    })
-    .await
-    .unwrap();
-
-  client.session_deinit(&session_id).await.unwrap();
-}
-
-#[tokio::test]
-async fn test_locks() {
-  let (client, session_id, ..) = setup().await;
-
-  client
-    .objects_lock(&ObjectsLock {
-      session_id: session_id.clone(),
-      objects: vec![Object {
-        id: 22_738_256,
-        class_id: "USER".to_string(),
-      }],
-    })
-    .await
-    .unwrap();
-
-  client
-    .objects_unlock(&ObjectsUnlock {
-      session_id: session_id.clone(),
-      clear_all_locks: true,
     })
     .await
     .unwrap();
