@@ -13,8 +13,8 @@ use crate::{
     requests::{
       AuthenticationURLGet, ClassChildrenGet, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck,
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
-      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodParametersGet, MethodValidateDefault,
-      MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
+      GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodParametersGet, MethodValidate,
+      MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet,
       ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionId,
       SessionInit, SystemCoreInfoGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
       SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
@@ -933,6 +933,27 @@ impl Client {
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "method_validate_default"))]
   pub async fn method_validate_default(&self, req: &MethodValidateDefault) -> Result<Validate> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Validate(validate) => Ok(validate),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Validate".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Вызов блока `Validate` операции, при событии элемента формы.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_validate"))]
+  pub async fn method_validate(&self, req: &MethodValidate) -> Result<Validate> {
     let body = self.api(req).await?;
     match body {
       ResponseBody::Validate(validate) => Ok(validate),

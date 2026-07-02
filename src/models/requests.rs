@@ -394,6 +394,31 @@ pub struct MethodValidateDefault {
   pub get_debug_text: bool,
 }
 
+/// Запрос на вызов блока `Validate` операции при событии элемента формы.
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodValidate {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@Type")]
+  pub r#type: ValidateType,
+  #[serde(rename = "@Info")]
+  pub info: String,
+  #[serde(rename = "@DoCommit")]
+  pub do_commit: bool,
+  #[serde(rename = "@GetDebugText")]
+  pub get_debug_text: bool,
+  #[serde(rename = "@OptimizedGridUpdates")]
+  pub optimized_grid_updates: bool,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ValidateType {
+  Validate,
+}
+
 /// Запрос на завершение выполнения операции.
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodEnd {

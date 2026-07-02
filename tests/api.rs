@@ -3,10 +3,10 @@ pub mod common;
 use as2mca_api::models::requests::{
   ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
   ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodEnd,
-  MethodParametersGet, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object,
+  MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object,
   ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, ObjectsUnlock, PipeTextGet,
   SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
-  ViewColumnsGet, ViewDataGetCancelable,
+  ValidateType, ViewColumnsGet, ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -253,6 +253,19 @@ async fn test_method() {
       is_called_from_another_method: true,
       read_only: false,
       get_debug_text: true,
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_validate(&MethodValidate {
+      session_id: session_id.clone(),
+      method_id,
+      r#type: ValidateType::Validate,
+      info: "P_NAME".to_string(),
+      do_commit: true,
+      get_debug_text: true,
+      optimized_grid_updates: true,
     })
     .await
     .unwrap();
