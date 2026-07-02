@@ -15,10 +15,10 @@ use crate::{
       ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, Credentials, DebugTextGet, Disconnect, GuidesGet,
       GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodParametersGet, MethodValidateDefault, MethodVariablesGet,
       NetworkInformationSet, NovoAllowedCheck, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock,
-      PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
-      SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
-      TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet,
-      ViewDataGetCancelable, XML_HEADER,
+      ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionId, SessionInit, SystemCoreInfoGet,
+      SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
+      SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
+      ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
     },
     responses::{
       BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodParameter,
@@ -1114,6 +1114,27 @@ impl Client {
       ResponseBody::LockResult(r) => Ok(r.message),
       _ => Err(Error::UnexpectedResponse {
         expected: "LockResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Разблокирововать экземпляры.
+  ///
+  /// # Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "objects_unlock"))]
+  pub async fn objects_unlock(&self, req: &ObjectsUnlock) -> Result<()> {
+    let body = self.api(req).await?;
+    match body {
+      ResponseBody::Done(_) => Ok(()),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Done".to_string(),
         actual: format!("{body:?}"),
       }),
     }

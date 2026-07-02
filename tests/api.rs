@@ -4,8 +4,9 @@ use as2mca_api::models::requests::{
   ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet, ClassNeedCollectionIDCheck, ClassStatesGet,
   ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodParametersGet,
   MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object, ObjectBackwardReferencesGet,
-  ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, PipeTextGet, SystemNetAddressSet, SystemOptionEnabledCheck,
-  SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+  ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, ObjectsUnlock, PipeTextGet, SystemNetAddressSet,
+  SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet, ViewColumnsGet,
+  ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -335,6 +336,14 @@ async fn test_locks() {
         id: 22_738_256,
         class_id: "USER".to_string(),
       }],
+    })
+    .await
+    .unwrap();
+
+  client
+    .objects_unlock(&ObjectsUnlock {
+      session_id: session_id.clone(),
+      clear_all_locks: true,
     })
     .await
     .unwrap();

@@ -494,3 +494,12 @@ pub struct Object {
   #[serde(rename = "@ClassID")]
   pub class_id: String,
 }
+
+/// Запрос на разблокировку экземпляров
+#[derive(Debug, Serialize, Clone)]
+pub struct ObjectsUnlock {
+  #[serde(rename = "@SessionID")]
+  pub session_id: SessionId,
+  #[serde(rename = "@ClearAllLocks")]
+  pub clear_all_locks: bool,
+}
