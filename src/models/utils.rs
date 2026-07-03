@@ -92,3 +92,20 @@ pub mod bool_as_bool {
     }
   }
 }
+
+/// Модуль для десериализации строк `"1"` / `"0"` в `bool`.
+pub mod number_as_bool {
+  use serde::{self, Deserialize, Deserializer};
+
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+      "1" => Ok(true),
+      "0" => Ok(false),
+      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+    }
+  }
+}

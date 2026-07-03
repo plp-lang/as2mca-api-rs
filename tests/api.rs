@@ -5,8 +5,7 @@ use as2mca_api::models::requests::{
   ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, MethodBegin, MethodControlsGet, MethodEnd,
   MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, Object,
   ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectFilter, ObjectsLock, ObjectsUnlock, PipeTextGet,
-  SystemNetAddressSet, SystemOptionEnabledCheck, SystemSettingGet, UserBelongsGroupCheck, UserProfilePropertyGet,
-  ValidateType, ViewColumnsGet, ViewDataGetCancelable,
+  SystemNetAddressSet, ValidateType, ViewColumnsGet, ViewDataGetCancelable,
 };
 
 use crate::common::setup;
@@ -25,7 +24,6 @@ async fn test_system_and_user_info() {
 
   client.system_core_info_get(&session_id).await.unwrap();
   client.system_server_version_get(&session_id).await.unwrap();
-  client.system_settings_get(&session_id).await.unwrap();
   client.protocol_info_get(&session_id).await.unwrap();
   client.authentication_url_get().await.unwrap();
   client.user_info_get(&session_id).await.unwrap();
@@ -49,43 +47,6 @@ async fn test_system_and_user_info() {
       client_ip: ip_address,
       client_user,
       module_name: "ЦФТ - Навигатор 6.0.121.84".to_owned(),
-    })
-    .await
-    .unwrap();
-}
-
-#[tokio::test]
-async fn test_get_options() {
-  let (client, session_id, ..) = setup().await;
-
-  client
-    .user_profile_property_get(&UserProfilePropertyGet {
-      session_id: session_id.clone(),
-      property_name: "SHOW_LOGINS_HISTORY".to_owned(),
-    })
-    .await
-    .unwrap();
-
-  client
-    .system_option_enabled_check(&SystemOptionEnabledCheck {
-      session_id: session_id.clone(),
-      option_name: "NAV_SKIN_INTERFACE".to_owned(),
-    })
-    .await
-    .unwrap();
-
-  client
-    .user_belongs_group_check(&UserBelongsGroupCheck {
-      session_id: session_id.clone(),
-      group_id: "DVS".to_owned(),
-    })
-    .await
-    .unwrap();
-
-  client
-    .system_setting_get(&SystemSettingGet {
-      session_id: session_id.clone(),
-      name: "NOVOMON.TIMEOUT_LIMIT".to_string(),
     })
     .await
     .unwrap();
@@ -393,4 +354,38 @@ async fn test_pipe_and_debug() {
     .unwrap();
 
   client.session_deinit(&session_id).await.unwrap();
+}
+
+#[tokio::test]
+async fn test_settings() {
+  let (client, ref session_id, ..) = setup().await;
+
+  let show_system_menu = client.system_setting_get(session_id, "SHOW_SYSTEM_MENU").await.unwrap();
+  assert_eq!(show_system_menu, Some("YES".to_string()));
+
+  let settings = client.system_settings_get(session_id).await.unwrap();
+  assert!(!settings.is_empty());
+
+  let show_system_menu = settings
+    .iter()
+    .find(|s| s.name == "SHOW_SYSTEM_MENU")
+    .and_then(|v| v.value.clone());
+  assert_eq!(show_system_menu, Some("YES".to_string()));
+
+  let is_nav_skin_interface = client
+    .system_option_enabled_check(session_id, "NAV_SKIN_INTERFACE")
+    .await
+    .unwrap();
+  assert!(is_nav_skin_interface);
+
+  let is_admin = client.user_belongs_group_check(session_id, "ADMIN_GRP").await.unwrap();
+  assert!(is_admin);
+
+  let is_sessions_per_user = client
+    .user_profile_property_get(session_id, "SESSIONS_PER_USER")
+    .await
+    .unwrap();
+  assert_eq!(is_sessions_per_user, "UNLIMITED".to_string());
+
+  client.session_deinit(session_id).await.unwrap();
 }

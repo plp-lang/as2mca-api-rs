@@ -1,6 +1,6 @@
 use crate::models::{
   requests::{DebugPipeName, SessionId},
-  utils::{Flags, bool_as_bool},
+  utils::{Flags, bool_as_bool, number_as_bool},
 };
 use serde::{Deserialize, Deserializer};
 
@@ -133,7 +133,7 @@ pub struct ServerInfo {
   pub version: String,
 }
 
-/// Информация о ядре системы (ТЯ).
+/// Информация о системе.
 #[derive(Debug, Deserialize, Clone)]
 pub struct CoreInfo {
   #[serde(rename = "@Auditor")]
@@ -214,8 +214,8 @@ pub struct UserProfileProperty {
 /// Универсальный результат проверки (например, вхождения в группу).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CheckResult {
-  #[serde(rename = "@Value")]
-  pub value: String,
+  #[serde(rename = "@Value", with = "number_as_bool")]
+  pub value: bool,
 }
 
 //======================================================================================================================

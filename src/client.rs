@@ -35,15 +35,15 @@ pub struct Client {
 }
 
 impl Client {
-  /// Создает новый экземпляр клиента подключения к серверу.
+  /// # Создает новый экземпляр клиента подключения к серверу
   ///
   /// По умолчанию настраиваются:
-  /// - `Content-Type: text/xml; charset=utf-8`
-  /// - Включенное хранилище cookie
-  /// - Таймауты по 30 секунд
-  /// - User-Agent из env `$CARGO_PKG_NAME/$CARGO_PKG_VERSION`
+  /// * `Content-Type: text/xml; charset=utf-8`
+  /// * Включенное хранилище cookie
+  /// * Таймауты по 30 секунд
+  /// * User-Agent из env `$CARGO_PKG_NAME/$CARGO_PKG_VERSION`
   ///
-  /// # Errors
+  /// ## Errors
   /// Возвращает ошибку, если `base_url` невалиден или если не удается собрать `reqwest::Client`.
   pub fn new(base_url: impl AsRef<str>) -> Result<Self> {
     let mut base_url = Url::parse(base_url.as_ref()).map_err(|e| Error::UrlParseError(e.to_string()))?;
@@ -68,13 +68,14 @@ impl Client {
     Ok(Self { client, base_url })
   }
 
-  /// Создает новый экземпляр клиента с пользовательским `reqwest::Client`.
+  /// # Создает новый экземпляр клиента с пользовательским `reqwest::Client`
   ///
   /// *Важно:* При передаче своего клиента, убедитесь, что вы добавили заголовок
   /// `Content-Type: text/xml; charset=utf-8` в `default_headers` и включили хранилище cookie.
   ///
-  /// # Examples
-  /// ```no_run
+  /// ## Examples
+  ///
+  /// ```rust,ignore
   ///  use std::time::Duration;
   ///  use reqwest::header::{CONTENT_TYPE, HeaderMap};
   ///  use as2mca_api::client::Client;
@@ -92,7 +93,7 @@ impl Client {
   ///  let client = Client::with_client("http://localhost:3000/platform2mca", client).unwrap();
   /// ```
   ///
-  /// # Errors
+  /// ## Errors
   /// Возвращает ошибку, если `base_url` невалиден.
   pub fn with_client(base_url: impl Into<String>, client: reqwest::Client) -> Result<Self> {
     let mut base_url = Url::parse(&base_url.into()).map_err(|e| Error::UrlParseError(e.to_string()))?;
@@ -110,11 +111,11 @@ impl Client {
   // Сессия
   //====================================================================================================================
 
-  /// Авторизация в системе методом Basic Auth.
+  /// # Авторизация в системе методом Basic Auth
   ///
-  /// Сервер устанавливает в cookies `JSESSIONID`, вне зависимости от валидности авторизационных данных.
+  /// Сервер устанавливает в cookies `JSESSIONID`, вне зависимости от валидности авторизационных данных
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::NotFoundSessionId`], если сервер не установил cookie `JSESSIONID` в ответе.
@@ -163,12 +164,12 @@ impl Client {
     Ok(SessionId::new(session_id))
   }
 
-  /// Активация сессии.
+  /// # Активация сессии.
   ///
   /// Сервер валидирует авторизационные данные переданные в [`Client::authbasic`] и возвращает
   /// наименование отладочного канала.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -188,9 +189,9 @@ impl Client {
     }
   }
 
-  /// Деативирует сессию, делая её невалидной для последующих запросов.
+  /// # Деативирует сессию, делая её невалидной для последующих запросов.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -213,20 +214,47 @@ impl Client {
     }
   }
 
-  /// Устанавливает для сессии пользователя следующую информацию:
-  /// - `client_name` - hostname устройства пользователя;
-  /// - `client_ip` - локальный ip-адрес устройства пользователя;
-  /// - `client_user` - username пользователя, например `echo $USER` в Linux;
-  /// - `module_name` - наименование клиентского приложения, например `ЦФТ - Навигатор 6.0.121.84`.
+  /// # Устанавливает для сессии пользователя сетевую информацию
   ///
-  /// # Errors
+  /// В **Oracle** это выглядит примерно так:
+  /// ```pl/sql
+  /// BEGIN IBS.nav.network_register_node(:1,:2,:3,:4,:5); commit; END;
+  /// ```
+  ///
+  /// ## Arguments
+  ///
+  /// * `client_name` - hostname устройства пользователя
+  /// * `client_ip` - локальный ip-адрес устройства пользователя
+  /// * `client_user` - username пользователя, например `echo $USER` в Linux
+  /// * `module_name` - наименование клиентского приложения, например `ЦФТ - Навигатор 6.0.121.84`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  /// let client_user = whoami::username().unwrap_or_else(|_| "<unknown>".to_string());
+  /// let client_name = whoami::hostname().unwrap_or_else(|_| "<unknown>".to_string());
+  /// let ip_address = local_ip_address::local_ip().map_or_else(|_| "<unknown>".to_owned(), |ip| ip.to_string());
+  ///
+  /// client
+  ///   .network_information_set(&NetworkInformationSet {
+  ///     session_id: session_id.clone(),
+  ///     client_name,
+  ///     client_ip: ip_address,
+  ///     client_user,
+  ///     module_name: "ЦФТ - Навигатор 6.0.121.84".to_owned(),
+  ///   })
+  ///   .await
+  ///   .unwrap();
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Узнать разницу между ip_address из SystemNetAddressSet
   #[instrument(skip(self), err, fields(method = "network_information_set"))]
   pub async fn network_information_set(&self, req: &NetworkInformationSet) -> Result<()> {
     let body = self.api(req).await?;
@@ -239,18 +267,45 @@ impl Client {
     }
   }
 
-  /// Устанавливает для сессии пользователя следующую информацию:
-  /// - `mac_address` - mac-адрес устройства пользователя;
-  /// - `ip_address` - локальный ip-адрес устройства пользователя.
+  /// # Устанавливает для сессии пользователя сетевую информацию
   ///
-  /// # Errors
+  /// В **Oracle** это выглядит примерно так:
+  /// ```pl/sql
+  /// BEGIN DECLARE v varchar2(1); BEGIN v:=IBS.Nav.SetNetAddresses(:1, :2); END; END
+  /// ```
+  ///
+  /// ## Arguments
+  ///
+  /// * `mac_address` - mac-адрес устройства пользователя
+  /// * `ip_address` - локальный ip-адрес устройства пользователя
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  ///  let ip_address = local_ip_address::local_ip().map_or_else(|_| "<unknown>".to_owned(), |ip| ip.to_string());
+  ///  let mac_address = mac_address::get_mac_address()
+  ///    .ok()
+  ///    .flatten()
+  ///    .map_or_else(|| "<unknown>".to_owned(), |m| m.to_string());
+  ///
+  /// client
+  ///   .system_net_address_set(&SystemNetAddressSet {
+  ///     session_id: session_id.clone(),
+  ///     mac_address,
+  ///     ip_address,
+  ///   })
+  ///   .await
+  ///   .unwrap();
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Узнать разницу между ip_address из NetworkInformationSet
   #[instrument(skip(self), err, fields(method = "system_net_address_set"))]
   pub async fn system_net_address_set(&self, req: &SystemNetAddressSet) -> Result<()> {
     let body = self.api(req).await?;
@@ -267,9 +322,11 @@ impl Client {
   // Получение информации о системе
   //====================================================================================================================
 
-  /// Возвращает версию протокола обмена запросами с API сервера приложений
+  /// # Возвращает версию протокола обмена запросами с API сервера приложений
   ///
-  /// # Errors
+  /// Например `9.54`
+  ///
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -277,7 +334,7 @@ impl Client {
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   ///
-  /// # Notes
+  /// ## Notes
   /// Библиотека протестирована с версией протокола `9.54`.
   /// Открытая спецификация различий между версиями протокола отсутствует.
   /// Если вам известна специфика работы с другими версиями, пожалуйста, поделитесь информацией в Issue или Pull Request.
@@ -293,9 +350,11 @@ impl Client {
     }
   }
 
-  /// Возвращает версию сервера приложений.
+  /// # Возвращает версию базы данных
   ///
-  /// # Errors
+  /// Например, если **Oracle**, то `12.2.0.1`
+  ///
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -318,9 +377,19 @@ impl Client {
     }
   }
 
-  /// Возвращает информацию о ядре системы (ТЯ).
+  /// # Возвращает информацию о системе.
   ///
-  /// # Errors
+  /// ## Returns
+  ///
+  /// * `Auditor` - например "AUD"
+  /// * `Owner` - например "IBS"
+  /// * `Version` - версия ТЯ, например "7.6"
+  /// * `Build` - например "5"
+  /// * `Revision` - например "0"
+  /// * `ASVersion` - версия сервера приложений, например "3.11.115"
+  /// * `ASWARDate` - время сборки сервера приложений, например "23/06/2026 13:12:02"
+  ///
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -344,16 +413,35 @@ impl Client {
     }
   }
 
-  /// Возвращает весь настройки системы в формате ключ-значение.
+  /// # Получить все настройку системы
   ///
-  /// # Errors
+  /// ## Returns
+  ///
+  /// Возвращает значение настроек системы в формате ключ-значение.
+  ///
+  /// В **Oracle** настройки берутся из таблицы `IBS.SETTINGS`, аналогично запросу `SELECT name, value FROM IBS.SETTINGS;`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  ///  let settings = client.system_settings_get(session_id).await.unwrap();
+  ///  assert!(!settings.is_empty());
+  ///
+  ///  let show_system_menu = settings
+  ///    .iter()
+  ///    .find(|s| s.name == "SHOW_SYSTEM_MENU")
+  ///    .and_then(|v| v.value.clone());
+  ///  assert_eq!(show_system_menu, Some("YES".to_string()));
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "system_settings_get"))]
   pub async fn system_settings_get(&self, session_id: &SessionId) -> Result<Vec<Setting>> {
     let body = self
@@ -370,19 +458,37 @@ impl Client {
     }
   }
 
-  /// Возвращает значение конкретной настройки системы по её ключу.
+  /// # Получить системную настройку по ключу
   ///
-  /// # Errors
+  /// ## Returns
+  ///
+  /// Возвращает значение настройки системы по её ключу.
+  ///
+  /// В **Oracle** настройки берутся из таблицы `IBS.settings`, аналогично запросу `SELECT value FROM ibs.settings WHERE name = $1;`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  /// let show_system_menu = client.system_setting_get(session_id, "SHOW_SYSTEM_MENU").await.unwrap();
+  /// assert_eq!(show_system_menu, Some("YES".to_string()));
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Объяснить, откуда берутся настройки и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "system_setting_get"))]
-  pub async fn system_setting_get(&self, req: &SystemSettingGet) -> Result<Option<String>> {
-    let body = self.api(req).await?;
+  pub async fn system_setting_get(&self, session_id: &SessionId, name: &str) -> Result<Option<String>> {
+    let body = self
+      .api(&SystemSettingGet {
+        session_id: session_id.clone(),
+        name: name.to_string(),
+      })
+      .await?;
     match body {
       ResponseBody::Setting(setting) => Ok(setting.value),
       _ => Err(Error::UnexpectedResponse {
@@ -392,11 +498,13 @@ impl Client {
     }
   }
 
-  /// Возвращает относительный URL до эндпоинта авторизации.
+  /// # Возвращает относительный URL до эндпоинта авторизации.
+  ///
+  /// ## Returns
   ///
   /// Например, ответ может выглядеть следующим образом: `/platform2mca/authbasic`.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -415,16 +523,15 @@ impl Client {
     }
   }
 
-  /// Проверяет доступность функционала NOVO для текущей сессии.
+  /// # Проверяет доступность функционала NOVO для текущей сессии.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Уточнить, что именно означает возвращаемое значение?
   #[instrument(skip(self), err, fields(method = "novo_allowed_check"))]
   pub async fn novo_allowed_check(&self, session_id: &SessionId) -> Result<String> {
     let body = self
@@ -441,19 +548,36 @@ impl Client {
     }
   }
 
-  /// Проверяет, включена ли указанная системная опция.
+  /// # Проверяет, включена ли указанная системная опция
   ///
-  /// # Errors
+  /// В **Oracle** значение опции берется из таблицы `IBS.SYSTEM_OPTIONS`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  /// let is_nav_skin_interface = client
+  ///   .system_option_enabled_check(session_id, "NAV_SKIN_INTERFACE")
+  ///   .await
+  ///   .unwrap();
+  /// assert!(is_nav_skin_interface);
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Объяснить, откуда берутся опции и как они конфигурируются на сервере
   #[instrument(skip(self), err, fields(method = "system_option_enabled_check"))]
-  pub async fn system_option_enabled_check(&self, req: &SystemOptionEnabledCheck) -> Result<bool> {
-    let body = self.api(req).await?;
+  pub async fn system_option_enabled_check(&self, session_id: &SessionId, name: &str) -> Result<bool> {
+    let body = self
+      .api(&SystemOptionEnabledCheck {
+        session_id: session_id.clone(),
+        option_name: name.to_string(),
+      })
+      .await?;
     match body {
       ResponseBody::OptionInfo(info) => Ok(info.enabled),
       _ => Err(Error::UnexpectedResponse {
@@ -467,9 +591,9 @@ impl Client {
   // Получение информации о пользователе
   //====================================================================================================================
 
-  /// Узнать является ли пользователь привелигированным.
+  /// # Узнать является ли пользователь привелигированным
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -492,19 +616,31 @@ impl Client {
     }
   }
 
-  /// Возвращает следующую информацию о пользователе:
-  /// - `name` - полное имя пользователя, например ФИО;
-  /// - `short_name` - короткое имя пользователя в системе;
-  /// - `properties` - параметры пользователя, перечесление строк с разделителем `|`, например `|ADMIN|CONTEXT|PICKER|PROFILE DEFAULT|SESSION|`
+  /// # Возвращает информацию о пользователе
   ///
-  /// # Errors
+  /// В **Oracle** данные будет взяты из таблицы `IBS.USERS`
+  ///
+  /// ## Returns
+  ///
+  /// * `name` - полное имя пользователя, например ФИО;
+  /// * `short_name` - короткое имя пользователя в системе;
+  /// * `properties` - параметры пользователя, перечесление строк с разделителем `|`, например `|ADMIN|CONTEXT|PICKER|PROFILE DEFAULT|SESSION|`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  /// let user = client.user_info_get(session_id).await.unwrap();
+  /// println!("{user:?}");
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "user_info_get"))]
   pub async fn user_info_get(&self, session_id: &SessionId) -> Result<User> {
     let body = self
@@ -521,19 +657,38 @@ impl Client {
     }
   }
 
-  /// Возвращает значение конкретной настройки пользователя по её ключу.
+  /// # Возвращает значение настройки профиля пользователя по её ключу
   ///
-  /// # Errors
+  /// В **Oracle** наименование профиля пользователя можно узнать из таблицы `IBS.USERS`, колонка `PROPERTIES`,
+  /// где $NAME в строке `..|PROFILE $NAME|..` имя профиля. Значение настройки профиля берется из таблицы
+  /// `ibs.profiles`.
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  ///  let is_sessions_per_user = client
+  ///    .user_profile_property_get(session_id, "SESSIONS_PER_USER")
+  ///    .await
+  ///    .unwrap();
+  ///  assert_eq!(is_sessions_per_user, "UNLIMITED".to_string());
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  // TODO: Объяснить, откуда берутся свойства пользователя, их значение и как они формируются на стороне сервера.
   #[instrument(skip(self), err, fields(method = "user_profile_property_get"))]
-  pub async fn user_profile_property_get(&self, req: &UserProfilePropertyGet) -> Result<String> {
-    let body = self.api(req).await?;
+  pub async fn user_profile_property_get(&self, session_id: &SessionId, property_name: &str) -> Result<String> {
+    let body = self
+      .api(&UserProfilePropertyGet {
+        session_id: session_id.clone(),
+        property_name: property_name.to_string(),
+      })
+      .await?;
     match body {
       ResponseBody::UserProfileProperty(u) => Ok(u.value),
       _ => Err(Error::UnexpectedResponse {
@@ -543,9 +698,19 @@ impl Client {
     }
   }
 
-  /// Проверяет, входит ли пользователь в указанную группу.
+  /// # Проверяет, входит ли пользователь в указанную группу
   ///
-  /// # Errors
+  /// В **Oracle** информация берется из таблицы `IBS.GROUP_USERS`
+  ///
+  /// ## Examples
+  ///
+  /// ```rust,ignore
+  /// let is_admin = client.user_belongs_group_check(session_id, "ADMIN_GRP").await.unwrap();
+  /// assert!(is_admin);
+  /// ```
+  ///
+  /// ## Errors
+  ///
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -553,8 +718,13 @@ impl Client {
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
-  pub async fn user_belongs_group_check(&self, req: &UserBelongsGroupCheck) -> Result<String> {
-    let body = self.api(req).await?;
+  pub async fn user_belongs_group_check(&self, session_id: &SessionId, group_id: &str) -> Result<bool> {
+    let body = self
+      .api(&UserBelongsGroupCheck {
+        session_id: session_id.clone(),
+        group_id: group_id.to_string(),
+      })
+      .await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
       _ => Err(Error::UnexpectedResponse {
@@ -715,7 +885,7 @@ impl Client {
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
   #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
-  pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<String> {
+  pub async fn class_need_collection_id_check(&self, req: &ClassNeedCollectionIDCheck) -> Result<bool> {
     let body = self.api(req).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
@@ -1160,12 +1330,14 @@ impl Client {
   // Блокировки
   //====================================================================================================================
 
-  /// Блокирововать экземпляр.
+  /// # Блокирововать экземпляр
+  ///
+  /// ## Returns
   ///
   /// Если ответ пустой экземпляр успешно заблокирован,
   /// иначе в ответе будет текст сообщения о причине провала.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
@@ -1184,9 +1356,9 @@ impl Client {
     }
   }
 
-  /// Разблокирововать экземпляры.
+  /// # Разблокирововать экземпляры.
   ///
-  /// # Errors
+  /// ## Errors
   /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
   /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
   /// - [`Error::UrlParseError`], если не удалось собрать URL;
