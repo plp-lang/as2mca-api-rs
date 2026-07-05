@@ -1,6 +1,4 @@
-use core::fmt;
-
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -25,75 +23,14 @@ pub struct SessionInit {
 
 /// Запрос на деактивацию (завершение) сессии.
 #[derive(Debug, Serialize)]
-pub struct Disconnect {
+pub struct Disconnect<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос на получение URL для авторизации.
 #[derive(Debug, Serialize)]
 pub struct AuthenticationURLGet {}
-
-/// Запрос на авторизацию.
-#[derive(Debug, Clone)]
-pub struct Credentials {
-  pub username: String,
-  pub password: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct SessionId(String);
-
-impl SessionId {
-  #[must_use]
-  pub const fn new(id: String) -> Self {
-    Self(id)
-  }
-
-  #[must_use]
-  pub fn as_str(&self) -> &str {
-    &self.0
-  }
-}
-
-impl fmt::Display for SessionId {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", self.0)
-  }
-}
-
-impl From<String> for SessionId {
-  fn from(s: String) -> Self {
-    Self::new(s)
-  }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct DebugPipeName(String);
-
-impl DebugPipeName {
-  #[must_use]
-  pub const fn new(id: String) -> Self {
-    Self(id)
-  }
-
-  #[must_use]
-  pub fn as_str(&self) -> &str {
-    &self.0
-  }
-}
-
-impl fmt::Display for DebugPipeName {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", self.0)
-  }
-}
-
-impl From<String> for DebugPipeName {
-  fn from(s: String) -> Self {
-    Self::new(s)
-  }
-}
 
 //====================================================================================================================
 // Информация о системе
@@ -105,74 +42,74 @@ pub struct ProtocolInfoGet {}
 
 /// Запрос версии сервера приложений.
 #[derive(Debug, Serialize)]
-pub struct SystemServerVersionGet {
+pub struct SystemServerVersionGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос информации о ядре системы.
 #[derive(Debug, Serialize)]
-pub struct SystemCoreInfoGet {
+pub struct SystemCoreInfoGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос всех системных настроек.
 #[derive(Debug, Serialize)]
-pub struct SystemSettingsGet {
+pub struct SystemSettingsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос конкретной системной настройки по имени.
 #[derive(Debug, Serialize, Clone)]
-pub struct SystemSettingGet {
+pub struct SystemSettingGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@Name")]
-  pub name: String,
+  pub name: &'a str,
 }
 
 /// Запрос проверки доступности NOVO.
 #[derive(Debug, Serialize, Clone)]
-pub struct NovoAllowedCheck {
+pub struct NovoAllowedCheck<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос проверки включения системной опции.
 #[derive(Debug, Serialize, Clone)]
-pub struct SystemOptionEnabledCheck {
+pub struct SystemOptionEnabledCheck<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@OptionName")]
-  pub option_name: String,
+  pub option_name: &'a str,
 }
 
 /// Установка информации о сетевом окружении клиента.
 #[derive(Debug, Serialize, Clone)]
-pub struct NetworkInformationSet {
+pub struct NetworkInformationSet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClientName")]
-  pub client_name: String,
+  pub client_name: &'a str,
   #[serde(rename = "@ClientIP")]
-  pub client_ip: String,
+  pub client_ip: &'a str,
   #[serde(rename = "@ClientUser")]
-  pub client_user: String,
+  pub client_user: &'a str,
   #[serde(rename = "@ModuleName")]
-  pub module_name: String,
+  pub module_name: &'a str,
 }
 
 /// Установка MAC и IP адресов клиента.
 #[derive(Debug, Serialize, Clone)]
-pub struct SystemNetAddressSet {
+pub struct SystemNetAddressSet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MACAddress")]
-  pub mac_address: String,
+  pub mac_address: &'a str,
   #[serde(rename = "@IPAddress")]
-  pub ip_address: String,
+  pub ip_address: &'a str,
 }
 
 //====================================================================================================================
@@ -181,34 +118,34 @@ pub struct SystemNetAddressSet {
 
 /// Запрос базовой информации о пользователе.
 #[derive(Debug, Serialize)]
-pub struct UserInfoGet {
+pub struct UserInfoGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос проверки привилегий пользователя.
 #[derive(Debug, Serialize, Clone)]
-pub struct SystemUserPrivilegedGet {
+pub struct SystemUserPrivilegedGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос свойства профиля пользователя.
 #[derive(Debug, Serialize, Clone)]
-pub struct UserProfilePropertyGet {
+pub struct UserProfilePropertyGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@PropertyName")]
-  pub property_name: String,
+  pub property_name: &'a str,
 }
 
 /// Запрос проверки вхождения пользователя в группу.
 #[derive(Debug, Serialize, Clone)]
-pub struct UserBelongsGroupCheck {
+pub struct UserBelongsGroupCheck<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@GroupID")]
-  pub group_id: String,
+  pub group_id: &'a str,
 }
 
 //====================================================================================================================
@@ -217,20 +154,20 @@ pub struct UserBelongsGroupCheck {
 
 /// Запрос текста из отладочного канала (Pipe).
 #[derive(Debug, Serialize, Clone)]
-pub struct PipeTextGet {
+pub struct PipeTextGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@PipeName")]
-  pub pipe_name: DebugPipeName,
+  pub pipe_name: &'a str,
 }
 
 /// Запрос отладочного текста.
 #[derive(Debug, Serialize, Clone)]
-pub struct DebugTextGet {
+pub struct DebugTextGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@Direction")]
-  pub direction: String,
+  pub direction: &'a str,
 }
 
 //======================================================================================================================
@@ -239,75 +176,75 @@ pub struct DebugTextGet {
 
 /// Запрос ТБП и ключа архива для экземпляра.
 #[derive(Debug, Serialize, Clone)]
-pub struct ObjectClassAndArchiveKeyGet {
+pub struct ObjectClassAndArchiveKeyGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ObjectID")]
   pub object_id: i64,
   #[serde(rename = "@BaseClassID")]
-  pub base_class_id: String,
+  pub base_class_id: &'a str,
 }
 
 /// Запрос обратных ссылок на экземпляр.
 #[derive(Debug, Serialize, Clone)]
-pub struct ObjectBackwardReferencesGet {
+pub struct ObjectBackwardReferencesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ObjectID")]
   pub object_id: i64,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос переходов состояний ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassTransitionsGet {
+pub struct ClassTransitionsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос состояний ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassStatesGet {
+pub struct ClassStatesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос проверки необходимости `CollectionID` для ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassNeedCollectionIDCheck {
+pub struct ClassNeedCollectionIDCheck<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос дочерних ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassChildrenGet {
+pub struct ClassChildrenGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос на получения списка типов/ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassesGet {
+pub struct ClassesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "$value")]
-  pub class_info: Vec<ClassInfo>,
+  pub class_info: &'a [ClassInfo<'a>],
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassInfo {
+pub struct ClassInfo<'a> {
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 //======================================================================================================================
@@ -316,74 +253,74 @@ pub struct ClassInfo {
 
 /// Запрос операций ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassMethodsGet {
+pub struct ClassMethodsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос на подготовку операции к выполнению
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodBegin {
+pub struct MethodBegin<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
 }
 
 /// Запрос списка входных параметров операции
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodParametersGet {
+pub struct MethodParametersGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
 }
 
 /// Запрос списка публичных переменных операции
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodVariablesGet {
+pub struct MethodVariablesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
 }
 
 /// Запрос списка элементов формы операции
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodControlsGet {
+pub struct MethodControlsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@FormID")]
   pub form_id: i64,
 }
 
 /// Запрос групп операций пользователя для ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassMethodsGroupsUserGet {
+pub struct ClassMethodsGroupsUserGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос вызова блока `Validate` операции.
 #[derive(Debug, Serialize, Clone)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct MethodValidateDefault {
+pub struct MethodValidateDefault<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
   #[serde(rename = "@Info")]
-  pub info: String,
+  pub info: &'a str,
   #[serde(rename = "@DoCommit")]
   pub do_commit: bool,
   #[serde(rename = "@ObjectID")]
   pub object_id: i64,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
   #[serde(rename = "@DebugLevel")]
   pub debug_level: u8,
   #[serde(rename = "@IsCalledFromAnotherMethod")]
@@ -396,15 +333,15 @@ pub struct MethodValidateDefault {
 
 /// Запрос на вызов блока `Validate` операции при событии элемента формы.
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodValidate {
+pub struct MethodValidate<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
   #[serde(rename = "@Type")]
   pub r#type: ValidateType,
   #[serde(rename = "@Info")]
-  pub info: String,
+  pub info: &'a str,
   #[serde(rename = "@DoCommit")]
   pub do_commit: bool,
   #[serde(rename = "@GetDebugText")]
@@ -421,9 +358,9 @@ pub enum ValidateType {
 
 /// Запрос на вызов блока `Execute` операции.
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodExecute {
+pub struct MethodExecute<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
   #[serde(rename = "@DoCommit")]
@@ -431,38 +368,38 @@ pub struct MethodExecute {
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
   #[serde(rename = "ControlsStates")]
-  pub controls_states: ControlsStates,
+  pub controls_states: ControlsStates<'a>,
   #[serde(rename = "PLPCallParameters")]
-  pub plpcall_parameters: PLPCallParameters,
+  pub plpcall_parameters: PLPCallParameters<'a>,
 }
 
 /// Список значений элементов формы операции.
 #[derive(Debug, Serialize, Clone)]
-pub struct ControlsStates {
+pub struct ControlsStates<'a> {
   #[serde(rename = "$value", default)]
-  pub controls_states: Vec<ControlState>,
+  pub controls_states: &'a [ControlState<'a>],
 }
 
 /// Значение элемента формы операции.
 #[derive(Debug, Serialize, Clone)]
-pub struct ControlState {
+pub struct ControlState<'a> {
   #[serde(rename = "@ID")]
   pub id: i64,
   #[serde(rename = "@Value")]
-  pub value: String,
+  pub value: &'a str,
 }
 
 /// Список значений элементов формы операции.
 #[derive(Debug, Serialize, Clone)]
-pub struct PLPCallParameters {
-  pub plpcall_parameters: Vec<()>,
+pub struct PLPCallParameters<'a> {
+  pub plpcall_parameters: &'a [()],
 }
 
 /// Запрос на завершение выполнения операции.
 #[derive(Debug, Serialize, Clone)]
-pub struct MethodEnd {
+pub struct MethodEnd<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@FrameID")]
   pub frame_id: i64,
 }
@@ -473,15 +410,15 @@ pub struct MethodEnd {
 
 /// Запрос данных представления.
 #[derive(Debug, Serialize, Clone)]
-pub struct ViewDataGetCancelable {
+pub struct ViewDataGetCancelable<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ViewShortName")]
-  pub view_short_name: String,
+  pub view_short_name: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
   #[serde(rename = "@Hint")]
-  pub hint: String,
+  pub hint: &'a str,
   #[serde(rename = "@AllowTimestampMilliseconds")]
   pub allow_timestamp_milliseconds: bool,
   #[serde(rename = "@RowsLimit", skip_serializing_if = "Option::is_none")]
@@ -499,20 +436,20 @@ pub struct ObjectFilter {
 
 /// Запрос колонок представления.
 #[derive(Debug, Serialize, Clone)]
-pub struct ViewColumnsGet {
+pub struct ViewColumnsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ViewID")]
   pub view_id: i64,
 }
 
 /// Запрос представлений ТБП.
 #[derive(Debug, Serialize, Clone)]
-pub struct ClassViewsGet {
+pub struct ClassViewsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 //====================================================================================================================
@@ -521,30 +458,30 @@ pub struct ClassViewsGet {
 
 /// Запрос пользовательского меню.
 #[derive(Debug, Serialize, Clone)]
-pub struct UserMenuGet {
+pub struct UserMenuGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос списка справочников.
 #[derive(Debug, Serialize, Clone)]
-pub struct GuidesGet {
+pub struct GuidesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос групп справочников.
 #[derive(Debug, Serialize, Clone)]
-pub struct GuidesGroupsGet {
+pub struct GuidesGroupsGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 /// Запрос списка всех ТБП (не справочников) системы.
 #[derive(Debug, Serialize, Clone)]
-pub struct TypesGet {
+pub struct TypesGet<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
 }
 
 //====================================================================================================================
@@ -553,26 +490,27 @@ pub struct TypesGet {
 
 /// Запрос на блокировку экземпляра
 #[derive(Debug, Serialize, Clone)]
-pub struct ObjectsLock {
+pub struct ObjectsLock<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "$value")]
-  pub objects: Vec<Object>,
+  pub objects: &'a [Object<'a>],
 }
 
+// Экземпляр типа
 #[derive(Debug, Serialize, Clone)]
-pub struct Object {
+pub struct Object<'a> {
   #[serde(rename = "@ID")]
   pub id: i64,
   #[serde(rename = "@ClassID")]
-  pub class_id: String,
+  pub class_id: &'a str,
 }
 
 /// Запрос на разблокировку экземпляров
 #[derive(Debug, Serialize, Clone)]
-pub struct ObjectsUnlock {
+pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]
-  pub session_id: SessionId,
+  pub session_id: &'a str,
   #[serde(rename = "@ClearAllLocks")]
   pub clear_all_locks: bool,
 }

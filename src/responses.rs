@@ -1,8 +1,4 @@
-use crate::models::{
-  requests::{DebugPipeName, SessionId},
-  utils::{Flags, bool_as_bool, number_as_bool},
-};
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
@@ -103,9 +99,9 @@ pub struct ServerErrorInfo {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Session {
   #[serde(rename = "@ID")]
-  pub session_id: SessionId,
+  pub session_id: String,
   #[serde(rename = "@DebugPipeName")]
-  pub debug_pipe_name: DebugPipeName,
+  pub debug_pipe_name: String,
 }
 
 /// Ответ с URL для авторизации.
@@ -171,8 +167,8 @@ pub struct Setting {
 /// Результат проверки доступности NOVO.
 #[derive(Debug, Deserialize, Clone)]
 pub struct NovoAllowedCheckResult {
-  #[serde(rename = "@Value")]
-  pub value: String,
+  #[serde(rename = "@Value", with = "number_as_bool")]
+  pub value: bool,
 }
 
 /// Информация о включенности системной опции.
@@ -482,7 +478,7 @@ pub struct Control {
 
   /// ID родительского элемента на форме.
   /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(rename = "@ParentID", default, deserialize_with = "deserialize_optional_number")]
+  #[serde(rename = "@ParentID", default, with = "optional_number")]
   pub parent_id: Option<i64>,
 
   /// Короткое имя ТБП (тип, справочник) которому соответствует значение в элементе.
@@ -801,16 +797,134 @@ pub struct LockResult {
   pub message: Option<String>,
 }
 
-fn deserialize_optional_number<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-  D: Deserializer<'de>,
-  T: std::str::FromStr,
-  T::Err: std::fmt::Display,
-{
-  let s: Option<String> = Option::deserialize(deserializer)?;
-  match s {
-    None => Ok(None),
-    Some(s) if s.is_empty() => Ok(None),
-    Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
+/// Флаги с тремя состояниями: 0 (выключен), 1 (включен), 2 (специальный/альтернативный)
+/// Хранятся как массив из 25 значений.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct Flags([u8; 25]);
+
+impl Flags {
+  pub const LEN: usize = 25;
+
+  /// Создаёт флаги из массива значений
+  #[must_use]
+  pub const fn new(values: [u8; 25]) -> Self {
+    Self(values)
+  }
+
+  /// Получает значение флага по индексу
+  #[must_use]
+  pub const fn get(&self, index: usize) -> u8 {
+    self.0[index]
+  }
+
+  /// Проверяет, установлен ли флаг (значение != 0)
+  #[must_use]
+  pub const fn has_flag(&self, index: usize) -> bool {
+    self.0[index] != 0
+  }
+
+  /// Проверяет, что флаг имеет конкретное значение
+  #[must_use]
+  pub const fn is(&self, index: usize, value: u8) -> bool {
+    self.0[index] == value
+  }
+}
+
+impl TryFrom<String> for Flags {
+  type Error = String;
+
+  fn try_from(value: String) -> Result<Self, Self::Error> {
+    if value.len() != Self::LEN {
+      return Err(format!(
+        "Invalid flags length: expected {}, got {}",
+        Self::LEN,
+        value.len()
+      ));
+    }
+
+    let mut result = [0u8; 25];
+    for (i, c) in value.chars().enumerate() {
+      result[i] = match c {
+        '0' => 0,
+        '1' => 1,
+        '2' => 2,
+        '3' => 3,
+        _ => {
+          return Err(format!("Invalid character '{c}' at position {i} in flags '{value}'"));
+        }
+      };
+    }
+
+    Ok(Self(result))
+  }
+}
+
+impl From<Flags> for String {
+  #[allow(clippy::cast_lossless)]
+  fn from(flags: Flags) -> Self {
+    flags
+      .0
+      .iter()
+      .map(|&b| char::from_digit(b as u32, 10).unwrap())
+      .collect()
+  }
+}
+
+/// Модуль для десериализации строк `"true"` / `"false"` в `bool`.
+pub mod bool_as_bool {
+  use serde::{self, Deserialize, Deserializer};
+
+  /// # Errors
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+      "true" => Ok(true),
+      "false" => Ok(false),
+      _ => Err(serde::de::Error::custom(format!(
+        "expected 'true' or 'false', received '{s}'"
+      ))),
+    }
+  }
+}
+
+/// Модуль для десериализации строк `"1"` / `"0"` в `bool`.
+pub mod number_as_bool {
+  use serde::{self, Deserialize, Deserializer};
+
+  /// # Errors
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+    match s.as_str() {
+      "1" => Ok(true),
+      "0" => Ok(false),
+      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
+    }
+  }
+}
+
+/// Модуль для десериализации пустой строки как отсутствие значения.
+pub mod optional_number {
+  use serde::{self, Deserialize, Deserializer};
+
+  /// # Errors
+  pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+  where
+    D: Deserializer<'de>,
+    T: std::str::FromStr,
+    T::Err: std::fmt::Display,
+  {
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    match s {
+      None => Ok(None),
+      Some(s) if s.is_empty() => Ok(None),
+      Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
+    }
   }
 }

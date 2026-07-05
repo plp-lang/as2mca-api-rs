@@ -36,8 +36,9 @@ serde = { version = "1.0.228", features = ["derive"] }
 thiserror = "2.0.18"
 
 [dev-dependencies]
+rstest = "0.26.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
-tokio = { version = "1.52.3", features = ["macros"] }
+tokio = { version = "1.52.3", features = ["full"] }
 local-ip-address = "0.6.13"
 mac_address = "1.1.8"
 whoami = "2.1.2"
