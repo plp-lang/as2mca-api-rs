@@ -14,6 +14,8 @@ pub enum ResponseBody {
   Result(MethodResult),
   Validate(Validate),
   LockResult(LockResult),
+  Class(Class),
+  NotFound(NotFound),
   Classes(Classes),
   MethodVariables(MethodVariables),
   Controls(Controls),
@@ -50,6 +52,9 @@ pub enum ResponseBody {
   CoreInfo(CoreInfo),
   Settings(Settings),
 }
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct NotFound {}
 
 /// Содержимое элемента `<User>` — зависит от метода API.
 #[derive(Debug, Deserialize, Clone)]

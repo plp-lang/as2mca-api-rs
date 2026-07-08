@@ -10,7 +10,7 @@ use tracing::instrument;
 use crate::{
   error::{Error, Result},
   requests::{
-    AuthenticationURLGet, ClassChildrenGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet,
+    AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet,
     ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet,
     Disconnect, GuidesGet, GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodExecute,
     MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet,
@@ -904,6 +904,28 @@ impl Client {
     let body = self.api(&ClassesGet { session_id, class_info }).await?;
     match body {
       ResponseBody::Classes(cls) => Ok(cls.body),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Classes".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// # Возвращает детализацию по типу/ТБП.
+  ///
+  /// ## Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "classes_get"))]
+  pub async fn class_get(&self, session_id: &str, class_id: &str) -> Result<Option<Class>> {
+    let body = self.api(&ClassGet { session_id, class_id }).await?;
+    match body {
+      ResponseBody::NotFound(_) => Ok(None),
+      ResponseBody::Class(cl) => Ok(Some(cl)),
       _ => Err(Error::UnexpectedResponse {
         expected: "Classes".to_string(),
         actual: format!("{body:?}"),
