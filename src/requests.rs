@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+use crate::responses::optional_number;
+
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
 /// Базовая обертка для любого XML-запроса к API.
@@ -317,8 +319,8 @@ pub struct MethodValidateDefault<'a> {
   pub info: &'a str,
   #[serde(rename = "@DoCommit")]
   pub do_commit: bool,
-  #[serde(rename = "@ObjectID")]
-  pub object_id: i64,
+  #[serde(rename = "@ObjectID", with = "optional_number")]
+  pub object_id: Option<i64>,
   #[serde(rename = "@ClassID")]
   pub class_id: &'a str,
   #[serde(rename = "@DebugLevel")]
@@ -329,6 +331,8 @@ pub struct MethodValidateDefault<'a> {
   pub read_only: bool,
   #[serde(rename = "@GetDebugText")]
   pub get_debug_text: bool,
+  #[serde(rename = "@OptimizedGridUpdates")]
+  pub optimized_grid_updates: bool,
 }
 
 /// Запрос на вызов блока `Validate` операции при событии элемента формы.
@@ -368,9 +372,9 @@ pub struct MethodExecute<'a> {
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
   #[serde(rename = "ControlsStates")]
-  pub controls_states: ControlsStates<'a>,
+  pub controls_states: &'a ControlsStates<'a>,
   #[serde(rename = "PLPCallParameters")]
-  pub plpcall_parameters: PLPCallParameters<'a>,
+  pub plpcall_parameters: &'a PLPCallParameters<'a>,
 }
 
 /// Список значений элементов формы операции.

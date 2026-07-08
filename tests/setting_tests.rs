@@ -5,10 +5,10 @@ use crate::common::ctx::{Context, ctx};
 mod common;
 
 #[rstest]
-#[case("UNKNOWN", "")]
-#[case("SHOW_SYSTEM_MENU", "YES")]
+#[case("UNKNOWN", None)]
+#[case("SHOW_SYSTEM_MENU", Some("YES"))]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case] value: &str) {
+async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case] value: Option<&str>) {
   let Context {
     ref client,
     ref session_id,
@@ -16,17 +16,13 @@ async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case]
   } = ctx.await;
 
   let res = client.system_setting_get(session_id, name).await.unwrap();
-  assert_eq!(res, Some(value.to_string()));
+  assert_eq!(res, value.map(ToString::to_string));
 
   let settings = client.system_settings_get(session_id).await.unwrap();
   assert!(!settings.is_empty());
 
-  let res = settings
-    .iter()
-    .find(|s| s.name == name)
-    .and_then(|v| v.value.clone())
-    .unwrap_or(String::new());
-  assert_eq!(res, value);
+  let res = settings.iter().find(|s| s.name == name).and_then(|v| v.value.clone());
+  assert_eq!(res, value.map(ToString::to_string));
 }
 
 #[rstest]

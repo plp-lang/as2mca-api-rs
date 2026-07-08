@@ -381,6 +381,13 @@ pub struct MethodParameter {
   #[serde(rename = "@Direction")]
   pub direction: Direction,
 
+  #[serde(rename = "@ViewID", default)]
+  pub view_id: Option<i64>,
+  #[serde(rename = "@ViewClassID", default)]
+  pub view_class_id: Option<String>,
+  #[serde(rename = "@ViewFilter", default)]
+  pub view_filter: Option<String>,
+
   /// Значение по умолчанию.
   #[serde(rename = "@DefaultValue", default)]
   pub default_value: Option<String>,
@@ -504,6 +511,14 @@ pub enum ControlType {
   Object,
   Check,
   Button,
+  Subform,
+  Line,
+  Memo,
+  Frame,
+  Date,
+  Variant,
+  Array,
+  Panel,
 }
 
 /// Результат выполнения блока `Validate` операции.
@@ -638,9 +653,11 @@ pub enum Invisible {
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ColumnBase {
+  Memo,
+  Date,
   String,
   Number,
-  Date,
+  Boolean,
   Reference,
   Collection,
 }
@@ -911,7 +928,7 @@ pub mod number_as_bool {
 
 /// Модуль для десериализации пустой строки как отсутствие значения.
 pub mod optional_number {
-  use serde::{self, Deserialize, Deserializer};
+  use serde::{self, Deserialize, Deserializer, Serializer};
 
   /// # Errors
   pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
@@ -925,6 +942,18 @@ pub mod optional_number {
       None => Ok(None),
       Some(s) if s.is_empty() => Ok(None),
       Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
+    }
+  }
+
+  /// # Errors
+  pub fn serialize<S, T>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+    T: std::fmt::Display,
+  {
+    match value {
+      Some(v) => serializer.serialize_str(&v.to_string()),
+      None => serializer.serialize_str(""),
     }
   }
 }

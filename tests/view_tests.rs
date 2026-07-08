@@ -7,9 +7,9 @@ mod common;
 
 #[rstest]
 #[case("USER", "VW_CRIT_USER")]
-#[case("CL_ORG", "VW_CRIT_CL_ORG")]
 #[case("CL_PRIV", "VW_CRIT_CL_PRIV")]
 #[case("CL_PRIV", "VW_CRIT_CL_PRIV_EXT")]
+#[case("FP_TUNE", "VW_CRIT_FP_TUNE_ALL")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_view(#[future] ctx: Context, #[case] class_short_name: &str, #[case] view_short_name: &str) {
   let Context {

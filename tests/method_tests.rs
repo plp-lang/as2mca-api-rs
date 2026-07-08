@@ -6,7 +6,7 @@ use as2mca_api::requests::{ClassInfo, MethodValidate, MethodValidateDefault, Val
 mod common;
 
 #[rstest]
-#[case("USER", "VW_CRIT_USER", "NEW_AUTO")]
+#[case("USER", "VW_CRIT_USER", "NEW#AUTO")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_method(
   #[future] ctx: Context,
@@ -83,12 +83,13 @@ async fn test_method(
       method_id,
       info: "",
       do_commit: true,
-      object_id,
+      object_id: Some(object_id),
       class_id: class_short_name,
       debug_level: 10,
       is_called_from_another_method: true,
       read_only: false,
       get_debug_text: true,
+      optimized_grid_updates: true,
     })
     .await
     .unwrap();
