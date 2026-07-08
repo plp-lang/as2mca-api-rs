@@ -1,14 +1,16 @@
 use rstest::rstest;
 
 use crate::common::ctx::{Context, ctx};
-use as2mca_api::requests::{ClassInfo, MethodValidate, MethodValidateDefault, ValidateType, ViewDataGetCancelable};
+use as2mca_api::requests::{
+  ClassInfo, ControlState, ControlsStates, MethodExecute, MethodValidate, MethodValidateDefault, ViewDataGetCancelable,
+};
 
 mod common;
 
 #[rstest]
 #[case("FP_TUNE", "VW_CRIT_FP_TUNE_ALL", "NEW#AUTO")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_method(
+async fn test_methods(
   #[future] ctx: Context,
   #[case] class_short_name: &str,
   #[case] view_short_name: &str,
@@ -84,15 +86,42 @@ async fn test_method(
     .method_validate_default(&MethodValidateDefault {
       session_id,
       method_id,
-      info: "",
-      do_commit: true,
       object_id: Some(object_id),
-      class_id: class_short_name,
-      debug_level: 10,
-      is_called_from_another_method: true,
-      read_only: false,
-      get_debug_text: true,
-      optimized_grid_updates: true,
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client.method_end(session_id, frame_id).await.unwrap();
+}
+
+#[rstest]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
+  const CLASS_SHORT_NAME: &str = "FP_TUNE";
+  const METHOD_SHORT_NAME: &str = "NEW#AUTO";
+
+  let Context {
+    ref client,
+    ref session_id,
+    ..
+  } = ctx.await;
+
+  let methods = client.class_methods_get(session_id, CLASS_SHORT_NAME).await.unwrap();
+  assert!(!methods.is_empty());
+
+  let method = methods.iter().find(|v| v.short_name == METHOD_SHORT_NAME).unwrap();
+  let method_id = method.id;
+
+  let frame_id = client.method_begin(session_id, method_id).await.unwrap();
+  assert!(frame_id == 0);
+
+  client
+    .method_validate_default(&MethodValidateDefault {
+      session_id,
+      method_id,
+      class_id: CLASS_SHORT_NAME,
+      ..Default::default()
     })
     .await
     .unwrap();
@@ -101,11 +130,87 @@ async fn test_method(
     .method_validate(&MethodValidate {
       session_id,
       method_id,
-      r#type: ValidateType::Validate,
-      info: "P_NAME",
-      do_commit: true,
-      get_debug_text: true,
-      optimized_grid_updates: true,
+      info: "%PARAM%.P_CODE",
+      controls_states: &ControlsStates {
+        controls_states: &[ControlState {
+          id: 17_007_818,
+          value: "TEST",
+        }],
+      },
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_validate(&MethodValidate {
+      session_id,
+      method_id,
+      info: "%PARAM%.P_NAME",
+      controls_states: &ControlsStates {
+        controls_states: &[ControlState {
+          id: 17_007_820,
+          value: "TEST",
+        }],
+      },
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_validate(&MethodValidate {
+      session_id,
+      method_id,
+      info: "%PARAM%.P_GROUP_ID",
+      controls_states: &ControlsStates {
+        controls_states: &[ControlState {
+          id: 17_007_839,
+          value: "TEST",
+        }],
+      },
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_validate(&MethodValidate {
+      session_id,
+      method_id,
+      info: "%VAR%.V_VAL_TYPE.0",
+      controls_states: &ControlsStates {
+        controls_states: &[ControlState {
+          id: 17_007_844,
+          value: "4",
+        }],
+      },
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_validate(&MethodValidate {
+      session_id,
+      method_id,
+      info: "%VAR%.V_VAL_BOOL.0",
+      controls_states: &ControlsStates {
+        controls_states: &[ControlState {
+          id: 17_007_835,
+          value: "1",
+        }],
+      },
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
+  client
+    .method_execute(&MethodExecute {
+      session_id,
+      method_id,
+      ..Default::default()
     })
     .await
     .unwrap();

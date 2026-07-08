@@ -353,6 +353,24 @@ pub struct MethodValidateDefault<'a> {
   pub optimized_grid_updates: bool,
 }
 
+impl Default for MethodValidateDefault<'_> {
+  fn default() -> Self {
+    Self {
+      session_id: Default::default(),
+      method_id: Default::default(),
+      class_id: Default::default(),
+      info: "",
+      do_commit: true,
+      object_id: None,
+      debug_level: 0,
+      is_called_from_another_method: true,
+      read_only: false,
+      get_debug_text: true,
+      optimized_grid_updates: true,
+    }
+  }
+}
+
 /// Запрос на вызов блока `Validate` операции при событии элемента формы.
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodValidate<'a> {
@@ -370,6 +388,28 @@ pub struct MethodValidate<'a> {
   pub get_debug_text: bool,
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
+  #[serde(rename = "ControlsStates")]
+  pub controls_states: &'a ControlsStates<'a>,
+  #[serde(rename = "PLPCallParameters")]
+  pub plpcall_parameters: &'a PLPCallParameters<'a>,
+}
+
+impl Default for MethodValidate<'_> {
+  fn default() -> Self {
+    Self {
+      session_id: Default::default(),
+      method_id: Default::default(),
+      info: Default::default(),
+      r#type: ValidateType::Validate,
+      controls_states: &ControlsStates { controls_states: &[] },
+      plpcall_parameters: &PLPCallParameters {
+        plpcall_parameters: &[],
+      },
+      do_commit: true,
+      get_debug_text: true,
+      optimized_grid_updates: true,
+    }
+  }
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -393,6 +433,21 @@ pub struct MethodExecute<'a> {
   pub controls_states: &'a ControlsStates<'a>,
   #[serde(rename = "PLPCallParameters")]
   pub plpcall_parameters: &'a PLPCallParameters<'a>,
+}
+
+impl Default for MethodExecute<'_> {
+  fn default() -> Self {
+    Self {
+      session_id: Default::default(),
+      method_id: Default::default(),
+      controls_states: &ControlsStates { controls_states: &[] },
+      plpcall_parameters: &PLPCallParameters {
+        plpcall_parameters: &[],
+      },
+      do_commit: true,
+      optimized_grid_updates: true,
+    }
+  }
 }
 
 /// Список значений элементов формы операции.
