@@ -11,6 +11,7 @@ pub struct Response {
 /// Тело ответа
 #[derive(Debug, Deserialize, Clone)]
 pub enum ResponseBody {
+  ClientScript(ClientScript),
   Result(MethodResult),
   Validate(Validate),
   LockResult(LockResult),
@@ -64,6 +65,13 @@ pub enum UserContent {
   Info(User),
   /// Ответ `SystemUserPrivilegedGet`: `<User IsPrivileged="..."/>`
   Privileged(UserPrivileged),
+}
+
+/// Клиент-скрипт
+#[derive(Debug, Deserialize, Clone)]
+pub struct ClientScript {
+  #[serde(rename = "@Text")]
+  pub text: String,
 }
 
 /// Результат выполнения операции.

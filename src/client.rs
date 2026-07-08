@@ -12,13 +12,13 @@ use crate::{
   requests::{
     AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet,
     ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet,
-    Disconnect, GuidesGet, GuidesGroupsGet, MethodBegin, MethodControlsGet, MethodEnd, MethodExecute,
-    MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet,
-    NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock,
-    PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
-    SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
-    TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet, ViewColumnsGet,
-    ViewDataGetCancelable, XML_HEADER,
+    Disconnect, GuidesGet, GuidesGroupsGet, MethodBegin, MethodClientScriptGet, MethodControlsGet, MethodEnd,
+    MethodExecute, MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet,
+    NetworkInformationSet, NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet,
+    ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet,
+    SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
+    SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
+    ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
   },
   responses::{
     BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame,
@@ -920,14 +920,14 @@ impl Client {
   /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
   /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
   /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
-  #[instrument(skip(self), err, fields(method = "classes_get"))]
+  #[instrument(skip(self), err, fields(method = "class_get"))]
   pub async fn class_get(&self, session_id: &str, class_id: &str) -> Result<Option<Class>> {
     let body = self.api(&ClassGet { session_id, class_id }).await?;
     match body {
       ResponseBody::NotFound(_) => Ok(None),
       ResponseBody::Class(cl) => Ok(Some(cl)),
       _ => Err(Error::UnexpectedResponse {
-        expected: "Classes".to_string(),
+        expected: "Class".to_string(),
         actual: format!("{body:?}"),
       }),
     }
@@ -953,6 +953,28 @@ impl Client {
       ResponseBody::Methods(methods) => Ok(methods.body),
       _ => Err(Error::UnexpectedResponse {
         expected: "Methods".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// # Запросить клиент-скрипт операции.
+  ///
+  /// ## Errors
+  /// - [`Error::Api`], если сервер вернул ошибку следующего вида: `<Response><Error Text="..."><ServerErrorInfo Text="..."></Error></Response>`;
+  /// - [`Error::Http`], если сеть недоступна, истёк таймаут или сервер вернул статус `4xx/5xx`;
+  /// - [`Error::UrlParseError`], если не удалось собрать URL;
+  /// - [`Error::XmlSerializeError`], если не удалось собрать тело запроса;
+  /// - [`Error::XmlDeserializeError`], если не удалось разобрать тело ответа;
+  /// - [`Error::UnexpectedResponse`], получили от сервера не то что ожидали.
+  #[instrument(skip(self), err, fields(method = "method_client_script_get"))]
+  pub async fn method_client_script_get(&self, session_id: &str, method_id: i64) -> Result<Option<String>> {
+    let body = self.api(&MethodClientScriptGet { session_id, method_id }).await?;
+    match body {
+      ResponseBody::ClientScript(s) if s.text.is_empty() => Ok(None),
+      ResponseBody::ClientScript(s) => Ok(Some(s.text)),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Validate".to_string(),
         actual: format!("{body:?}"),
       }),
     }

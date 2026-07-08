@@ -6,7 +6,7 @@ use as2mca_api::requests::{ClassInfo, MethodValidate, MethodValidateDefault, Val
 mod common;
 
 #[rstest]
-#[case("USER", "VW_CRIT_USER", "NEW#AUTO")]
+#[case("FP_TUNE", "VW_CRIT_FP_TUNE_ALL", "NEW#AUTO")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_method(
   #[future] ctx: Context,
@@ -58,7 +58,10 @@ async fn test_method(
   assert!(!methods.is_empty());
 
   let method = methods.iter().find(|v| v.short_name == method_short_name).unwrap();
+  let form_id = method.form_id.unwrap_or(method.id);
   let method_id = method.id;
+
+  let _ = client.method_client_script_get(session_id, method_id).await.unwrap();
 
   let frame_id = client.method_begin(session_id, method_id).await.unwrap();
   assert!(frame_id == 0);
@@ -68,7 +71,7 @@ async fn test_method(
 
   let _ = client.method_variables_get(session_id, method_id).await.unwrap();
 
-  let controls = client.method_controls_get(session_id, method_id).await.unwrap();
+  let controls = client.method_controls_get(session_id, form_id).await.unwrap();
   assert!(!controls.is_empty());
 
   let class_info: Vec<ClassInfo> = params.iter().map(|p| ClassInfo { class_id: &p.class_id }).collect();

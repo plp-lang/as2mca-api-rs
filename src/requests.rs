@@ -316,6 +316,15 @@ pub struct ClassMethodsGroupsUserGet<'a> {
   pub class_id: &'a str,
 }
 
+/// Запрос на получение клиент-скрипта операции
+#[derive(Debug, Serialize, Clone)]
+pub struct MethodClientScriptGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+}
+
 /// Запрос вызова блока `Validate` операции.
 #[derive(Debug, Serialize, Clone)]
 #[allow(clippy::struct_excessive_bools)]
