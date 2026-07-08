@@ -31,7 +31,7 @@ async fn test_lock(#[future] ctx: Context, #[case] class_short_name: &str, #[cas
       hint: "FIRST_ROWS",
       allow_timestamp_milliseconds: true,
       rows_limit: Some(1),
-      body: None,
+      object_filter: None,
     })
     .await
     .unwrap();

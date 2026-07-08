@@ -2,7 +2,7 @@ use rstest::rstest;
 
 use crate::common::ctx::{Context, ctx};
 use as2mca_api::requests::{
-  ClassInfo, ControlState, ControlsStates, MethodExecute, MethodValidate, MethodValidateDefault, ViewDataGetCancelable,
+  ClassInfo, ControlState, MethodExecute, MethodValidate, MethodValidateDefault, ViewDataGetCancelable,
 };
 
 mod common;
@@ -38,7 +38,7 @@ async fn test_methods(
       hint: "FIRST_ROWS",
       allow_timestamp_milliseconds: true,
       rows_limit: Some(1),
-      body: None,
+      object_filter: None,
     })
     .await
     .unwrap();
@@ -131,12 +131,10 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id,
       info: "%PARAM%.P_CODE",
-      controls_states: &ControlsStates {
-        controls_states: &[ControlState {
-          id: 17_007_818,
-          value: "TEST",
-        }],
-      },
+      controls_states: &[ControlState {
+        id: 17_007_818,
+        value: "TEST",
+      }],
       ..Default::default()
     })
     .await
@@ -147,12 +145,10 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id,
       info: "%PARAM%.P_NAME",
-      controls_states: &ControlsStates {
-        controls_states: &[ControlState {
-          id: 17_007_820,
-          value: "TEST",
-        }],
-      },
+      controls_states: &[ControlState {
+        id: 17_007_820,
+        value: "TEST",
+      }],
       ..Default::default()
     })
     .await
@@ -163,12 +159,10 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id,
       info: "%PARAM%.P_GROUP_ID",
-      controls_states: &ControlsStates {
-        controls_states: &[ControlState {
-          id: 17_007_839,
-          value: "TEST",
-        }],
-      },
+      controls_states: &[ControlState {
+        id: 17_007_839,
+        value: "TEST",
+      }],
       ..Default::default()
     })
     .await
@@ -179,12 +173,10 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id,
       info: "%VAR%.V_VAL_TYPE.0",
-      controls_states: &ControlsStates {
-        controls_states: &[ControlState {
-          id: 17_007_844,
-          value: "4",
-        }],
-      },
+      controls_states: &[ControlState {
+        id: 17_007_844,
+        value: "4",
+      }],
       ..Default::default()
     })
     .await
@@ -195,12 +187,10 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id,
       info: "%VAR%.V_VAL_BOOL.0",
-      controls_states: &ControlsStates {
-        controls_states: &[ControlState {
-          id: 17_007_835,
-          value: "1",
-        }],
-      },
+      controls_states: &[ControlState {
+        id: 17_007_835,
+        value: "1",
+      }],
       ..Default::default()
     })
     .await

@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::serde_helpers::{empty_string_as_number, number_as_bool, string_bool_as_bool, unwrap_list};
+
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "Response")]
@@ -80,8 +82,8 @@ pub struct ClientScript {
 pub struct MethodResult {
   #[serde(rename = "@Value")]
   pub value: i64,
-  #[serde(rename = "$value")]
-  pub controls_states: ControlsStates,
+  #[serde(rename = "$value", with = "unwrap_list")]
+  pub controls_states: Vec<ControlsState>,
 }
 
 /// Пустой ответ, подтверждающий успешное выполнение действия (например, отключение сессии).
@@ -164,7 +166,7 @@ pub struct CoreInfo {
 /// Список системных настроек.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Setting>,
 }
 
@@ -187,7 +189,7 @@ pub struct NovoAllowedCheckResult {
 /// Информация о включенности системной опции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct OptionInfo {
-  #[serde(rename = "@Enabled", with = "bool_as_bool")]
+  #[serde(rename = "@Enabled", with = "string_bool_as_bool")]
   pub enabled: bool,
 }
 
@@ -209,7 +211,7 @@ pub struct User {
 /// Информация о привилегиях пользователя.
 #[derive(Debug, Deserialize, Clone)]
 pub struct UserPrivileged {
-  #[serde(rename = "@IsPrivileged", with = "bool_as_bool")]
+  #[serde(rename = "@IsPrivileged", with = "string_bool_as_bool")]
   pub is_privileged: bool,
 }
 
@@ -261,7 +263,7 @@ pub struct ObjectClassAndArchiveKey {
 /// Список обратных ссылок на экземпляр.
 #[derive(Debug, Deserialize, Clone)]
 pub struct BackwardReferences {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<BackwardReference>,
 }
 
@@ -300,7 +302,7 @@ pub struct ChildClasses {}
 /// Список операций ТБП.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Methods {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Method>,
 }
 
@@ -375,7 +377,7 @@ pub enum MethodType {
 /// Список входных параметров операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodParameters {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub parameters: Vec<MethodParameter>,
 }
 
@@ -409,7 +411,7 @@ pub struct MethodParameter {
 /// Список публичных переменных операции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodVariables {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub variables: Vec<MethodVariable>,
 }
 
@@ -446,7 +448,7 @@ pub enum Direction {
 /// Спиcок элементов на форме.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Controls {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub controls: Vec<Control>,
 }
 
@@ -498,7 +500,7 @@ pub struct Control {
 
   /// ID родительского элемента на форме.
   /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(rename = "@ParentID", default, with = "optional_number")]
+  #[serde(rename = "@ParentID", default, with = "empty_string_as_number")]
   pub parent_id: Option<i64>,
 
   /// Короткое имя ТБП (тип, справочник) которому соответствует значение в элементе.
@@ -539,14 +541,7 @@ pub enum ControlType {
 pub struct Validate {
   #[serde(rename = "@DebugText")]
   pub debug_text: String,
-  #[serde(rename = "$value")]
-  pub controls_states: ControlsStates,
-}
-
-/// Список значений элементов формы операции.
-#[derive(Debug, Deserialize, Clone)]
-pub struct ControlsStates {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", with = "unwrap_list")]
   pub controls_states: Vec<ControlsState>,
 }
 
@@ -559,7 +554,7 @@ pub struct ControlsState {
   pub value: String,
 }
 
-// TODO
+// ID открытой формы
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodFrame {
   #[serde(rename = "@FrameID", default)]
@@ -577,14 +572,14 @@ pub struct MethodsGroups {}
 /// Данные представления.
 #[derive(Debug, Deserialize, Clone)]
 pub struct ViewData {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub row: Vec<Row>,
 }
 
 /// Строка данных представления.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Row {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub row_item: Vec<RowItem>,
 }
 
@@ -600,7 +595,7 @@ pub struct RowItem {
 /// Список колонок представления.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Columns {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Column>,
 }
 
@@ -687,7 +682,7 @@ pub enum Logging {
 /// Список представлений ТБП.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Views {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<View>,
 }
 
@@ -741,7 +736,7 @@ pub struct UserMenu {}
 /// Список справочников.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Guides {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Class>,
 }
 
@@ -755,7 +750,7 @@ pub enum BaseClassID {
 /// Список групп справочников.
 #[derive(Debug, Deserialize, Clone)]
 pub struct GuidesGroups {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<GuidesGroup>,
 }
 
@@ -771,14 +766,14 @@ pub struct GuidesGroup {
 /// Список типов/ТБП.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Classes {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Class>,
 }
 
 /// Список всех ТПБ (не справочников) системы.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Types {
-  #[serde(default, rename = "$value")]
+  #[serde(rename = "$value", default)]
   pub body: Vec<Class>,
 }
 
@@ -898,75 +893,5 @@ impl From<Flags> for String {
       .iter()
       .map(|&b| char::from_digit(b as u32, 10).unwrap())
       .collect()
-  }
-}
-
-/// Модуль для десериализации строк `"true"` / `"false"` в `bool`.
-pub mod bool_as_bool {
-  use serde::{self, Deserialize, Deserializer};
-
-  /// # Errors
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    match s.as_str() {
-      "true" => Ok(true),
-      "false" => Ok(false),
-      _ => Err(serde::de::Error::custom(format!(
-        "expected 'true' or 'false', received '{s}'"
-      ))),
-    }
-  }
-}
-
-/// Модуль для десериализации строк `"1"` / `"0"` в `bool`.
-pub mod number_as_bool {
-  use serde::{self, Deserialize, Deserializer};
-
-  /// # Errors
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    match s.as_str() {
-      "1" => Ok(true),
-      "0" => Ok(false),
-      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
-    }
-  }
-}
-
-/// Модуль для десериализации пустой строки как отсутствие значения.
-pub mod optional_number {
-  use serde::{self, Deserialize, Deserializer, Serializer};
-
-  /// # Errors
-  pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-  where
-    D: Deserializer<'de>,
-    T: std::str::FromStr,
-    T::Err: std::fmt::Display,
-  {
-    let s: Option<String> = Option::deserialize(deserializer)?;
-    match s {
-      None => Ok(None),
-      Some(s) if s.is_empty() => Ok(None),
-      Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
-    }
-  }
-
-  /// # Errors
-  pub fn serialize<S, T>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-    T: std::fmt::Display,
-  {
-    match value {
-      Some(v) => serializer.serialize_str(&v.to_string()),
-      None => serializer.serialize_str(""),
-    }
   }
 }

@@ -27,10 +27,14 @@ pub enum Error {
   #[error("Header value error: {0}")]
   InvalidHeaderValue(#[from] InvalidHeaderValue),
 
-  #[error("XML deserialization error: {0}")]
+  #[error(
+    "XML deserialization error: {0}. The server API has changed and is incompatible with the current library version. Please open an issue in the project repository and include the details below."
+  )]
   XmlDeserializeError(#[from] quick_xml::DeError),
 
-  #[error("XML serialization error: {0}")]
+  #[error(
+    "XML serialization error: {0}. The server API has changed and is incompatible with the current library version. Please open an issue in the project repository and include the details below."
+  )]
   XmlSerializeError(#[from] quick_xml::SeError),
 }
 

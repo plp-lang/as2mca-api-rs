@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::responses::optional_number;
+use crate::serde_helpers::{empty_string_as_number, unwrap_list};
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -271,7 +271,7 @@ pub struct ClassMethodsGet<'a> {
   pub class_id: &'a str,
 }
 
-/// Запрос на подготовку операции к выполнению
+/// Запрос на открытие формы операции
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodBegin<'a> {
   #[serde(rename = "@SessionID")]
@@ -337,7 +337,7 @@ pub struct MethodValidateDefault<'a> {
   pub info: &'a str,
   #[serde(rename = "@DoCommit")]
   pub do_commit: bool,
-  #[serde(rename = "@ObjectID", with = "optional_number")]
+  #[serde(rename = "@ObjectID", with = "empty_string_as_number")]
   pub object_id: Option<i64>,
   #[serde(rename = "@ClassID")]
   pub class_id: &'a str,
@@ -388,10 +388,10 @@ pub struct MethodValidate<'a> {
   pub get_debug_text: bool,
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
-  #[serde(rename = "ControlsStates")]
-  pub controls_states: &'a ControlsStates<'a>,
-  #[serde(rename = "PLPCallParameters")]
-  pub plpcall_parameters: &'a PLPCallParameters<'a>,
+  #[serde(rename = "ControlsStates", with = "unwrap_list")]
+  pub controls_states: &'a [ControlState<'a>],
+  #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
+  pub plpcall_parameters: &'a [()],
 }
 
 impl Default for MethodValidate<'_> {
@@ -401,10 +401,8 @@ impl Default for MethodValidate<'_> {
       method_id: Default::default(),
       info: Default::default(),
       r#type: ValidateType::Validate,
-      controls_states: &ControlsStates { controls_states: &[] },
-      plpcall_parameters: &PLPCallParameters {
-        plpcall_parameters: &[],
-      },
+      controls_states: &[],
+      plpcall_parameters: &[],
       do_commit: true,
       get_debug_text: true,
       optimized_grid_updates: true,
@@ -429,10 +427,10 @@ pub struct MethodExecute<'a> {
   pub do_commit: bool,
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
-  #[serde(rename = "ControlsStates")]
-  pub controls_states: &'a ControlsStates<'a>,
-  #[serde(rename = "PLPCallParameters")]
-  pub plpcall_parameters: &'a PLPCallParameters<'a>,
+  #[serde(rename = "ControlsStates", with = "unwrap_list")]
+  pub controls_states: &'a [ControlState<'a>],
+  #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
+  pub plpcall_parameters: &'a [()],
 }
 
 impl Default for MethodExecute<'_> {
@@ -440,21 +438,12 @@ impl Default for MethodExecute<'_> {
     Self {
       session_id: Default::default(),
       method_id: Default::default(),
-      controls_states: &ControlsStates { controls_states: &[] },
-      plpcall_parameters: &PLPCallParameters {
-        plpcall_parameters: &[],
-      },
+      controls_states: &[],
+      plpcall_parameters: &[],
       do_commit: true,
       optimized_grid_updates: true,
     }
   }
-}
-
-/// Список значений элементов формы операции.
-#[derive(Debug, Serialize, Clone)]
-pub struct ControlsStates<'a> {
-  #[serde(rename = "$value", default)]
-  pub controls_states: &'a [ControlState<'a>],
 }
 
 /// Значение элемента формы операции.
@@ -464,12 +453,6 @@ pub struct ControlState<'a> {
   pub id: i64,
   #[serde(rename = "@Value")]
   pub value: &'a str,
-}
-
-/// Список значений элементов формы операции.
-#[derive(Debug, Serialize, Clone)]
-pub struct PLPCallParameters<'a> {
-  pub plpcall_parameters: &'a [()],
 }
 
 /// Запрос на завершение выполнения операции.
@@ -501,7 +484,7 @@ pub struct ViewDataGetCancelable<'a> {
   #[serde(rename = "@RowsLimit", skip_serializing_if = "Option::is_none")]
   pub rows_limit: Option<i64>,
   #[serde(rename = "$value")]
-  pub body: Option<ObjectFilter>,
+  pub object_filter: Option<ObjectFilter>,
 }
 
 /// Фильтр экземпляра внутри запроса данных представления.

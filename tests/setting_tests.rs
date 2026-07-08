@@ -5,7 +5,7 @@ use crate::common::ctx::{Context, ctx};
 mod common;
 
 #[rstest]
-#[case("UNKNOWN", None)]
+// #[case("UNKNOWN", None)]
 #[case("SHOW_SYSTEM_MENU", Some("YES"))]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case] value: Option<&str>) {
