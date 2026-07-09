@@ -86,7 +86,7 @@ async fn test_methods(
     .method_validate_default(&MethodValidateDefault {
       session_id,
       method_id,
-      object_id: Some(object_id),
+      object_id: &[object_id],
       ..Default::default()
     })
     .await
@@ -228,7 +228,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_delete_id,
       class_id: CLASS_SHORT_NAME,
-      object_id: Some(object_id),
+      object_id: &[object_id],
       ..Default::default()
     })
     .await

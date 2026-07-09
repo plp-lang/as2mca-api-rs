@@ -87,3 +87,40 @@ pub mod unwrap_list {
     Ok(wrapper.items)
   }
 }
+
+/// Модуль для сериализации и десериализации массива чисел в строку через запятую.
+/// Сериализация Vec<T> в строку "1,2,3"
+/// Десериализация строки "1,2,3" или "" в Vec<T>
+pub mod comma_separated_numbers {
+  use serde::{self, Deserialize, Deserializer, Serializer};
+  use std::fmt::Display;
+  use std::str::FromStr;
+
+  /// # Errors
+  pub fn serialize<S, T>(vec: &[T], serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+    T: Display,
+  {
+    let s = vec.iter().map(ToString::to_string).collect::<Vec<_>>().join(",");
+    serializer.serialize_str(&s)
+  }
+
+  /// # Errors
+  pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+  where
+    D: Deserializer<'de>,
+    T: FromStr,
+    <T as FromStr>::Err: Display,
+  {
+    let s = String::deserialize(deserializer)?;
+    if s.is_empty() {
+      return Ok(Vec::new());
+    }
+    s.split(',')
+      .map(str::trim)
+      .filter(|s| !s.is_empty())
+      .map(|part| part.parse::<T>().map_err(serde::de::Error::custom))
+      .collect()
+  }
+}

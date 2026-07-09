@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::serde_helpers::{empty_string_as_number, unwrap_list};
+use crate::serde_helpers::{comma_separated_numbers, unwrap_list};
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -337,8 +337,8 @@ pub struct MethodValidateDefault<'a> {
   pub info: &'a str,
   #[serde(rename = "@DoCommit")]
   pub do_commit: bool,
-  #[serde(rename = "@ObjectID", with = "empty_string_as_number")]
-  pub object_id: Option<i64>,
+  #[serde(rename = "@ObjectID", with = "comma_separated_numbers")]
+  pub object_id: &'a [i64],
   #[serde(rename = "@ClassID")]
   pub class_id: &'a str,
   #[serde(rename = "@DebugLevel")]
@@ -361,7 +361,7 @@ impl Default for MethodValidateDefault<'_> {
       class_id: Default::default(),
       info: "",
       do_commit: true,
-      object_id: None,
+      object_id: &[],
       debug_level: 0,
       is_called_from_another_method: true,
       read_only: false,
