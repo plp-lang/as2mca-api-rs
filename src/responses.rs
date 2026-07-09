@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::serde_helpers::{empty_string_as_number, number_as_bool, string_bool_as_bool, unwrap_list};
+use crate::serde_helpers::{empty_string_as_number, string_as_bool, unwrap_list};
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
@@ -80,8 +80,8 @@ pub struct ClientScript {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "@Result")]
 pub struct MethodResult {
-  #[serde(rename = "@Value")]
-  pub value: i64,
+  #[serde(rename = "@Value", with = "empty_string_as_number")]
+  pub value: Option<i64>,
   #[serde(rename = "$value", with = "unwrap_list")]
   pub controls_states: Vec<ControlsState>,
 }
@@ -182,14 +182,14 @@ pub struct Setting {
 /// Результат проверки доступности NOVO.
 #[derive(Debug, Deserialize, Clone)]
 pub struct NovoAllowedCheckResult {
-  #[serde(rename = "@Value", with = "number_as_bool")]
+  #[serde(rename = "@Value", with = "string_as_bool")]
   pub value: bool,
 }
 
 /// Информация о включенности системной опции.
 #[derive(Debug, Deserialize, Clone)]
 pub struct OptionInfo {
-  #[serde(rename = "@Enabled", with = "string_bool_as_bool")]
+  #[serde(rename = "@Enabled", with = "string_as_bool")]
   pub enabled: bool,
 }
 
@@ -211,7 +211,7 @@ pub struct User {
 /// Информация о привилегиях пользователя.
 #[derive(Debug, Deserialize, Clone)]
 pub struct UserPrivileged {
-  #[serde(rename = "@IsPrivileged", with = "string_bool_as_bool")]
+  #[serde(rename = "@IsPrivileged", with = "string_as_bool")]
   pub is_privileged: bool,
 }
 
@@ -225,7 +225,7 @@ pub struct UserProfileProperty {
 /// Универсальный результат проверки (например, вхождения в группу).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct CheckResult {
-  #[serde(rename = "@Value", with = "number_as_bool")]
+  #[serde(rename = "@Value", with = "string_as_bool")]
   pub value: bool,
 }
 

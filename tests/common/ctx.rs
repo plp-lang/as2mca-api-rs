@@ -14,9 +14,13 @@ pub struct Context {
 impl Context {
   #[allow(clippy::missing_errors_doc)]
   pub async fn with_client(client: Client, username: &str, password: &str) -> Result<Self, Error> {
-    let session_id = client.authbasic(username, password).await?;
+    client.authbasic(username, password).await?;
 
-    let Session { debug_pipe_name, .. } = client.session_init(None).await?;
+    let Session {
+      debug_pipe_name,
+      session_id,
+      ..
+    } = client.session_init(None).await?;
 
     Ok(Self {
       client,

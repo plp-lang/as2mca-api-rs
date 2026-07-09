@@ -30,8 +30,8 @@ pub mod empty_string_as_number {
   }
 }
 
-/// Модуль для десериализации строк `"true"` / `"false"` в `bool`.
-pub mod string_bool_as_bool {
+/// Модуль для десериализации строк в `bool`.
+pub mod string_as_bool {
   use serde::{self, Deserialize, Deserializer};
 
   /// # Errors
@@ -41,29 +41,11 @@ pub mod string_bool_as_bool {
   {
     let s = String::deserialize(deserializer)?;
     match s.as_str() {
-      "true" => Ok(true),
-      "false" => Ok(false),
+      "true" | "1" => Ok(true),
+      "false" | "0" => Ok(false),
       _ => Err(serde::de::Error::custom(format!(
         "expected 'true' or 'false', received '{s}'"
       ))),
-    }
-  }
-}
-
-/// Модуль для десериализации строк `"1"` / `"0"` в `bool`.
-pub mod number_as_bool {
-  use serde::{self, Deserialize, Deserializer};
-
-  /// # Errors
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    match s.as_str() {
-      "1" => Ok(true),
-      "0" => Ok(false),
-      _ => Err(serde::de::Error::custom(format!("expected '1' or '0', received '{s}'"))),
     }
   }
 }

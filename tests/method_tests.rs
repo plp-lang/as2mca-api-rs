@@ -99,7 +99,8 @@ async fn test_methods(
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   const CLASS_SHORT_NAME: &str = "FP_TUNE";
-  const METHOD_SHORT_NAME: &str = "NEW#AUTO";
+  const METHOD_CREATE_SHORT_NAME: &str = "NEW#AUTO";
+  const METHOD_DELETE_SHORT_NAME: &str = "DELETE#AUTO";
 
   let Context {
     ref client,
@@ -110,16 +111,19 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   let methods = client.class_methods_get(session_id, CLASS_SHORT_NAME).await.unwrap();
   assert!(!methods.is_empty());
 
-  let method = methods.iter().find(|v| v.short_name == METHOD_SHORT_NAME).unwrap();
-  let method_id = method.id;
+  let method_create = methods
+    .iter()
+    .find(|v| v.short_name == METHOD_CREATE_SHORT_NAME)
+    .unwrap();
+  let method_create_id = method_create.id;
 
-  let frame_id = client.method_begin(session_id, method_id).await.unwrap();
+  let frame_id = client.method_begin(session_id, method_create_id).await.unwrap();
   assert!(frame_id == 0);
 
   client
     .method_validate_default(&MethodValidateDefault {
       session_id,
-      method_id,
+      method_id: method_create_id,
       class_id: CLASS_SHORT_NAME,
       ..Default::default()
     })
@@ -129,7 +133,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   client
     .method_validate(&MethodValidate {
       session_id,
-      method_id,
+      method_id: method_create_id,
       info: "%PARAM%.P_CODE",
       controls_states: &[ControlState {
         id: 17_007_818,
@@ -143,7 +147,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   client
     .method_validate(&MethodValidate {
       session_id,
-      method_id,
+      method_id: method_create_id,
       info: "%PARAM%.P_NAME",
       controls_states: &[ControlState {
         id: 17_007_820,
@@ -157,7 +161,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   client
     .method_validate(&MethodValidate {
       session_id,
-      method_id,
+      method_id: method_create_id,
       info: "%PARAM%.P_GROUP_ID",
       controls_states: &[ControlState {
         id: 17_007_839,
@@ -171,7 +175,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   client
     .method_validate(&MethodValidate {
       session_id,
-      method_id,
+      method_id: method_create_id,
       info: "%VAR%.V_VAL_TYPE.0",
       controls_states: &[ControlState {
         id: 17_007_844,
@@ -185,7 +189,7 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
   client
     .method_validate(&MethodValidate {
       session_id,
-      method_id,
+      method_id: method_create_id,
       info: "%VAR%.V_VAL_BOOL.0",
       controls_states: &[ControlState {
         id: 17_007_835,
@@ -196,10 +200,44 @@ async fn test_method_new_auto_fp_tune(#[future] ctx: Context) {
     .await
     .unwrap();
 
+  let res = client
+    .method_execute(&MethodExecute {
+      session_id,
+      method_id: method_create_id,
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+  let object_id = res.value.unwrap();
+
+  client.method_end(session_id, frame_id).await.unwrap();
+
+  // Удаляем
+
+  let method_delete = methods
+    .iter()
+    .find(|v| v.short_name == METHOD_DELETE_SHORT_NAME)
+    .unwrap();
+  let method_delete_id = method_delete.id;
+
+  let frame_id = client.method_begin(session_id, method_delete_id).await.unwrap();
+  assert!(frame_id == 0);
+
+  client
+    .method_validate_default(&MethodValidateDefault {
+      session_id,
+      method_id: method_delete_id,
+      class_id: CLASS_SHORT_NAME,
+      object_id: Some(object_id),
+      ..Default::default()
+    })
+    .await
+    .unwrap();
+
   client
     .method_execute(&MethodExecute {
       session_id,
-      method_id,
+      method_id: method_delete_id,
       ..Default::default()
     })
     .await
