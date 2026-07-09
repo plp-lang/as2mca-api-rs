@@ -1,3 +1,19 @@
+//! Модуль, описывающий XML‑ответы сервера.
+//!
+//! Ответ всегда обёрнут в контейнер [`Response`], внутри которого находится перечисление [`ResponseBody`].
+//! Каждый вариант перечисления соответствует конкретному типу ответа (сессия, список операций, данные представления и т.п.).
+//!
+//! # Пример
+//! ```no_run
+//! use as2mca_api::responses::{Response, ResponseBody};
+//! # let xml = r#"<Response><Session ID="sess" DebugPipeName="pipe"/></Response>"#;
+//!
+//! let parsed: Response = quick_xml::de::from_str(xml).unwrap();
+//! if let ResponseBody::Session(session) = parsed.body {
+//!     println!("Session ID: {}", session.session_id);
+//! }
+//! ```
+
 use serde::Deserialize;
 
 use crate::serde_helpers::{empty_string_as_number, string_as_bool, unwrap_list};

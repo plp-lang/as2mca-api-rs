@@ -1,8 +1,27 @@
+//! Вспомогательные модули для сериализации/десериализации с помощью `serde`.
+//!
+//! Эти модули используются внутри структур запросов и ответов для обработки нестандартных форматов:
+//! - преобразование пустой строки в `None` для чисел;
+//! - разбор строк `"true"`/`"false"` как `bool`;
+//! - сериализация/десериализация списков;
+//! - преобразование массива чисел в строку через запятую.
+//!
+//! # Модули
+//! - [`empty_string_as_number`] – позволяет полю типа `Option<T>` принимать пустую строку как `None`.
+//! - [`string_as_bool`] – десериализует строки `"true"`/`"false"` (или `"1"`/`"0"`) в `bool`.
+//! - [`unwrap_list`] – убирает лишний уровень вложенности для списков в XML (используется для `Vec<T>` внутри элемента). Взято из [документации quick-xml](https://docs.rs/quick-xml/latest/quick_xml/de/#element-lists)
+//! - [`comma_separated_numbers`] – сериализует `Vec<T>` в строку вида `"1,2,3"` и обратно.
+//!
+//! # Использование
+//! Модули применяются через атрибуты `#[serde(with = "...")]` или `#[serde(deserialize_with = "...")]`.
+//! Они уже интегрированы в структуры из `requests` и `responses`, но могут быть полезны и для пользовательских типов.
+
+#![allow(clippy::missing_errors_doc)]
+
 /// Модуль для десериализации пустой строки как отсутствие числа.
 pub mod empty_string_as_number {
   use serde::{self, Deserialize, Deserializer, Serializer};
 
-  /// # Errors
   pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
   where
     D: Deserializer<'de>,
@@ -17,7 +36,6 @@ pub mod empty_string_as_number {
     }
   }
 
-  /// # Errors
   pub fn serialize<S, T>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
   where
     S: Serializer,
@@ -34,7 +52,6 @@ pub mod empty_string_as_number {
 pub mod string_as_bool {
   use serde::{self, Deserialize, Deserializer};
 
-  /// # Errors
   pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
   where
     D: Deserializer<'de>,
@@ -54,7 +71,6 @@ pub mod string_as_bool {
 pub mod unwrap_list {
   use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
-  /// # Errors
   pub fn serialize<'a, T, S>(items: &'a [T], serializer: S) -> Result<S::Ok, S::Error>
   where
     T: Serialize + 'a,
@@ -71,7 +87,6 @@ pub mod unwrap_list {
     Wrapper { items }.serialize(serializer)
   }
 
-  /// # Errors
   pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Vec<T>, D::Error>
   where
     T: Deserialize<'de>,
@@ -89,14 +104,13 @@ pub mod unwrap_list {
 }
 
 /// Модуль для сериализации и десериализации массива чисел в строку через запятую.
-/// Сериализация Vec<T> в строку "1,2,3"
-/// Десериализация строки "1,2,3" или "" в Vec<T>
+/// Сериализация `Vec<T>` в строку "1,2,3"
+/// Десериализация строки "1,2,3" или "" в `Vec<T>`
 pub mod comma_separated_numbers {
   use serde::{self, Deserialize, Deserializer, Serializer};
   use std::fmt::Display;
   use std::str::FromStr;
 
-  /// # Errors
   pub fn serialize<S, T>(vec: &[T], serializer: S) -> Result<S::Ok, S::Error>
   where
     S: Serializer,
@@ -106,7 +120,6 @@ pub mod comma_separated_numbers {
     serializer.serialize_str(&s)
   }
 
-  /// # Errors
   pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
   where
     D: Deserializer<'de>,

@@ -32,10 +32,7 @@ async fn test_view(#[future] ctx: Context, #[case] class_short_name: &str, #[cas
       session_id,
       view_short_name,
       class_id: class_short_name,
-      hint: "FIRST_ROWS",
-      allow_timestamp_milliseconds: true,
-      rows_limit: Some(10),
-      object_filter: None,
+      ..Default::default()
     })
     .await
     .unwrap();

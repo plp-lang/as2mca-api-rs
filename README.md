@@ -25,7 +25,28 @@
 > Использование этого проекта в продуктивных контурах банков или в нарушение лицензионных соглашений и политик безопасности «ЦФТ» осуществляется исключительно на ваш страх и риск.
 > Автор не несет ответственности за любые прямые или косвенные последствия использования этой библиотеки.
 
-## Пример
+## Основные возможности
+
+- **Управление сессией**: Basic‑аутентификация, активация/деактивация сессии;
+- **Системная информация**: версия протокола, версия БД, настройки системы;
+- **Информация о пользователе**: параметры, группы, привилегии;
+- **Работа с ТБП и типами**: получение списка справочников, типов и переходов состояний;
+- **Операции**: открытие формы, получение параметров, переменных, элементов формы, вызов блоков `Validate` и `Execute`;
+- **Представления**: получение данных, колонок, списка представлений для ТБП;
+- **Меню и навигация**: пользовательское меню, группы справочников;
+- **Блокировки**: блокировка/разблокировка экземпляров.
+
+Все запросы и ответы строго типизированы, используют `serde` и `quick-xml` для работы с XML.
+
+## Версия протокола и совместимость
+
+Библиотека разработана на основе анализа версии протокола `9.54`.
+Метод `protocol_info_get` возвращает версию, поддерживаемую сервером.
+
+Если ваш сервер использует другую версию, некоторые структуры могут не совпадать.
+В таком случае прошу открыть Issue или Pull Request.
+
+## Пример использования
 
 Этот пример использует `Tokio` c дополнительными функциями. Ваш `Cargo.toml` может выглядеть так:
 
@@ -35,43 +56,43 @@ tokio = { version = "1", features = ["full"] }
 as2mca_api = "0.1"
 ```
 
-И следующий код:
+Полный цикл: аутентификация, инициализация сессии, получение данных из представления и завершение сессии.
 
 ```rs
-use as2mca_api::{
-  client::Client,
-  models::requests::Credentials,
-};
+use as2mca_api::client::Client;
+use as2mca_api::requests::ViewDataGetCancelable;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let client = Client::new("http://localhost:3000/platform2mca/")?;
+  // Создаём клиент
+  let client = Client::new("http://localhost:3000/platform2mca")?;
 
-  let session_id = client
-    .authbasic(&Credentials {
-      username: "IBS".to_string(),
-      password: "strong_password".to_string(),
-    })
-    .await?;
+  // 1. Basic‑аутентификация
+  client.authbasic("IBS", "strong_password").await?;
 
-  let _ = client.session_init(None)
-    .await?;
+  // 2. Активация сессии
+  let session = client.session_init(None).await?;
 
-  let resp = client
-    .view_data_get_cancelable(&ViewDataGetCancelable {
-      session_id: session_id.clone(),
-      view_short_name: "VW_CRIT_USER".to_string(),
-      class_id: "USER".to_string(),
-      hint: "FIRST_ROWS".to_string(),
-      allow_timestamp_milliseconds: true,
-      rows_limit: Some(10),
-      body: None,
-    })
-    .await?;
-  println!("{resp:#?}");
+  // 3. Запрос данных представления (первые 10 строк)
+  let rows = client
+      .view_data_get_cancelable(&ViewDataGetCancelable {
+          session_id: &session.session_id,
+          view_short_name: "VW_CRIT_USER",
+          class_id: "USER",
+          rows_limit: Some(10),
+          ..Default::default()
+      })
+      .await?;
 
-  client.session_deinit(&session_id)
-    .await?;
+  for row in rows {
+      for item in row.row_item {
+          println!("{} = {}", item.column_name, item.value);
+      }
+      println!("---");
+  }
+
+  // 4. Завершаем сессию
+  client.session_deinit(&session.session_id).await?;
 
   Ok(())
 }

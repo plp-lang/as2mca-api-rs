@@ -1,3 +1,21 @@
+//! Модуль, содержащий все структуры, используемые для формирования XML‑тел запросов к API.
+//!
+//! Каждая структура соответствует одному методу API и сериализуется в XML с помощью `serde`.
+//! Общим контейнером для всех запросов служит структура [`Request<T>`], которая оборачивает тело запроса.
+//!
+//! # Пример использования
+//! ```no_run
+//! use as2mca_api::requests::{Request, SystemServerVersionGet};
+//!
+//! let req = SystemServerVersionGet { session_id: "abc123" };
+//! let xml = quick_xml::se::to_string(&Request { body: req }).unwrap();
+//! println!("{}", xml);
+//! ```
+//!
+//! # Примечание
+//! Все структуры реализуют `Serialize` и рассчитаны на использование внутри [`crate::client::Client`].
+//! Ручная сериализация обычно не требуется.
+
 use serde::Serialize;
 
 use crate::serde_helpers::{comma_separated_numbers, unwrap_list};
@@ -485,6 +503,20 @@ pub struct ViewDataGetCancelable<'a> {
   pub rows_limit: Option<i64>,
   #[serde(rename = "$value")]
   pub object_filter: Option<ObjectFilter>,
+}
+
+impl Default for ViewDataGetCancelable<'_> {
+  fn default() -> Self {
+    Self {
+      session_id: Default::default(),
+      view_short_name: Default::default(),
+      class_id: Default::default(),
+      hint: "FIRST_ROWS",
+      allow_timestamp_milliseconds: true,
+      rows_limit: Some(10),
+      object_filter: None,
+    }
+  }
 }
 
 /// Фильтр экземпляра внутри запроса данных представления.
