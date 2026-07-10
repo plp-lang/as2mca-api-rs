@@ -35,10 +35,8 @@ async fn test_methods(
       session_id,
       view_short_name,
       class_id: class_short_name,
-      hint: "FIRST_ROWS",
-      allow_timestamp_milliseconds: true,
       rows_limit: Some(1),
-      object_filter: None,
+      ..Default::default()
     })
     .await
     .unwrap();

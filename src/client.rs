@@ -21,9 +21,9 @@ use crate::{
     ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
   },
   responses::{
-    BackwardReference, ChildClasses, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame,
-    MethodParameter, MethodResult, MethodVariable, MethodsGroups, ObjectClassAndArchiveKey, Response, ResponseBody,
-    Row, Session, Setting, States, Transitions, User, UserContent, UserMenu, Validate, View,
+    BackwardReference, ChildClass, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame, MethodParameter,
+    MethodResult, MethodVariable, MethodsGroup, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session,
+    Setting, State, Transition, User, UserContent, UserMenuItem, Validate, View,
   },
 };
 
@@ -734,14 +734,14 @@ impl Client {
   // ТБП и типы
   //====================================================================================================================
 
-  /// Возвращает короткое имя базового ТБП и ключ архива для указанного экземпляра.
+  /// Возвращает короткое имя ТБП и ключ архива для указанного экземпляра.
   ///
   /// # Arguments
   /// * `object_id` – идентификатор экземпляра
-  /// * `base_class_id` – короткое имя базового ТБП (например, `"DOC"`)
+  /// * `base_class_id` – короткое имя базового ТБП (например, `"DOCUMENT"`)
   ///
   /// # Returns
-  /// Структура [`ObjectClassAndArchiveKey`] с полями `class_id` и `archive_key`.
+  /// Структура [`ObjectClassAndArchiveKey`] с полями `class_id` (текущий тип экземпляра, например `"MAIN_DOCUM"`) и `archive_key`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -815,10 +815,10 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "class_transitions_get"))]
-  pub async fn class_transitions_get(&self, session_id: &str, class_id: &str) -> Result<Transitions> {
+  pub async fn class_transitions_get(&self, session_id: &str, class_id: &str) -> Result<Vec<Transition>> {
     let body = self.api(&ClassTransitionsGet { session_id, class_id }).await?;
     match body {
-      ResponseBody::Transitions(transitions) => Ok(transitions),
+      ResponseBody::Transitions(v) => Ok(v.transitions),
       _ => Err(Error::UnexpectedResponse {
         expected: "Transitions".to_string(),
         actual: format!("{body:?}"),
@@ -837,10 +837,10 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "class_states_get"))]
-  pub async fn class_states_get(&self, session_id: &str, class_id: &str) -> Result<States> {
+  pub async fn class_states_get(&self, session_id: &str, class_id: &str) -> Result<Vec<State>> {
     let body = self.api(&ClassStatesGet { session_id, class_id }).await?;
     match body {
-      ResponseBody::States(states) => Ok(states),
+      ResponseBody::States(v) => Ok(v.states),
       _ => Err(Error::UnexpectedResponse {
         expected: "States".to_string(),
         actual: format!("{body:?}"),
@@ -881,10 +881,10 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "class_children_get"))]
-  pub async fn class_children_get(&self, session_id: &str, class_id: &str) -> Result<ChildClasses> {
+  pub async fn class_children_get(&self, session_id: &str, class_id: &str) -> Result<Vec<ChildClass>> {
     let body = self.api(&ClassChildrenGet { session_id, class_id }).await?;
     match body {
-      ResponseBody::ChildClasses(children) => Ok(children),
+      ResponseBody::ChildClasses(v) => Ok(v.child_classes),
       _ => Err(Error::UnexpectedResponse {
         expected: "ChildClasses".to_string(),
         actual: format!("{body:?}"),
@@ -1109,10 +1109,10 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
-  pub async fn class_methods_groups_user_get(&self, session_id: &str, class_id: &str) -> Result<MethodsGroups> {
+  pub async fn class_methods_groups_user_get(&self, session_id: &str, class_id: &str) -> Result<Vec<MethodsGroup>> {
     let body = self.api(&ClassMethodsGroupsUserGet { session_id, class_id }).await?;
     match body {
-      ResponseBody::MethodsGroups(groups) => Ok(groups),
+      ResponseBody::MethodsGroups(v) => Ok(v.methods_group),
       _ => Err(Error::UnexpectedResponse {
         expected: "MethodsGroups".to_string(),
         actual: format!("{body:?}"),
@@ -1190,6 +1190,25 @@ impl Client {
   // Представления и данные
   //====================================================================================================================
 
+  /// Получает структуру пользовательского меню представлений.
+  ///
+  /// # Returns
+  /// Структура [`UserMenu`].
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
+  pub async fn user_menu_get(&self, session_id: &str) -> Result<Vec<UserMenuItem>> {
+    let body = self.api(&UserMenuGet { session_id }).await?;
+    match body {
+      ResponseBody::UserMenu(menu) => Ok(menu.user_menu_items),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "UserMenu".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
   /// Получает данные представления (табличные данные) с возможностью отмены.
   ///
   /// # Arguments
@@ -1260,25 +1279,6 @@ impl Client {
   // Навигация, справочники и меню
   //====================================================================================================================
 
-  /// Получает структуру пользовательского меню.
-  ///
-  /// # Returns
-  /// Структура [`UserMenu`].
-  ///
-  /// # Errors
-  /// Стандартные ошибки API и сетевые ошибки.
-  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
-  pub async fn user_menu_get(&self, session_id: &str) -> Result<UserMenu> {
-    let body = self.api(&UserMenuGet { session_id }).await?;
-    match body {
-      ResponseBody::UserMenu(menu) => Ok(menu),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "UserMenu".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
   /// Получает список справочников, доступных пользователю.
   ///
   /// # Returns
@@ -1317,7 +1317,7 @@ impl Client {
     }
   }
 
-  /// Получает список всех ТБП (не справочников) системы.
+  /// Получает список всех типов системы.
   ///
   /// # Returns
   /// Вектор структур [`Class`].

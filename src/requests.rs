@@ -365,6 +365,8 @@ pub struct MethodValidateDefault<'a> {
   pub is_called_from_another_method: bool,
   #[serde(rename = "@ReadOnly")]
   pub read_only: bool,
+  #[serde(rename = "@LockObjectClassID", skip_serializing_if = "Option::is_none")]
+  pub lock_object_class_id: Option<&'a str>,
   #[serde(rename = "@GetDebugText")]
   pub get_debug_text: bool,
   #[serde(rename = "@OptimizedGridUpdates")]
@@ -382,6 +384,7 @@ impl Default for MethodValidateDefault<'_> {
       object_id: &[],
       debug_level: 0,
       is_called_from_another_method: true,
+      lock_object_class_id: None,
       read_only: false,
       get_debug_text: true,
       optimized_grid_updates: true,
@@ -409,7 +412,7 @@ pub struct MethodValidate<'a> {
   #[serde(rename = "ControlsStates", with = "unwrap_list")]
   pub controls_states: &'a [ControlState<'a>],
   #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
-  pub plpcall_parameters: &'a [()],
+  pub plpcall_parameters: &'a [PLPCallParameter<'a>],
 }
 
 impl Default for MethodValidate<'_> {
@@ -448,7 +451,7 @@ pub struct MethodExecute<'a> {
   #[serde(rename = "ControlsStates", with = "unwrap_list")]
   pub controls_states: &'a [ControlState<'a>],
   #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
-  pub plpcall_parameters: &'a [()],
+  pub plpcall_parameters: &'a [PLPCallParameter<'a>],
 }
 
 impl Default for MethodExecute<'_> {
@@ -464,13 +467,50 @@ impl Default for MethodExecute<'_> {
   }
 }
 
-/// Значение элемента формы операции.
 #[derive(Debug, Serialize, Clone)]
 pub struct ControlState<'a> {
   #[serde(rename = "@ID")]
   pub id: i64,
   #[serde(rename = "@Value")]
   pub value: &'a str,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPCallParameter<'a> {
+  #[serde(rename = "@SourcePLPCallItem", with = "unwrap_list")]
+  pub source: &'a [PLPEntity<'a>],
+  #[serde(rename = "@TargetPLPCallItem", with = "unwrap_list")]
+  pub target: &'a [PLPEntity<'a>],
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(untagged)]
+pub enum PLPEntity<'a> {
+  PLPConstant(PLPConstant<'a>),
+  PLPVariable(PLPVariable<'a>),
+  PLPParameter(PLPParameter<'a>),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPConstant<'a> {
+  #[serde(rename = "@Value")]
+  pub value: &'a str,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPParameter<'a> {
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@Name")]
+  pub name: &'a str,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPVariable<'a> {
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@Name")]
+  pub name: &'a str,
 }
 
 /// Запрос на завершение выполнения операции.
@@ -501,8 +541,12 @@ pub struct ViewDataGetCancelable<'a> {
   pub allow_timestamp_milliseconds: bool,
   #[serde(rename = "@RowsLimit", skip_serializing_if = "Option::is_none")]
   pub rows_limit: Option<i64>,
-  #[serde(rename = "$value")]
+  #[serde(rename = "AdditionalFilterBind", skip_serializing_if = "Option::is_none")]
+  pub additional_filter_bind: Option<AdditionalFilterBind<'a>>,
+  #[serde(rename = "ObjectFilter", skip_serializing_if = "Option::is_none")]
   pub object_filter: Option<ObjectFilter>,
+  #[serde(rename = "UserFilter", skip_serializing_if = "Option::is_none")]
+  pub user_filter: Option<UserFilter<'a>>,
 }
 
 impl Default for ViewDataGetCancelable<'_> {
@@ -514,9 +558,17 @@ impl Default for ViewDataGetCancelable<'_> {
       hint: "FIRST_ROWS",
       allow_timestamp_milliseconds: true,
       rows_limit: Some(10),
+      additional_filter_bind: None,
       object_filter: None,
+      user_filter: None,
     }
   }
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct AdditionalFilterBind<'a> {
+  #[serde(rename = "@Clause")]
+  pub clause: &'a str,
 }
 
 /// Фильтр экземпляра внутри запроса данных представления.
@@ -524,6 +576,53 @@ impl Default for ViewDataGetCancelable<'_> {
 pub struct ObjectFilter {
   #[serde(rename = "@ObjectID")]
   pub object_id: i64,
+}
+
+/// Фильтр запроса данных представления.
+#[derive(Debug, Serialize, Clone)]
+pub struct UserFilter<'a> {
+  #[serde(rename = "@ExtraFilter", skip_serializing_if = "Option::is_none")]
+  pub extra_filter: Option<&'a str>,
+  #[serde(rename = "$value")]
+  pub filters: &'a [Filter<'a>],
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub enum Filter<'a> {
+  #[serde(rename = "AND")]
+  And {
+    #[serde(rename = "$value")]
+    filters: &'a [Self],
+  },
+  #[serde(rename = "OR")]
+  Or {
+    #[serde(rename = "$value")]
+    filters: &'a [Self],
+  },
+  #[serde(untagged)]
+  Simple(&'a SimpleFilter<'a>),
+  #[serde(untagged)]
+  CaseInsensitive(&'a CaseInsensitiveFilter<'a>),
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct SimpleFilter<'a> {
+  #[serde(rename = "@ColumnName")]
+  pub column_name: &'a str,
+  #[serde(rename = "@Operator")]
+  pub operator: &'a str,
+  #[serde(rename = "@Value")]
+  pub value: Option<&'a str>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct CaseInsensitiveFilter<'a> {
+  #[serde(rename = "@ColumnName")]
+  pub column_name: &'a str,
+  #[serde(rename = "@Operator")]
+  pub operator: &'a str,
+  #[serde(rename = "@Value")]
+  pub value: Option<&'a str>,
 }
 
 /// Запрос колонок представления.

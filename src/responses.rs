@@ -16,7 +16,7 @@
 
 use serde::Deserialize;
 
-use crate::serde_helpers::{empty_string_as_number, string_as_bool, unwrap_list};
+use crate::serde_helpers::{empty_string_as_none, string_as_bool, unwrap_list};
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Deserialize, Clone)]
@@ -96,7 +96,7 @@ pub struct ClientScript {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename = "@Result")]
 pub struct MethodResult {
-  #[serde(rename = "@Value", with = "empty_string_as_number")]
+  #[serde(rename = "@Value", with = "empty_string_as_none")]
   pub value: Option<i64>,
   #[serde(rename = "$value", with = "unwrap_list")]
   pub controls_states: Vec<ControlsState>,
@@ -297,19 +297,58 @@ pub struct BackwardReference {
 }
 
 /// Переходы состояний ТБП.
-// TODO
 #[derive(Debug, Deserialize, Clone)]
-pub struct Transitions {}
+pub struct Transitions {
+  #[serde(rename = "$value", default)]
+  pub transitions: Vec<Transition>,
+}
+
+/// Переход состояния ТБП.
+#[derive(Debug, Deserialize, Clone)]
+pub struct Transition {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@MethodShortName", with = "empty_string_as_none")]
+  pub method_short_name: Option<String>,
+  #[serde(rename = "@InitialStateID")]
+  pub initial_state_id: String,
+  #[serde(rename = "@FinalStateID")]
+  pub final_state_id: String,
+}
 
 /// Состояния ТБП.
-// TODO
 #[derive(Debug, Deserialize, Clone)]
-pub struct States {}
+pub struct States {
+  #[serde(rename = "$value", default)]
+  pub states: Vec<State>,
+}
+
+/// Состояние ТБП.
+#[derive(Debug, Deserialize, Clone)]
+pub struct State {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@IndexUse")]
+  pub index_use: i64,
+}
 
 /// Дочерние ТБП.
-// TODO
 #[derive(Debug, Deserialize, Clone)]
-pub struct ChildClasses {}
+pub struct ChildClasses {
+  #[serde(rename = "$value", default)]
+  pub child_classes: Vec<ChildClass>,
+}
+
+/// Дочерний ТБП.
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChildClass {
+  #[serde(rename = "@ID")]
+  pub id: String,
+}
 
 //======================================================================================================================
 // Операции
@@ -516,7 +555,7 @@ pub struct Control {
 
   /// ID родительского элемента на форме.
   /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(rename = "@ParentID", default, with = "empty_string_as_number")]
+  #[serde(rename = "@ParentID", default, with = "empty_string_as_none")]
   pub parent_id: Option<i64>,
 
   /// Короткое имя ТБП (тип, справочник) которому соответствует значение в элементе.
@@ -577,13 +616,47 @@ pub struct MethodFrame {
   pub frame_id: Option<i64>,
 }
 
-// TODO
+// Группы операций пользователя
 #[derive(Debug, Deserialize, Clone)]
-pub struct MethodsGroups {}
+pub struct MethodsGroups {
+  #[serde(rename = "$value", default)]
+  pub methods_group: Vec<MethodsGroup>,
+}
+
+// Группа операций пользователя
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodsGroup {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Name")]
+  pub name: String,
+}
 
 //====================================================================================================================
 // Представления и их строки
 //====================================================================================================================
+
+/// Пользовательское меню представлений.
+#[derive(Debug, Deserialize, Clone)]
+pub struct UserMenu {
+  #[serde(rename = "$value", default)]
+  pub user_menu_items: Vec<UserMenuItem>,
+}
+
+/// Пункт пользовательского меню представлений.
+#[derive(Debug, Deserialize, Clone)]
+pub struct UserMenuItem {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Name")]
+  pub name: String,
+  #[serde(rename = "@ClassID")]
+  pub class_id: String,
+  #[serde(rename = "@ViewID")]
+  pub view_id: String,
+  #[serde(rename = "@Properties")]
+  pub properties: String,
+}
 
 /// Данные представления.
 #[derive(Debug, Deserialize, Clone)]
@@ -743,11 +816,6 @@ pub struct View {
 //====================================================================================================================
 // Навигация, справочники и меню
 //====================================================================================================================
-
-/// Пользовательское меню.
-// TODO
-#[derive(Debug, Deserialize, Clone)]
-pub struct UserMenu {}
 
 /// Список справочников.
 #[derive(Debug, Deserialize, Clone)]

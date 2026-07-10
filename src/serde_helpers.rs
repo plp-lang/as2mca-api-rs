@@ -7,7 +7,7 @@
 //! - преобразование массива чисел в строку через запятую.
 //!
 //! # Модули
-//! - [`empty_string_as_number`] – позволяет полю типа `Option<T>` принимать пустую строку как `None`.
+//! - [`empty_string_as_none`] – позволяет полю типа `Option<T>` принимать пустую строку как `None`.
 //! - [`string_as_bool`] – десериализует строки `"true"`/`"false"` (или `"1"`/`"0"`) в `bool`.
 //! - [`unwrap_list`] – убирает лишний уровень вложенности для списков в XML (используется для `Vec<T>` внутри элемента). Взято из [документации quick-xml](https://docs.rs/quick-xml/latest/quick_xml/de/#element-lists)
 //! - [`comma_separated_numbers`] – сериализует `Vec<T>` в строку вида `"1,2,3"` и обратно.
@@ -18,8 +18,8 @@
 
 #![allow(clippy::missing_errors_doc)]
 
-/// Модуль для десериализации пустой строки как отсутствие числа.
-pub mod empty_string_as_number {
+/// Модуль для десериализации пустой строки как отсутствие значения.
+pub mod empty_string_as_none {
   use serde::{self, Deserialize, Deserializer, Serializer};
 
   pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
@@ -31,7 +31,7 @@ pub mod empty_string_as_number {
     let s: Option<String> = Option::deserialize(deserializer)?;
     match s {
       None => Ok(None),
-      Some(s) if s.is_empty() => Ok(None),
+      Some(ref s) if s.is_empty() => Ok(None),
       Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
     }
   }
@@ -42,7 +42,7 @@ pub mod empty_string_as_number {
     T: std::fmt::Display,
   {
     match value {
-      Some(v) => serializer.serialize_str(&v.to_string()),
+      Some(v) => serializer.collect_str(v),
       None => serializer.serialize_str(""),
     }
   }
