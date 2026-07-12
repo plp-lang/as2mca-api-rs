@@ -38,6 +38,7 @@ pub struct Request<T> {
 #[derive(Debug, Serialize)]
 pub struct SessionInit {
   #[serde(rename = "@AliveActiveSession", skip_serializing_if = "Option::is_none")]
+  /// Флаг, указывающий, следует ли поддерживать активную сессию
   pub alive_active_session: Option<bool>,
 }
 
@@ -52,9 +53,9 @@ pub struct Disconnect<'a> {
 #[derive(Debug, Serialize)]
 pub struct AuthenticationURLGet {}
 
-//====================================================================================================================
+//======================================================================================================================
 // Информация о системе
-//====================================================================================================================
+//======================================================================================================================
 
 /// Запрос версии протокола API.
 #[derive(Debug, Serialize)]
@@ -132,9 +133,9 @@ pub struct SystemNetAddressSet<'a> {
   pub ip_address: &'a str,
 }
 
-//====================================================================================================================
+//======================================================================================================================
 // Информация о пользователе
-//====================================================================================================================
+//======================================================================================================================
 
 /// Запрос базовой информации о пользователе.
 #[derive(Debug, Serialize)]
@@ -252,7 +253,7 @@ pub struct ClassChildrenGet<'a> {
   pub class_id: &'a str,
 }
 
-/// Запрос на получения списка типов/ТБП.
+/// Запрос на получения списка ТБП.
 #[derive(Debug, Serialize, Clone)]
 pub struct ClassesGet<'a> {
   #[serde(rename = "@SessionID")]
@@ -261,13 +262,14 @@ pub struct ClassesGet<'a> {
   pub class_info: &'a [ClassInfo<'a>],
 }
 
+/// Информация о ТБП для запроса списка ТБП.
 #[derive(Debug, Serialize, Clone)]
 pub struct ClassInfo<'a> {
   #[serde(rename = "@ClassID")]
   pub class_id: &'a str,
 }
 
-/// Запрос на получения информации об типе/ТБП
+/// Запрос на получения информации об ТБП
 #[derive(Debug, Serialize, Clone)]
 pub struct ClassGet<'a> {
   #[serde(rename = "@SessionID")]
@@ -343,7 +345,7 @@ pub struct MethodClientScriptGet<'a> {
   pub method_id: i64,
 }
 
-/// Запрос вызова блока `Validate` операции.
+/// Запрос вызова блока `Validate` операции (по умолчанию, при открытии формы).
 #[derive(Debug, Serialize, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct MethodValidateDefault<'a> {
@@ -467,6 +469,7 @@ impl Default for MethodExecute<'_> {
   }
 }
 
+/// Состояние элемента управления на форме.
 #[derive(Debug, Serialize, Clone)]
 pub struct ControlState<'a> {
   #[serde(rename = "@ID")]
@@ -475,36 +478,14 @@ pub struct ControlState<'a> {
   pub value: &'a str,
 }
 
-#[derive(Debug, Serialize, Clone)]
-pub struct PLPCallParameter<'a> {
-  #[serde(rename = "@SourcePLPCallItem", with = "unwrap_list")]
-  pub source: &'a [PLPEntity<'a>],
-  #[serde(rename = "@TargetPLPCallItem", with = "unwrap_list")]
-  pub target: &'a [PLPEntity<'a>],
-}
-
-#[derive(Debug, Serialize, Clone)]
-#[serde(untagged)]
-pub enum PLPEntity<'a> {
-  PLPConstant(PLPConstant<'a>),
-  PLPVariable(PLPVariable<'a>),
-  PLPParameter(PLPParameter<'a>),
-}
-
+/// Константа для PLP-вызова.
 #[derive(Debug, Serialize, Clone)]
 pub struct PLPConstant<'a> {
   #[serde(rename = "@Value")]
   pub value: &'a str,
 }
 
-#[derive(Debug, Serialize, Clone)]
-pub struct PLPParameter<'a> {
-  #[serde(rename = "@MethodID")]
-  pub method_id: i64,
-  #[serde(rename = "@Name")]
-  pub name: &'a str,
-}
-
+/// Переменная для PLP-вызова.
 #[derive(Debug, Serialize, Clone)]
 pub struct PLPVariable<'a> {
   #[serde(rename = "@MethodID")]
@@ -513,7 +494,34 @@ pub struct PLPVariable<'a> {
   pub name: &'a str,
 }
 
-/// Запрос на завершение выполнения операции.
+/// Параметр для PLP-вызова.
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPParameter<'a> {
+  #[serde(rename = "@MethodID")]
+  pub method_id: i64,
+  #[serde(rename = "@Name")]
+  pub name: &'a str,
+}
+
+/// Объединённый тип сущности для PLP вызова.
+#[derive(Debug, Serialize, Clone)]
+#[serde(untagged)]
+pub enum PLPEntity<'a> {
+  PLPConstant(PLPConstant<'a>),
+  PLPVariable(PLPVariable<'a>),
+  PLPParameter(PLPParameter<'a>),
+}
+
+/// Параметр PLP-вызова (источник и цель).
+#[derive(Debug, Serialize, Clone)]
+pub struct PLPCallParameter<'a> {
+  #[serde(rename = "@SourcePLPCallItem", with = "unwrap_list")]
+  pub source: &'a [PLPEntity<'a>],
+  #[serde(rename = "@TargetPLPCallItem", with = "unwrap_list")]
+  pub target: &'a [PLPEntity<'a>],
+}
+
+/// Запрос на завершение выполнения операции (закрытие формы).
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodEnd<'a> {
   #[serde(rename = "@SessionID")]
@@ -522,9 +530,9 @@ pub struct MethodEnd<'a> {
   pub frame_id: i64,
 }
 
-//====================================================================================================================
+//======================================================================================================================
 // Представления и данные
-//====================================================================================================================
+//======================================================================================================================
 
 /// Запрос данных представления.
 #[derive(Debug, Serialize, Clone)]
@@ -565,35 +573,52 @@ impl Default for ViewDataGetCancelable<'_> {
   }
 }
 
+/// Дополнительная привязка фильтра для представления.
 #[derive(Debug, Serialize, Clone)]
 pub struct AdditionalFilterBind<'a> {
   #[serde(rename = "@Clause")]
   pub clause: &'a str,
 }
 
-/// Фильтр экземпляра внутри запроса данных представления.
+/// Фильтр по идентификатору экземпляра.
 #[derive(Debug, Serialize, Clone)]
 pub struct ObjectFilter {
   #[serde(rename = "@ObjectID")]
   pub object_id: i64,
 }
 
-/// Фильтр запроса данных представления.
+/// Простой фильтр для представления.
 #[derive(Debug, Serialize, Clone)]
-pub struct UserFilter<'a> {
-  #[serde(rename = "@ExtraFilter", skip_serializing_if = "Option::is_none")]
-  pub extra_filter: Option<&'a str>,
-  #[serde(rename = "$value")]
-  pub filters: &'a [Filter<'a>],
+pub struct SimpleFilter<'a> {
+  #[serde(rename = "@ColumnName")]
+  pub column_name: &'a str,
+  #[serde(rename = "@Operator")]
+  pub operator: &'a str,
+  #[serde(rename = "@Value")]
+  pub value: Option<&'a str>,
 }
 
+/// Регистронезависимый фильтр для представления.
+#[derive(Debug, Serialize, Clone)]
+pub struct CaseInsensitiveFilter<'a> {
+  #[serde(rename = "@ColumnName")]
+  pub column_name: &'a str,
+  #[serde(rename = "@Operator")]
+  pub operator: &'a str,
+  #[serde(rename = "@Value")]
+  pub value: Option<&'a str>,
+}
+
+/// Объединённый тип фильтра для представления.
 #[derive(Debug, Serialize, Clone)]
 pub enum Filter<'a> {
+  /// Логический фильтр "AND".
   #[serde(rename = "AND")]
   And {
     #[serde(rename = "$value")]
     filters: &'a [Self],
   },
+  /// Логический фильтр "OR".
   #[serde(rename = "OR")]
   Or {
     #[serde(rename = "$value")]
@@ -605,24 +630,13 @@ pub enum Filter<'a> {
   CaseInsensitive(&'a CaseInsensitiveFilter<'a>),
 }
 
+/// Пользовательский фильтр для представления.
 #[derive(Debug, Serialize, Clone)]
-pub struct SimpleFilter<'a> {
-  #[serde(rename = "@ColumnName")]
-  pub column_name: &'a str,
-  #[serde(rename = "@Operator")]
-  pub operator: &'a str,
-  #[serde(rename = "@Value")]
-  pub value: Option<&'a str>,
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub struct CaseInsensitiveFilter<'a> {
-  #[serde(rename = "@ColumnName")]
-  pub column_name: &'a str,
-  #[serde(rename = "@Operator")]
-  pub operator: &'a str,
-  #[serde(rename = "@Value")]
-  pub value: Option<&'a str>,
+pub struct UserFilter<'a> {
+  #[serde(rename = "@ExtraFilter", skip_serializing_if = "Option::is_none")]
+  pub extra_filter: Option<&'a str>,
+  #[serde(rename = "$value")]
+  pub filters: &'a [Filter<'a>],
 }
 
 /// Запрос колонок представления.
@@ -643,9 +657,9 @@ pub struct ClassViewsGet<'a> {
   pub class_id: &'a str,
 }
 
-//====================================================================================================================
+//======================================================================================================================
 // Навигация, справочники и меню
-//====================================================================================================================
+//======================================================================================================================
 
 /// Запрос пользовательского меню.
 #[derive(Debug, Serialize, Clone)]
@@ -675,20 +689,11 @@ pub struct TypesGet<'a> {
   pub session_id: &'a str,
 }
 
-//====================================================================================================================
+//======================================================================================================================
 // Блокировки
-//====================================================================================================================
+//======================================================================================================================
 
-/// Запрос на блокировку экземпляра
-#[derive(Debug, Serialize, Clone)]
-pub struct ObjectsLock<'a> {
-  #[serde(rename = "@SessionID")]
-  pub session_id: &'a str,
-  #[serde(rename = "$value")]
-  pub objects: &'a [Object<'a>],
-}
-
-// Экземпляр типа
+// Описание экземпляра для блокировки.
 #[derive(Debug, Serialize, Clone)]
 pub struct Object<'a> {
   #[serde(rename = "@ID")]
@@ -697,7 +702,16 @@ pub struct Object<'a> {
   pub class_id: &'a str,
 }
 
-/// Запрос на разблокировку экземпляров
+/// Запрос на блокировку одного или нескольких экземпляров.
+#[derive(Debug, Serialize, Clone)]
+pub struct ObjectsLock<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "$value")]
+  pub objects: &'a [Object<'a>],
+}
+
+/// Запрос на разблокировку экземпляров.
 #[derive(Debug, Serialize, Clone)]
 pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]

@@ -1,6 +1,11 @@
 # HTTP-клиент сервера приложений 2 MCA АБС ЦФТ
 
-Неофициальная, свободная асинхронная Rust-библиотека, предоставляющая строго типизированный клиент для взаимодействия с API сервера приложений Платформы 2 MCA АБС ЦФТ.
+<p align="center">
+  <a href="https://github.com/plp-lang/as2mca-api-rs"><img src="https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white" alt="Rust"></a>
+  <a href="https://github.com/plp-lang/as2mca-api-ts"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" style="margin-right: 15px;"></a>
+</p>
+
+Неофициальная, свободная асинхронная Rust-библиотека ([реализация на Typescript](https://github.com/plp-lang/as2mca-api-ts)), предоставляющая строго типизированный клиент для взаимодействия с API сервера приложений Платформы 2 MCA АБС ЦФТ.
 Библиотека позволяет обращаться к серверу приложений аналогично клиенту «ЦФТ - Навигатор», программно реализуя схожее поведение: от управления сессиями и аутентификации до работы с выборками представлений и вызова операций.
 
 Проект создан исключительно в некоммерческих, образовательных и исследовательских целях. Основные направления применения:

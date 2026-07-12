@@ -72,41 +72,15 @@ pub enum ResponseBody {
   Settings(Settings),
 }
 
+/// Ответ "Not Found" (пустой).
 #[derive(Debug, Deserialize, Clone)]
 pub struct NotFound {}
-
-/// Содержимое элемента `<User>` — зависит от метода API.
-#[derive(Debug, Deserialize, Clone)]
-#[serde(untagged)]
-pub enum UserContent {
-  /// Ответ `UserInfoGet`: `<User Name="..." ShortName="..." Properties="..."/>`
-  Info(User),
-  /// Ответ `SystemUserPrivilegedGet`: `<User IsPrivileged="..."/>`
-  Privileged(UserPrivileged),
-}
-
-/// Клиент-скрипт
-#[derive(Debug, Deserialize, Clone)]
-pub struct ClientScript {
-  #[serde(rename = "@Text")]
-  pub text: String,
-}
-
-/// Результат выполнения операции.
-#[derive(Debug, Deserialize, Clone)]
-#[serde(rename = "@Result")]
-pub struct MethodResult {
-  #[serde(rename = "@Value", with = "empty_string_as_none")]
-  pub value: Option<i64>,
-  #[serde(rename = "$value", with = "unwrap_list")]
-  pub controls_states: Vec<ControlsState>,
-}
 
 /// Пустой ответ, подтверждающий успешное выполнение действия (например, отключение сессии).
 #[derive(Debug, Deserialize, Clone)]
 pub struct Done {}
 
-/// Структура описания ошибки API.
+/// Структура ошибки API.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Error {
   #[serde(rename = "@Text")]
@@ -231,6 +205,16 @@ pub struct UserPrivileged {
   pub is_privileged: bool,
 }
 
+/// Содержимое элемента `<User>` — зависит от метода API.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(untagged)]
+pub enum UserContent {
+  /// Ответ `UserInfoGet`: `<User Name="..." ShortName="..." Properties="..."/>`
+  Info(User),
+  /// Ответ `SystemUserPrivilegedGet`: `<User IsPrivileged="..."/>`
+  Privileged(UserPrivileged),
+}
+
 /// Значение свойства профиля пользователя.
 #[derive(Debug, Deserialize, Clone)]
 pub struct UserProfileProperty {
@@ -276,14 +260,7 @@ pub struct ObjectClassAndArchiveKey {
   pub archive_key: String,
 }
 
-/// Список обратных ссылок на экземпляр.
-#[derive(Debug, Deserialize, Clone)]
-pub struct BackwardReferences {
-  #[serde(rename = "$value", default)]
-  pub body: Vec<BackwardReference>,
-}
-
-/// Описание обратной ссылки.
+/// Обратная ссылка на экземпляр.
 #[derive(Debug, Deserialize, Clone)]
 pub struct BackwardReference {
   #[serde(rename = "@ClassID")]
@@ -296,14 +273,14 @@ pub struct BackwardReference {
   pub qual_name: String,
 }
 
-/// Переходы состояний ТБП.
+/// Список обратных ссылок.
 #[derive(Debug, Deserialize, Clone)]
-pub struct Transitions {
+pub struct BackwardReferences {
   #[serde(rename = "$value", default)]
-  pub transitions: Vec<Transition>,
+  pub body: Vec<BackwardReference>,
 }
 
-/// Переход состояния ТБП.
+/// Переход состояний ТБП.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Transition {
   #[serde(rename = "@ID")]
@@ -318,11 +295,11 @@ pub struct Transition {
   pub final_state_id: String,
 }
 
-/// Состояния ТБП.
+/// Список переходов.
 #[derive(Debug, Deserialize, Clone)]
-pub struct States {
+pub struct Transitions {
   #[serde(rename = "$value", default)]
-  pub states: Vec<State>,
+  pub transitions: Vec<Transition>,
 }
 
 /// Состояние ТБП.
@@ -336,11 +313,11 @@ pub struct State {
   pub index_use: i64,
 }
 
-/// Дочерние ТБП.
+/// Список состояний.
 #[derive(Debug, Deserialize, Clone)]
-pub struct ChildClasses {
+pub struct States {
   #[serde(rename = "$value", default)]
-  pub child_classes: Vec<ChildClass>,
+  pub states: Vec<State>,
 }
 
 /// Дочерний ТБП.
@@ -350,16 +327,16 @@ pub struct ChildClass {
   pub id: String,
 }
 
+/// Список дочерних ТБП.
+#[derive(Debug, Deserialize, Clone)]
+pub struct ChildClasses {
+  #[serde(rename = "$value", default)]
+  pub child_classes: Vec<ChildClass>,
+}
+
 //======================================================================================================================
 // Операции
 //======================================================================================================================
-
-/// Список операций ТБП.
-#[derive(Debug, Deserialize, Clone)]
-pub struct Methods {
-  #[serde(rename = "$value", default)]
-  pub body: Vec<Method>,
-}
 
 /// Структура операции.
 #[derive(Debug, Deserialize, Clone)]
@@ -429,11 +406,11 @@ pub enum MethodType {
   Destructor,
 }
 
-/// Список входных параметров операции.
+/// Список операций.
 #[derive(Debug, Deserialize, Clone)]
-pub struct MethodParameters {
+pub struct Methods {
   #[serde(rename = "$value", default)]
-  pub parameters: Vec<MethodParameter>,
+  pub body: Vec<Method>,
 }
 
 /// Описание входного параметра операции.
@@ -463,11 +440,26 @@ pub struct MethodParameter {
   pub default_value: Option<String>,
 }
 
-/// Список публичных переменных операции.
+/// Тип ссылки.
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+pub enum ReferenceType {
+  D,
+  /// `table of`?
+  T,
+}
+
+/// Направление параметра.
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+  D,
+  I,
+}
+
+/// Список входных параметров.
 #[derive(Debug, Deserialize, Clone)]
-pub struct MethodVariables {
+pub struct MethodParameters {
   #[serde(rename = "$value", default)]
-  pub variables: Vec<MethodVariable>,
+  pub parameters: Vec<MethodParameter>,
 }
 
 /// Описание публичной переменной операции.
@@ -476,7 +468,7 @@ pub struct MethodVariable {
   /// Имя переменной.
   #[serde(rename = "@ShortName")]
   pub short_name: String,
-  /// Тип переменной.
+  /// ТБП переменной.
   #[serde(rename = "@ClassID")]
   pub class_id: String,
   #[serde(rename = "@Position")]
@@ -485,39 +477,25 @@ pub struct MethodVariable {
   pub reference_type: ReferenceType,
 }
 
-/// Тип ссылочного типа
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
-pub enum ReferenceType {
-  D,
-  /// `table of`?
-  T,
-}
-
-/// TODO
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
-pub enum Direction {
-  D,
-  I,
-}
-
-/// Спиcок элементов на форме.
+/// Список публичных переменных.
 #[derive(Debug, Deserialize, Clone)]
-pub struct Controls {
+pub struct MethodVariables {
   #[serde(rename = "$value", default)]
-  pub controls: Vec<Control>,
+  pub variables: Vec<MethodVariable>,
 }
 
-/// Структура элемента на форме
+/// Описание элемента формы.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Control {
-  /// ID элемента.
+  ///  Идентификатор элемента.
   #[serde(rename = "@ID")]
   pub id: i64,
 
-  /// ID операции, элемент формы которой предналежит.
+  /// Идентификатор операции.
   #[serde(rename = "@MethodID")]
   pub method_id: i64,
 
+  /// Квалификатор
   #[serde(rename = "@Qualifier")]
   pub qualifier: String,
 
@@ -544,29 +522,36 @@ pub struct Control {
   #[serde(rename = "@Width")]
   pub width: u32,
 
+  /// Индекс табуляции.
   #[serde(rename = "@TabIndex")]
   pub tab_index: u32,
+
+  /// Позиция.
   #[serde(rename = "@Position")]
   pub position: u32,
 
-  /// Имя элемента по которому к нему можно обратится из кода.
+  /// Имя для валидации.
   #[serde(rename = "@ValidateName")]
   pub validate_name: String,
 
-  /// ID родительского элемента на форме.
+  /// Идентификатор родительского элемента.
   /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
   #[serde(rename = "@ParentID", default, with = "empty_string_as_none")]
   pub parent_id: Option<i64>,
 
-  /// Короткое имя ТБП (тип, справочник) которому соответствует значение в элементе.
+  /// ТБП значения.
   #[serde(rename = "@ClassID", default)]
   pub class_id: Option<String>,
+
+  /// Зависимость.
   #[serde(rename = "@Depend", default)]
   pub depend: Option<i64>,
+
+  /// Свойства
   #[serde(rename = "@Properties", default)]
   pub properties: Option<String>,
 
-  /// Тект, который всплывает при наведении на элемент курсором.
+  /// Подсказка.
   #[serde(rename = "@Tips", default)]
   pub tips: Option<String>,
 }
@@ -591,7 +576,14 @@ pub enum ControlType {
   Panel,
 }
 
-/// Результат выполнения блока `Validate` операции.
+/// Спиcок элементов на форме.
+#[derive(Debug, Deserialize, Clone)]
+pub struct Controls {
+  #[serde(rename = "$value", default)]
+  pub controls: Vec<Control>,
+}
+
+/// Результат выполнения блока `Validate`.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Validate {
   #[serde(rename = "@DebugText")]
@@ -600,7 +592,7 @@ pub struct Validate {
   pub controls_states: Vec<ControlsState>,
 }
 
-/// Значение элемента формы операции.
+/// Состояние элемента на форме.
 #[derive(Debug, Deserialize, Clone)]
 pub struct ControlsState {
   #[serde(rename = "@ID")]
@@ -609,11 +601,37 @@ pub struct ControlsState {
   pub value: String,
 }
 
-// ID открытой формы
+/// Результат выполнения блока `Execute`.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename = "@Result")]
+pub struct MethodResult {
+  #[serde(rename = "@Value", with = "empty_string_as_none")]
+  pub value: Option<i64>,
+  #[serde(rename = "$value", with = "unwrap_list")]
+  pub controls_states: Vec<ControlsState>,
+}
+
+/// Клиент-скрипт
+#[derive(Debug, Deserialize, Clone)]
+pub struct ClientScript {
+  #[serde(rename = "@Text")]
+  pub text: String,
+}
+
+// Информация об открытой форме.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MethodFrame {
   #[serde(rename = "@FrameID", default)]
   pub frame_id: Option<i64>,
+}
+
+// Группа операций пользователя.
+#[derive(Debug, Deserialize, Clone)]
+pub struct MethodsGroup {
+  #[serde(rename = "@ID")]
+  pub id: i64,
+  #[serde(rename = "@Name")]
+  pub name: String,
 }
 
 // Группы операций пользователя
@@ -623,27 +641,11 @@ pub struct MethodsGroups {
   pub methods_group: Vec<MethodsGroup>,
 }
 
-// Группа операций пользователя
-#[derive(Debug, Deserialize, Clone)]
-pub struct MethodsGroup {
-  #[serde(rename = "@ID")]
-  pub id: i64,
-  #[serde(rename = "@Name")]
-  pub name: String,
-}
+//======================================================================================================================
+// Представления и данные
+//======================================================================================================================
 
-//====================================================================================================================
-// Представления и их строки
-//====================================================================================================================
-
-/// Пользовательское меню представлений.
-#[derive(Debug, Deserialize, Clone)]
-pub struct UserMenu {
-  #[serde(rename = "$value", default)]
-  pub user_menu_items: Vec<UserMenuItem>,
-}
-
-/// Пункт пользовательского меню представлений.
+/// Пункт пользовательского меню.
 #[derive(Debug, Deserialize, Clone)]
 pub struct UserMenuItem {
   #[serde(rename = "@ID")]
@@ -656,6 +658,13 @@ pub struct UserMenuItem {
   pub view_id: String,
   #[serde(rename = "@Properties")]
   pub properties: String,
+}
+
+/// Пользовательское меню.
+#[derive(Debug, Deserialize, Clone)]
+pub struct UserMenu {
+  #[serde(rename = "$value", default)]
+  pub user_menu_items: Vec<UserMenuItem>,
 }
 
 /// Данные представления.
@@ -672,20 +681,13 @@ pub struct Row {
   pub row_item: Vec<RowItem>,
 }
 
-/// Колонка в строке данных.
+/// Значение колонки в строке.
 #[derive(Debug, Deserialize, Clone)]
 pub struct RowItem {
   #[serde(rename = "@ColumnName")]
   pub column_name: String,
   #[serde(rename = "@Value")]
   pub value: String,
-}
-
-/// Список колонок представления.
-#[derive(Debug, Deserialize, Clone)]
-pub struct Columns {
-  #[serde(rename = "$value", default)]
-  pub body: Vec<Column>,
 }
 
 /// Описание колонки представления.
@@ -726,26 +728,6 @@ pub struct Column {
   pub logging: Option<Logging>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[repr(u8)]
-pub enum Align {
-  #[serde(rename = "0")]
-  Left = 0,
-  #[serde(rename = "1")]
-  Center = 1,
-  #[serde(rename = "2")]
-  Right = 2,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[repr(u8)]
-pub enum Invisible {
-  #[serde(rename = "0")]
-  Visible = 0,
-  #[serde(rename = "2")]
-  Hidden = 2,
-}
-
 /// Базовый тип данных колонки.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -759,7 +741,29 @@ pub enum ColumnBase {
   Collection,
 }
 
-/// Настройка логирования для колонки.
+/// Выравнивание.
+#[derive(Debug, Clone, Deserialize)]
+#[repr(u8)]
+pub enum Align {
+  #[serde(rename = "0")]
+  Left = 0,
+  #[serde(rename = "1")]
+  Center = 1,
+  #[serde(rename = "2")]
+  Right = 2,
+}
+
+/// Видимость.
+#[derive(Debug, Clone, Deserialize)]
+#[repr(u8)]
+pub enum Invisible {
+  #[serde(rename = "0")]
+  Visible = 0,
+  #[serde(rename = "2")]
+  Hidden = 2,
+}
+
+/// Логирование.
 #[derive(Debug, Clone, Deserialize)]
 pub enum Logging {
   #[serde(rename = "0")]
@@ -768,11 +772,11 @@ pub enum Logging {
   Delete,
 }
 
-/// Список представлений ТБП.
+/// Список колонок.
 #[derive(Debug, Deserialize, Clone)]
-pub struct Views {
+pub struct Columns {
   #[serde(rename = "$value", default)]
-  pub body: Vec<View>,
+  pub body: Vec<Column>,
 }
 
 /// Описание представления.
@@ -813,9 +817,16 @@ pub struct View {
   pub filter_method_properties: Option<String>,
 }
 
-//====================================================================================================================
+/// Список представлений.
+#[derive(Debug, Deserialize, Clone)]
+pub struct Views {
+  #[serde(rename = "$value", default)]
+  pub body: Vec<View>,
+}
+
+//======================================================================================================================
 // Навигация, справочники и меню
-//====================================================================================================================
+//======================================================================================================================
 
 /// Список справочников.
 #[derive(Debug, Deserialize, Clone)]
@@ -824,11 +835,13 @@ pub struct Guides {
   pub body: Vec<Class>,
 }
 
-/// Тип справочника.
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum BaseClassID {
-  Structure,
+/// Группа справочников.
+#[derive(Debug, Deserialize, Clone)]
+pub struct GuidesGroup {
+  #[serde(rename = "@ID")]
+  pub id: String,
+  #[serde(rename = "@Name")]
+  pub name: String,
 }
 
 /// Список групп справочников.
@@ -838,30 +851,21 @@ pub struct GuidesGroups {
   pub body: Vec<GuidesGroup>,
 }
 
-/// Описание группы справочников.
-#[derive(Debug, Deserialize, Clone)]
-pub struct GuidesGroup {
-  #[serde(rename = "@ID")]
-  pub id: String,
-  #[serde(rename = "@Name")]
-  pub name: String,
-}
-
-/// Список типов/ТБП.
+/// Список cправочников.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Classes {
   #[serde(rename = "$value", default)]
   pub body: Vec<Class>,
 }
 
-/// Список всех ТПБ (не справочников) системы.
+/// Список ТПБ (не справочников).
 #[derive(Debug, Deserialize, Clone)]
 pub struct Types {
   #[serde(rename = "$value", default)]
   pub body: Vec<Class>,
 }
 
-/// Описание ТБП.
+/// Описание ТБП (типа).
 #[derive(Debug, Deserialize, Clone)]
 pub struct Class {
   #[serde(rename = "@ID")]
@@ -895,9 +899,16 @@ pub struct Class {
   pub group_id: Option<String>,
 }
 
-//====================================================================================================================
+/// Тип справочника.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum BaseClassID {
+  Structure,
+}
+
+//======================================================================================================================
 // Блокировки
-//====================================================================================================================
+//======================================================================================================================
 
 /// Результат блокировки экземпляра
 #[derive(Debug, Deserialize, Clone)]

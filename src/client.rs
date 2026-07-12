@@ -46,7 +46,7 @@ impl Client {
   /// # Настройки по умолчанию
   /// - `Content-Type: text/xml; charset=utf-8`
   /// - Включено хранилище cookie (поддержка сессий)
-  /// - Таймауты: `connect_timeout` и `timeout` – 30 секунд
+  /// - Таймауты: `connect_timeout` и `timeout` – 5 секунд
   /// - `User-Agent`: `$CARGO_PKG_NAME/$CARGO_PKG_VERSION`
   ///
   /// # Arguments
@@ -75,8 +75,8 @@ impl Client {
     headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse()?);
 
     let client = reqwest::Client::builder()
-      .connect_timeout(Duration::from_secs(30))
-      .timeout(Duration::from_secs(30))
+      .connect_timeout(Duration::from_secs(5))
+      .timeout(Duration::from_secs(5))
       .cookie_store(true)
       .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
       .default_headers(headers)
@@ -228,7 +228,7 @@ impl Client {
     }
   }
 
-  // Деактивирует сессию, делая её недействительной.
+  /// Деактивирует сессию, делая её недействительной.
   ///
   /// После вызова все последующие запросы с этим `session_id` будут отклонены.
   /// Cookie `JSESSIONID` на стороне клиента не удаляется – следует очистить хранилище cookie отдельно,
