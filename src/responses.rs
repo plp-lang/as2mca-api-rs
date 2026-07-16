@@ -752,7 +752,7 @@ pub struct View {
   #[serde(rename = "@ShortName")]
   pub short_name: String,
   #[serde(rename = "@IsDefault")]
-  pub is_default: u8,
+  pub is_default: bool,
   #[serde(rename = "@Properties")]
   pub properties: String,
   #[serde(rename = "@Distance")]
@@ -760,9 +760,9 @@ pub struct View {
   #[serde(rename = "@ObjectRights")]
   pub object_rights: u8,
   #[serde(rename = "@ToPrinter")]
-  pub to_printer: u8,
+  pub to_printer: bool,
   #[serde(rename = "@ToFile")]
-  pub to_file: u8,
+  pub to_file: bool,
 
   #[serde(rename = "@OrderBy", default)]
   pub order_by: Option<String>,
