@@ -10,20 +10,20 @@ use tracing::instrument;
 use crate::{
   error::{Error, Result},
   requests::{
-    AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassMethodsGroupsUserGet,
-    ClassNeedCollectionIDCheck, ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet,
-    Disconnect, GuidesGet, GuidesGroupsGet, MethodBegin, MethodClientScriptGet, MethodControlsGet, MethodEnd,
-    MethodExecute, MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet,
-    NetworkInformationSet, NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet,
-    ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet,
-    SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet,
-    SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet, UserMenuGet, UserProfilePropertyGet,
-    ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+    AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassNeedCollectionIDCheck,
+    ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, Disconnect, GuidesGet,
+    GuidesGroupsGet, MethodBegin, MethodClientScriptGet, MethodControlsGet, MethodEnd, MethodExecute,
+    MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet,
+    NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock,
+    PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+    SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
+    TypesGet, UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
+    XML_HEADER,
   },
   responses::{
     BackwardReference, ChildClass, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame, MethodParameter,
-    MethodResult, MethodVariable, MethodsGroup, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session,
-    Setting, State, Transition, User, UserContent, UserMenuItem, Validate, View,
+    MethodResult, MethodVariable, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, State,
+    Transition, User, UserContent, Validate, View,
   },
 };
 
@@ -1098,28 +1098,6 @@ impl Client {
     }
   }
 
-  /// Возвращает группы операций пользователя для указанного ТБП.
-  ///
-  /// # Arguments
-  /// * `class_id` – короткое имя ТБП.
-  ///
-  /// # Returns
-  /// Структура [`MethodsGroups`].
-  ///
-  /// # Errors
-  /// Стандартные ошибки API и сетевые ошибки.
-  #[instrument(skip(self), err, fields(method = "class_methods_groups_user_get"))]
-  pub async fn class_methods_groups_user_get(&self, session_id: &str, class_id: &str) -> Result<Vec<MethodsGroup>> {
-    let body = self.api(&ClassMethodsGroupsUserGet { session_id, class_id }).await?;
-    match body {
-      ResponseBody::MethodsGroups(v) => Ok(v.methods_group),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "MethodsGroups".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
   /// Выполняет блок `Validate` операции по умолчанию (при открытии формы).
   ///
   /// # Arguments
@@ -1190,25 +1168,6 @@ impl Client {
   // Представления и данные
   //====================================================================================================================
 
-  /// Получает структуру пользовательского меню представлений.
-  ///
-  /// # Returns
-  /// Структура [`UserMenu`].
-  ///
-  /// # Errors
-  /// Стандартные ошибки API и сетевые ошибки.
-  #[instrument(skip(self), err, fields(method = "user_menu_get"))]
-  pub async fn user_menu_get(&self, session_id: &str) -> Result<Vec<UserMenuItem>> {
-    let body = self.api(&UserMenuGet { session_id }).await?;
-    match body {
-      ResponseBody::UserMenu(menu) => Ok(menu.user_menu_items),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "UserMenu".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
   /// Получает данные представления (табличные данные) с возможностью отмены.
   ///
   /// # Arguments
@@ -1237,7 +1196,7 @@ impl Client {
   /// * `view_id` – идентификатор представления.
   ///
   /// # Returns
-  /// Вектор структур [`Column`] с описанием каждой колонки.
+  /// Массив структур [`Column`] с описанием каждой колонки.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -1259,7 +1218,7 @@ impl Client {
   /// * `class_id` – короткое имя ТБП.
   ///
   /// # Returns
-  /// Вектор структур [`View`].
+  /// Массив структур [`View`].
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -1282,7 +1241,7 @@ impl Client {
   /// Получает список справочников, доступных пользователю.
   ///
   /// # Returns
-  /// Вектор структур [`Class`] (справочники являются ТБП с определёнными атрибутами).
+  /// Массив структур [`Class`].
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -1301,7 +1260,7 @@ impl Client {
   /// Получает список групп справочников.
   ///
   /// # Returns
-  /// Вектор структур [`GuidesGroup`].
+  /// Массив структур [`GuidesGroup`].
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -1320,7 +1279,7 @@ impl Client {
   /// Получает список всех типов системы.
   ///
   /// # Returns
-  /// Вектор структур [`Class`].
+  /// Массив структур [`Class`].
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.

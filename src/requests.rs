@@ -327,15 +327,6 @@ pub struct MethodControlsGet<'a> {
   pub form_id: i64,
 }
 
-/// Запрос групп операций пользователя для ТБП.
-#[derive(Debug, Serialize, Clone)]
-pub struct ClassMethodsGroupsUserGet<'a> {
-  #[serde(rename = "@SessionID")]
-  pub session_id: &'a str,
-  #[serde(rename = "@ClassID")]
-  pub class_id: &'a str,
-}
-
 /// Запрос на получение клиент-скрипта операции
 #[derive(Debug, Serialize, Clone)]
 pub struct MethodClientScriptGet<'a> {
@@ -660,13 +651,6 @@ pub struct ClassViewsGet<'a> {
 //======================================================================================================================
 // Навигация, справочники и меню
 //======================================================================================================================
-
-/// Запрос пользовательского меню.
-#[derive(Debug, Serialize, Clone)]
-pub struct UserMenuGet<'a> {
-  #[serde(rename = "@SessionID")]
-  pub session_id: &'a str,
-}
 
 /// Запрос списка справочников.
 #[derive(Debug, Serialize, Clone)]

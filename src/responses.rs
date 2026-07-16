@@ -50,10 +50,8 @@ pub enum ResponseBody {
   States(States),
   Columns(Columns),
   Methods(Methods),
-  MethodsGroups(MethodsGroups),
   ChildClasses(ChildClasses),
   Views(Views),
-  UserMenu(UserMenu),
   Guides(Guides),
   GuidesGroups(GuidesGroups),
   Types(Types),
@@ -233,17 +231,17 @@ pub struct CheckResult {
 // Отладка
 //======================================================================================================================
 
-/// Текст из отладочного канала (Pipe).
+/// Текст из отладочного канала.
 #[derive(Debug, Deserialize, Clone)]
 pub struct PipeText {
-  #[serde(default, rename = "@Value")]
+  #[serde(rename = "@Value")]
   pub value: String,
 }
 
 /// Отладочный текст.
 #[derive(Debug, Deserialize, Clone)]
 pub struct DebugText {
-  #[serde(default, rename = "@Value")]
+  #[serde(rename = "@Value")]
   pub value: String,
 }
 
@@ -404,6 +402,9 @@ pub enum MethodType {
   /// `Y` — деструктор.
   #[serde(rename = "Y")]
   Destructor,
+  /// `O` — выбор.
+  #[serde(rename = "O")]
+  Choice,
 }
 
 /// Список операций.
@@ -625,47 +626,9 @@ pub struct MethodFrame {
   pub frame_id: Option<i64>,
 }
 
-// Группа операций пользователя.
-#[derive(Debug, Deserialize, Clone)]
-pub struct MethodsGroup {
-  #[serde(rename = "@ID")]
-  pub id: i64,
-  #[serde(rename = "@Name")]
-  pub name: String,
-}
-
-// Группы операций пользователя
-#[derive(Debug, Deserialize, Clone)]
-pub struct MethodsGroups {
-  #[serde(rename = "$value", default)]
-  pub methods_group: Vec<MethodsGroup>,
-}
-
 //======================================================================================================================
 // Представления и данные
 //======================================================================================================================
-
-/// Пункт пользовательского меню.
-#[derive(Debug, Deserialize, Clone)]
-pub struct UserMenuItem {
-  #[serde(rename = "@ID")]
-  pub id: i64,
-  #[serde(rename = "@Name")]
-  pub name: String,
-  #[serde(rename = "@ClassID")]
-  pub class_id: String,
-  #[serde(rename = "@ViewID")]
-  pub view_id: String,
-  #[serde(rename = "@Properties")]
-  pub properties: String,
-}
-
-/// Пользовательское меню.
-#[derive(Debug, Deserialize, Clone)]
-pub struct UserMenu {
-  #[serde(rename = "$value", default)]
-  pub user_menu_items: Vec<UserMenuItem>,
-}
 
 /// Данные представления.
 #[derive(Debug, Deserialize, Clone)]
@@ -877,7 +840,7 @@ pub struct Class {
   #[serde(rename = "@EntityID")]
   pub entity_id: String,
   #[serde(rename = "@IsKernelType")]
-  pub is_kernel_type: u8,
+  pub is_kernel_type: bool,
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
   #[serde(rename = "@Flags")]
@@ -886,7 +849,7 @@ pub struct Class {
   #[serde(rename = "@MenuCaption", default)]
   pub menu_caption: Option<String>,
   #[serde(rename = "@IsAccessible", default)]
-  pub is_accessible: Option<u8>,
+  pub is_accessible: Option<bool>,
   #[serde(rename = "@PadLength", default)]
   pub pad_length: Option<u8>,
   #[serde(rename = "@DataSize", default)]
