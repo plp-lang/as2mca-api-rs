@@ -252,14 +252,14 @@ pub struct DebugText {
 /// Идентификатор ТБП и ключ архива экземпляра.
 #[derive(Debug, Deserialize, Clone)]
 pub struct ObjectClassAndArchiveKey {
-  #[serde(rename = "@ClassID")]
-  pub class_id: String,
-  #[serde(rename = "@ArchiveKey")]
-  pub archive_key: String,
+  #[serde(rename = "@ClassID", default)]
+  pub class_id: Option<String>,
+  #[serde(rename = "@ArchiveKey", default)]
+  pub archive_key: Option<String>,
 }
 
 /// Обратная ссылка на экземпляр.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct BackwardReference {
   #[serde(rename = "@ClassID")]
   pub class_id: String,
@@ -279,7 +279,7 @@ pub struct BackwardReferences {
 }
 
 /// Переход состояний ТБП.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct Transition {
   #[serde(rename = "@ID")]
   pub id: i64,
@@ -301,7 +301,7 @@ pub struct Transitions {
 }
 
 /// Состояние ТБП.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct State {
   #[serde(rename = "@ID")]
   pub id: String,
@@ -319,7 +319,7 @@ pub struct States {
 }
 
 /// Дочерний ТБП.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
 pub struct ChildClass {
   #[serde(rename = "@ID")]
   pub id: String,
@@ -405,6 +405,9 @@ pub enum MethodType {
   /// `O` — выбор.
   #[serde(rename = "O")]
   Choice,
+  /// `P` — печать.
+  #[serde(rename = "P")]
+  Print,
 }
 
 /// Список операций.
@@ -444,16 +447,32 @@ pub struct MethodParameter {
 /// Тип ссылки.
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum ReferenceType {
-  D,
-  /// `table of`?
-  T,
+  /// default
+  #[serde(rename = "D")]
+  Default,
+  /// `table of`
+  #[serde(rename = "T")]
+  TableOf,
+  /// `ref`
+  #[serde(rename = "R")]
+  Ref,
 }
 
 /// Направление параметра.
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
-  D,
-  I,
+  /// `default`
+  #[serde(rename = "D")]
+  Default,
+  /// `in`
+  #[serde(rename = "I")]
+  In,
+  /// `in out`
+  #[serde(rename = "B")]
+  InOut,
+  /// `out`
+  #[serde(rename = "O")]
+  Out,
 }
 
 /// Список входных параметров.
@@ -504,16 +523,17 @@ pub struct Control {
   #[serde(rename = "@Control")]
   pub control: ControlType,
 
+  /// Заголовок.
   #[serde(rename = "@Caption")]
   pub caption: String,
 
   /// Кол-во пикселей отступа от верхнего края формы.
   #[serde(rename = "@Top")]
-  pub top: u32,
+  pub top: i32,
 
   /// Кол-во пикселей отступа от левого края формы.
   #[serde(rename = "@Left")]
-  pub left: u32,
+  pub left: i32,
 
   /// Высота элемента в пикселях.
   #[serde(rename = "@Height")]
@@ -525,7 +545,7 @@ pub struct Control {
 
   /// Индекс табуляции.
   #[serde(rename = "@TabIndex")]
-  pub tab_index: u32,
+  pub tab_index: i32,
 
   /// Позиция.
   #[serde(rename = "@Position")]
@@ -575,6 +595,13 @@ pub enum ControlType {
   Variant,
   Array,
   Panel,
+  Combo,
+  Number,
+  Depend,
+  Tabbed,
+  Grid,
+  Gridcol,
+  Table,
 }
 
 /// Спиcок элементов на форме.
@@ -670,17 +697,24 @@ pub struct Column {
   pub alias: String,
   #[serde(rename = "@Base")]
   pub base: ColumnBase,
-  #[serde(rename = "@IsSizeable")]
-  pub is_sizeable: u8,
-  #[serde(rename = "@IsCellStyle")]
-  pub is_cell_style: u8,
+  #[serde(rename = "@IsSizeable", with = "string_as_bool")]
+  pub is_sizeable: bool,
   #[serde(rename = "@IsInvisible")]
   pub is_invisible: Invisible,
   #[serde(rename = "@AbilityPerformOperation")]
   pub ability_perform_operation: bool,
-
-  #[serde(rename = "@IsEditable", default)]
-  pub is_editable: Option<u8>,
+  #[serde(
+    rename = "@IsCellStyle",
+    default,
+    deserialize_with = "string_as_bool::deserialize_option"
+  )]
+  pub is_cell_style: Option<bool>,
+  #[serde(
+    rename = "@IsEditable",
+    default,
+    deserialize_with = "string_as_bool::deserialize_option"
+  )]
+  pub is_editable: Option<bool>,
   #[serde(rename = "@ReferenceID", default)]
   pub reference_id: Option<String>,
   #[serde(rename = "@TargetClassID", default)]
@@ -702,6 +736,9 @@ pub enum ColumnBase {
   Boolean,
   Reference,
   Collection,
+  Ole,
+  Null,
+  State,
 }
 
 /// Выравнивание.

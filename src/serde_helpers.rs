@@ -61,7 +61,22 @@ pub mod string_as_bool {
       "true" | "1" => Ok(true),
       "false" | "0" => Ok(false),
       _ => Err(serde::de::Error::custom(format!(
-        "expected 'true' or 'false', received '{s}'"
+        "expected 'true', 'false', '1' or '0', received '{s}'"
+      ))),
+    }
+  }
+
+  pub fn deserialize_option<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let opt_s = Option::<String>::deserialize(deserializer)?;
+    match opt_s.as_deref() {
+      None => Ok(None),
+      Some("true" | "1") => Ok(Some(true)),
+      Some("false" | "0") => Ok(Some(false)),
+      Some(s) => Err(serde::de::Error::custom(format!(
+        "expected 'true', 'false', '1', '0' or null, received '{s}'"
       ))),
     }
   }

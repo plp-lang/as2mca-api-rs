@@ -19,7 +19,7 @@
 //!   let client = Client::new("http://localhost:3000/platform2mca")?;
 //!   client.authbasic("user", "pass").await?;
 //!   let session = client.session_init(None).await?;
-//!   let version = client.protocol_info_get(&session.session_id).await?;
+//!   let version = client.protocol_info_get().await?;
 //!
 //!   println!("Protocol version: {}", version);
 //!

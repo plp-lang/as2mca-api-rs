@@ -46,7 +46,7 @@ impl Client {
   /// # Настройки по умолчанию
   /// - `Content-Type: text/xml; charset=utf-8`
   /// - Включено хранилище cookie (поддержка сессий)
-  /// - Таймауты: `connect_timeout` и `timeout` – 5 секунд
+  /// - Таймауты: `connect_timeout` и `timeout` – 30 секунд
   /// - `User-Agent`: `$CARGO_PKG_NAME/$CARGO_PKG_VERSION`
   ///
   /// # Arguments
@@ -75,8 +75,8 @@ impl Client {
     headers.insert(CONTENT_TYPE, "text/xml; charset=utf-8".parse()?);
 
     let client = reqwest::Client::builder()
-      .connect_timeout(Duration::from_secs(5))
-      .timeout(Duration::from_secs(5))
+      .connect_timeout(Duration::from_secs(30))
+      .timeout(Duration::from_secs(30))
       .cookie_store(true)
       .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
       .default_headers(headers)
@@ -366,11 +366,11 @@ impl Client {
   /// # use as2mca_api::client::Client;
   /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
   /// # let session = client.session_init(None).await.unwrap();
-  /// let version = client.protocol_info_get(&session.session_id).await.unwrap();
+  /// let version = client.protocol_info_get().await.unwrap();
   /// println!("Protocol version: {}", version);
   /// ```
   #[instrument(skip(self), err, fields(method = "protocol_info_get"))]
-  pub async fn protocol_info_get(&self, session_id: &str) -> Result<String> {
+  pub async fn protocol_info_get(&self) -> Result<String> {
     let body = self.api(&ProtocolInfoGet {}).await?;
     match body {
       ResponseBody::ProtocolInfo(info) => Ok(info.version),
@@ -903,8 +903,13 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "classes_get"))]
-  pub async fn classes_get(&self, session_id: &str, class_info: &[ClassInfo<'_>]) -> Result<Vec<Class>> {
-    let body = self.api(&ClassesGet { session_id, class_info }).await?;
+  pub async fn classes_get(&self, session_id: &str, classes: &[&str]) -> Result<Vec<Class>> {
+    let body = self
+      .api(&ClassesGet {
+        session_id,
+        class_info: &classes.iter().map(|&s| ClassInfo { class_id: s }).collect::<Vec<_>>(),
+      })
+      .await?;
     match body {
       ResponseBody::Classes(cls) => Ok(cls.body),
       _ => Err(Error::UnexpectedResponse {
@@ -1348,10 +1353,10 @@ impl Client {
   /// # use as2mca_api::client::Client;
   /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
   /// # let session = client.session_init(None).await.unwrap();
-  /// client.objects_unlock(&session.session_id, false).await.unwrap();
+  /// client.objects_unlock(&session.session_id, None).await.unwrap();
   /// ```
   #[instrument(skip(self), err, fields(method = "objects_unlock"))]
-  pub async fn objects_unlock(&self, session_id: &str, clear_all_locks: bool) -> Result<()> {
+  pub async fn objects_unlock(&self, session_id: &str, clear_all_locks: Option<bool>) -> Result<()> {
     let body = self
       .api(&ObjectsUnlock {
         session_id,

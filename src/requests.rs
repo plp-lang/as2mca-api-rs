@@ -700,6 +700,6 @@ pub struct ObjectsLock<'a> {
 pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
-  #[serde(rename = "@ClearAllLocks")]
-  pub clear_all_locks: bool,
+  #[serde(rename = "@ClearAllLocks", skip_serializing_if = "Option::is_none")]
+  pub clear_all_locks: Option<bool>,
 }

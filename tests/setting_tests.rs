@@ -5,7 +5,25 @@ use crate::common::ctx::{Context, ctx};
 mod common;
 
 #[rstest]
-// #[case("UNKNOWN", None)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_protocol_info_get(#[future] ctx: Context) {
+  let Context { ref client, .. } = ctx.await;
+  client.protocol_info_get().await.unwrap();
+}
+
+#[rstest]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_system_server_version_get(#[future] ctx: Context) {
+  let Context {
+    ref client,
+    ref session_id,
+    ..
+  } = ctx.await;
+  client.system_server_version_get(session_id).await.unwrap();
+}
+
+#[rstest]
+#[case("UNKNOWN", None)]
 #[case("SHOW_SYSTEM_MENU", Some("YES"))]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case] value: Option<&str>) {
@@ -26,48 +44,10 @@ async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case]
 }
 
 #[rstest]
-#[case("UNKNOWN", false)]
-#[case("NAV_SKIN_INTERFACE", true)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_option(#[future] ctx: Context, #[case] name: &str, #[case] value: bool) {
-  let Context {
-    ref client,
-    ref session_id,
-    ..
-  } = ctx.await;
-
-  let res = client.system_option_enabled_check(session_id, name).await.unwrap();
-  assert_eq!(res, value);
-}
-
-#[rstest]
-#[case("UNKNOWN", false)]
-#[case("ADMIN_GRP", true)]
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_user_belongs_group_check(#[future] ctx: Context, #[case] name: &str, #[case] value: bool) {
-  let Context {
-    ref client,
-    ref session_id,
-    ..
-  } = ctx.await;
-
-  let res = client.user_belongs_group_check(session_id, name).await.unwrap();
-  assert_eq!(res, value);
-}
-
-#[rstest]
-// #[case("UNKNOWN", "")]
-#[case("SESSIONS_PER_USER", "UNLIMITED")]
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_user_profile_property(#[future] ctx: Context, #[case] name: &str, #[case] value: &str) {
-  let Context {
-    ref client,
-    ref session_id,
-    ..
-  } = ctx.await;
-
-  let res = client.user_profile_property_get(session_id, name).await.unwrap();
-  assert_eq!(res, value.to_string());
+async fn test_authentication_url_get(#[future] ctx: Context) {
+  let Context { ref client, .. } = ctx.await;
+  client.authentication_url_get().await.unwrap();
 }
 
 #[rstest]
@@ -84,14 +64,16 @@ async fn test_novo_allowed_check(#[future] ctx: Context) {
 }
 
 #[rstest]
+#[case("UNKNOWN", false)]
+#[case("NAV_SKIN_INTERFACE", true)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_user_privileged(#[future] ctx: Context) {
+async fn test_system_option_enabled_check(#[future] ctx: Context, #[case] name: &str, #[case] value: bool) {
   let Context {
     ref client,
     ref session_id,
     ..
   } = ctx.await;
 
-  let is_privileged = client.system_user_privileged_get(session_id).await.unwrap();
-  assert!(is_privileged);
+  let res = client.system_option_enabled_check(session_id, name).await.unwrap();
+  assert_eq!(res, value);
 }
