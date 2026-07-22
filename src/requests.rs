@@ -506,10 +506,10 @@ pub enum PLPEntity<'a> {
 /// Параметр PLP-вызова (источник и цель).
 #[derive(Debug, Serialize, Clone)]
 pub struct PLPCallParameter<'a> {
-  #[serde(rename = "@SourcePLPCallItem", with = "unwrap_list")]
-  pub source: &'a [PLPEntity<'a>],
-  #[serde(rename = "@TargetPLPCallItem", with = "unwrap_list")]
+  #[serde(rename = "TargetPLPCallItem", with = "unwrap_list")]
   pub target: &'a [PLPEntity<'a>],
+  #[serde(rename = "SourcePLPCallItem", with = "unwrap_list")]
+  pub source: &'a [PLPEntity<'a>],
 }
 
 /// Запрос на завершение выполнения операции (закрытие формы).
