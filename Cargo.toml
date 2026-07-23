@@ -32,17 +32,17 @@ multiple_crate_versions = "allow"
 tracing = { version = "0.1.44", features = ["attributes"] }
 quick-xml = { version = "0.41.0", features = ["serialize"] }
 reqwest = { version = "0.13.4", features = ["cookies"] }
-serde = { version = "1.0.228", features = ["derive"] }
-thiserror = "2.0.18"
+serde = { version = "1.0.229", features = ["derive"] }
+thiserror = "2.0.19"
 
 [dev-dependencies]
 rstest = "0.26.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
-tokio = { version = "1.52.3", features = ["full"] }
+tokio = { version = "1.53.1", features = ["full"] }
 local-ip-address = "0.6.13"
 mac_address = "1.1.8"
 whoami = "2.1.2"
-regex = "1.12.4"
+regex = "1.13.1"
 
 [package.metadata.docs.rs]
 all-features = true
