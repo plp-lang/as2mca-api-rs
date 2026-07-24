@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Falldot <fe.offep@gmail.com>"]
 readme = "README.md"
-description = "Aplication Server 2MCA API HTTP Client for Rust"
+description = "Aplication Server 2MCA API HTTP Client"
 license = "MIT"
 homepage = "https://github.com/plp-lang/as2mca-api-rs"
 repository = "https://github.com/plp-lang/as2mca-api-rs"
@@ -12,7 +12,11 @@ categories = [
   "web-programming::http-client"
 ]
 keywords = [
-  "api"
+  "async",
+  "api",
+  "client",
+  "2mca",
+  "cbs"
 ]
 
 [lints.clippy]
