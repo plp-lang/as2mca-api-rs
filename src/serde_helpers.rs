@@ -9,6 +9,7 @@
 //! # Модули
 //! - [`empty_string_as_none`] – позволяет полю типа `Option<T>` принимать пустую строку как `None`.
 //! - [`string_as_bool`] – десериализует строки `"true"`/`"false"` (или `"1"`/`"0"`) в `bool`.
+//! - [`string_as_option_bool`] – десериализует строки `"true"`/`"false"` (или `"1"`/`"0"`) в `Option<bool>`.
 //! - [`unwrap_list`] – убирает лишний уровень вложенности для списков в XML (используется для `Vec<T>` внутри элемента). Взято из [документации quick-xml](https://docs.rs/quick-xml/latest/quick_xml/de/#element-lists)
 //! - [`comma_separated_numbers`] – сериализует `Vec<T>` в строку вида `"1,2,3"` и обратно.
 //!
@@ -48,9 +49,19 @@ pub mod empty_string_as_none {
   }
 }
 
-/// Модуль для десериализации строк в `bool`.
+/// Модуль для сериализации и десериализации `bool` как строки.
+/// Поддерживает: "true", "false", "1", "0".
 pub mod string_as_bool {
-  use serde::{self, Deserialize, Deserializer};
+  use serde::{self, Deserialize, Deserializer, Serializer};
+
+  pub fn serialize<S>(value: &bool, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    // Сериализуем сразу как строковый срез, чтобы избежать аллокаций
+    let s = if *value { "true" } else { "false" };
+    serializer.serialize_str(s)
+  }
 
   pub fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
   where
@@ -65,8 +76,25 @@ pub mod string_as_bool {
       ))),
     }
   }
+}
 
-  pub fn deserialize_option<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+/// Модуль для сериализации и десериализации `Option<bool>` как строки.
+/// Поддерживает: "true", "false", "1", "0".
+pub mod string_as_option_bool {
+  use serde::{self, Deserialize, Deserializer, Serializer};
+
+  pub fn serialize<S>(value: &Option<bool>, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    match value {
+      Some(true) => serializer.serialize_str("true"),
+      Some(false) => serializer.serialize_str("false"),
+      None => serializer.serialize_none(),
+    }
+  }
+
+  pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
   where
     D: Deserializer<'de>,
   {
@@ -76,7 +104,7 @@ pub mod string_as_bool {
       Some("true" | "1") => Ok(Some(true)),
       Some("false" | "0") => Ok(Some(false)),
       Some(s) => Err(serde::de::Error::custom(format!(
-        "expected 'true', 'false', '1', '0' or null, received '{s}'"
+        "expected 'true', 'false', '1', '0', received '{s}'"
       ))),
     }
   }
@@ -86,10 +114,13 @@ pub mod string_as_bool {
 pub mod unwrap_list {
   use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
-  pub fn serialize<'a, T, S>(items: &'a [T], serializer: S) -> Result<S::Ok, S::Error>
+  /// Сериализация поддерживает `Vec<T>`, `&[T]`, `&Vec<T>` и любые другие типы,
+  /// которые можно привести к срезу через `AsRef<[T]>`.
+  pub fn serialize<T, S, V>(value: &V, serializer: S) -> Result<S::Ok, S::Error>
   where
-    T: Serialize + 'a,
+    T: Serialize,
     S: Serializer,
+    V: AsRef<[T]> + ?Sized,
   {
     #[derive(Serialize)]
     struct Wrapper<'b, U>
@@ -99,9 +130,12 @@ pub mod unwrap_list {
       #[serde(rename = "$value", skip_serializing_if = "<[_]>::is_empty")]
       items: &'b [U],
     }
-    Wrapper { items }.serialize(serializer)
+    Wrapper { items: value.as_ref() }.serialize(serializer)
   }
 
+  /// Десериализация всегда возвращает `Vec<T>`.
+  /// Возврат `&[T]` невозможен, так как промежуточный Wrapper владеет данными (`Vec`),
+  /// и мы не можем вернуть ссылку на локальную переменную.
   pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Vec<T>, D::Error>
   where
     T: Deserialize<'de>,
