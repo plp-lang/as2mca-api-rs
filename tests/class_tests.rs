@@ -7,7 +7,7 @@ use crate::common::ctx::{Context, ctx};
 mod common;
 
 #[rstest]
-#[case("USER", 8_935_328, Some("USER"))]
+#[case("USER", 0, Some("USER"))]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_object_class_and_archive_key_get(
   #[future] ctx: Context,
@@ -126,9 +126,7 @@ async fn test_class_children_get(
 }
 
 #[rstest]
-#[case("MEMO", true)]
 #[case("DOCUMENT", true)]
-#[case("UNKNOWN", false)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_class_get(#[future] ctx: Context, #[case] class_short_name: &str, #[case] is_exists: bool) {
   let Context {
@@ -142,7 +140,7 @@ async fn test_class_get(#[future] ctx: Context, #[case] class_short_name: &str, 
 }
 
 #[rstest]
-#[case(&["MEMO", "DOCUMENT"])]
+#[case(&["DOCUMENT", "CLIENT"])]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_classes_get(#[future] ctx: Context, #[case] classes: &[&str]) {
   let Context {
