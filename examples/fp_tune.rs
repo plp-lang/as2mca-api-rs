@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       session_id,
       method_id,
       info: "%PARAM%.P_GROUP_ID",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_839,
         value: "AS2MCA_TEST_GROUP",
       }],
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       session_id,
       method_id,
       info: "%PARAM%.P_NAME",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_820,
         value: "Тестовая настройка",
       }],
@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       session_id,
       method_id,
       info: "%PARAM%.P_CODE",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_818,
         value: "AS2MCA_TEST_CODE",
       }],
@@ -87,7 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       session_id,
       method_id,
       info: "%VAR%.V_VAL_TYPE.0",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_844,
         value: "4",
       }],
@@ -101,7 +101,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       session_id,
       method_id,
       info: "%VAR%.V_VAL_BOOL.0",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_835,
         value: "1",
       }],
@@ -113,7 +113,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   //   .method_execute(&MethodExecute {
   //     session_id,
   //     method_id,
-  //     controls_states: &[
+  //     controls_states: vec![
   //       ControlState {
   //         id: 17_007_839,
   //         value: "AS2MCA_TEST_GROUP",
@@ -145,47 +145,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   //     session_id,
   //     method_id,
   //     info: "%PLPCALL%",
-  //     plpcall_parameters: &[
+  //     plpcall_parameters: vec![
   //       PLPCallParameter {
-  //         target: &[PLPEntity::PLPParameter(PLPParameter {
+  //         target: vec![PLPEntity::PLPParameter(PLPParameter {
   //           method_id,
   //           name: "P_GROUP_ID",
   //         })],
-  //         source: &[PLPEntity::PLPConstant(PLPConstant {
+  //         source: vec![PLPEntity::PLPConstant(PLPConstant {
   //           value: "AS2MCA_TEST_GROUP",
   //         })],
   //       },
   //       PLPCallParameter {
-  //         target: &[PLPEntity::PLPParameter(PLPParameter {
+  //         target: vec![PLPEntity::PLPParameter(PLPParameter {
   //           method_id,
   //           name: "P_NAME",
   //         })],
-  //         source: &[PLPEntity::PLPConstant(PLPConstant {
+  //         source: vec![PLPEntity::PLPConstant(PLPConstant {
   //           value: "Тестовая настройка",
   //         })],
   //       },
   //       PLPCallParameter {
-  //         target: &[PLPEntity::PLPParameter(PLPParameter {
+  //         target: vec![PLPEntity::PLPParameter(PLPParameter {
   //           method_id,
   //           name: "P_CODE",
   //         })],
-  //         source: &[PLPEntity::PLPConstant(PLPConstant {
+  //         source: vec![PLPEntity::PLPConstant(PLPConstant {
   //           value: "AS2MCA_TEST_CODE",
   //         })],
   //       },
   //       PLPCallParameter {
-  //         target: &[PLPEntity::PLPParameter(PLPParameter {
+  //         target: vec![PLPEntity::PLPParameter(PLPParameter {
   //           method_id,
   //           name: "P_VAL_TYPE",
   //         })],
-  //         source: &[PLPEntity::PLPConstant(PLPConstant { value: "BOOLEAN" })],
+  //         source: vec![PLPEntity::PLPConstant(PLPConstant { value: "BOOLEAN" })],
   //       },
   //       PLPCallParameter {
-  //         target: &[PLPEntity::PLPParameter(PLPParameter {
+  //         target: vec![PLPEntity::PLPParameter(PLPParameter {
   //           method_id,
   //           name: "P_VALUES",
   //         })],
-  //         source: &[PLPEntity::PLPConstant(PLPConstant { value: "45543423508" })],
+  //         source: vec![PLPEntity::PLPConstant(PLPConstant { value: "45543423508" })],
   //       },
   //     ],
   //     ..Default::default()

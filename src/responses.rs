@@ -16,7 +16,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::serde_helpers::{empty_string_as_none, string_as_bool, string_as_option_bool, unwrap_list};
+use crate::serde_helpers::{empty_string_as_none, string_as_bool, string_as_option_bool};
 
 /// Базовая обертка XML-ответа от сервера.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -154,7 +154,7 @@ pub struct CoreInfo {
 /// Список системных настроек.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Settings {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Setting>,
 }
 
@@ -163,7 +163,7 @@ pub struct Settings {
 pub struct Setting {
   #[serde(rename = "@Name")]
   pub name: String,
-  #[serde(rename = "@Value")]
+  #[serde(default, rename = "@Value", skip_serializing_if = "Option::is_none")]
   pub value: Option<String>,
 }
 
@@ -252,9 +252,9 @@ pub struct DebugText {
 /// Идентификатор ТБП и ключ архива экземпляра.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ObjectClassAndArchiveKey {
-  #[serde(rename = "@ClassID", default)]
+  #[serde(rename = "@ClassID", default, skip_serializing_if = "Option::is_none")]
   pub class_id: Option<String>,
-  #[serde(rename = "@ArchiveKey", default)]
+  #[serde(rename = "@ArchiveKey", default, skip_serializing_if = "Option::is_none")]
   pub archive_key: Option<String>,
 }
 
@@ -274,7 +274,7 @@ pub struct BackwardReference {
 /// Список обратных ссылок.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BackwardReferences {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<BackwardReference>,
 }
 
@@ -285,7 +285,7 @@ pub struct Transition {
   pub id: i64,
   #[serde(rename = "@Name")]
   pub name: String,
-  #[serde(rename = "@MethodShortName", with = "empty_string_as_none")]
+  #[serde(rename = "@MethodShortName", deserialize_with = "empty_string_as_none::deserialize")]
   pub method_short_name: Option<String>,
   #[serde(rename = "@InitialStateID")]
   pub initial_state_id: String,
@@ -296,7 +296,7 @@ pub struct Transition {
 /// Список переходов.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Transitions {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub transitions: Vec<Transition>,
 }
 
@@ -314,7 +314,7 @@ pub struct State {
 /// Список состояний.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct States {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub states: Vec<State>,
 }
 
@@ -328,7 +328,7 @@ pub struct ChildClass {
 /// Список дочерних ТБП.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ChildClasses {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub child_classes: Vec<ChildClass>,
 }
 
@@ -364,20 +364,20 @@ pub struct Method {
   #[serde(rename = "@CallableShortName")]
   pub callable_short_name: String,
 
-  #[serde(rename = "@ScriptID", default)]
+  #[serde(rename = "@ScriptID", default, skip_serializing_if = "Option::is_none")]
   pub script_id: Option<String>,
 
   /// Короткое имя возвращаемого типа операцией.
-  #[serde(rename = "@ResultClassID", default)]
+  #[serde(rename = "@ResultClassID", default, skip_serializing_if = "Option::is_none")]
   pub result_class_id: Option<String>,
 
-  #[serde(rename = "@UserDriven", default)]
+  #[serde(rename = "@UserDriven", default, skip_serializing_if = "Option::is_none")]
   pub user_driven: Option<u8>,
-  #[serde(rename = "@FormID", default)]
+  #[serde(rename = "@FormID", default, skip_serializing_if = "Option::is_none")]
   pub form_id: Option<i64>,
-  #[serde(rename = "@ReportType", default)]
+  #[serde(rename = "@ReportType", default, skip_serializing_if = "Option::is_none")]
   pub report_type: Option<String>,
-  #[serde(rename = "@ReportTemplate", default)]
+  #[serde(rename = "@ReportTemplate", default, skip_serializing_if = "Option::is_none")]
   pub report_template: Option<String>,
 }
 
@@ -413,7 +413,7 @@ pub enum MethodType {
 /// Список операций.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Methods {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Method>,
 }
 
@@ -432,15 +432,15 @@ pub struct MethodParameter {
   #[serde(rename = "@Direction")]
   pub direction: Direction,
 
-  #[serde(rename = "@ViewID", default)]
+  #[serde(rename = "@ViewID", default, skip_serializing_if = "Option::is_none")]
   pub view_id: Option<i64>,
-  #[serde(rename = "@ViewClassID", default)]
+  #[serde(rename = "@ViewClassID", default, skip_serializing_if = "Option::is_none")]
   pub view_class_id: Option<String>,
-  #[serde(rename = "@ViewFilter", default)]
+  #[serde(rename = "@ViewFilter", default, skip_serializing_if = "Option::is_none")]
   pub view_filter: Option<String>,
 
   /// Значение по умолчанию.
-  #[serde(rename = "@DefaultValue", default)]
+  #[serde(rename = "@DefaultValue", default, skip_serializing_if = "Option::is_none")]
   pub default_value: Option<String>,
 }
 
@@ -478,7 +478,7 @@ pub enum Direction {
 /// Список входных параметров.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MethodParameters {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub parameters: Vec<MethodParameter>,
 }
 
@@ -500,7 +500,7 @@ pub struct MethodVariable {
 /// Список публичных переменных.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MethodVariables {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub variables: Vec<MethodVariable>,
 }
 
@@ -557,23 +557,28 @@ pub struct Control {
 
   /// Идентификатор родительского элемента.
   /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(rename = "@ParentID", default, with = "empty_string_as_none")]
+  #[serde(
+    rename = "@ParentID",
+    default,
+    deserialize_with = "empty_string_as_none::deserialize",
+    skip_serializing_if = "Option::is_none"
+  )]
   pub parent_id: Option<i64>,
 
   /// ТБП значения.
-  #[serde(rename = "@ClassID", default)]
+  #[serde(rename = "@ClassID", default, skip_serializing_if = "Option::is_none")]
   pub class_id: Option<String>,
 
   /// Зависимость.
-  #[serde(rename = "@Depend", default)]
+  #[serde(rename = "@Depend", default, skip_serializing_if = "Option::is_none")]
   pub depend: Option<i64>,
 
   /// Свойства
-  #[serde(rename = "@Properties", default)]
+  #[serde(rename = "@Properties", default, skip_serializing_if = "Option::is_none")]
   pub properties: Option<String>,
 
   /// Подсказка.
-  #[serde(rename = "@Tips", default)]
+  #[serde(rename = "@Tips", default, skip_serializing_if = "Option::is_none")]
   pub tips: Option<String>,
 }
 
@@ -607,22 +612,24 @@ pub enum ControlType {
 /// Спиcок элементов на форме.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Controls {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub controls: Vec<Control>,
 }
 
 /// Результат выполнения блока `Validate`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Validate {
-  #[serde(rename = "@DebugText")]
-  pub debug_text: String,
-  #[serde(rename = "$value", with = "unwrap_list")]
-  pub controls_states: Vec<ControlsState>,
+  #[serde(default, rename = "@DebugText", skip_serializing_if = "Option::is_none")]
+  pub debug_text: Option<String>,
+  #[serde(rename = "@ObjectID", default, skip_serializing_if = "Option::is_none")]
+  pub object_id: Option<i64>,
+  #[serde(rename = "ControlsStates", skip_serializing_if = "Option::is_none")]
+  pub controls_states: Option<ControlsStates>,
 }
 
 /// Состояние элемента на форме.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ControlsState {
+pub struct ControlState {
   #[serde(rename = "@ID")]
   pub id: i64,
   #[serde(rename = "@Value")]
@@ -631,12 +638,18 @@ pub struct ControlsState {
 
 /// Результат выполнения блока `Execute`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename = "@Result")]
+#[serde(rename = "Result")]
 pub struct MethodResult {
-  #[serde(rename = "@Value", with = "empty_string_as_none")]
-  pub value: Option<i64>,
-  #[serde(rename = "$value", with = "unwrap_list")]
-  pub controls_states: Vec<ControlsState>,
+  #[serde(default, rename = "@Value", skip_serializing_if = "Option::is_none")]
+  pub value: Option<String>,
+  #[serde(rename = "ControlsStates", skip_serializing_if = "Option::is_none")]
+  pub controls_states: Option<ControlsStates>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ControlsStates {
+  #[serde(rename = "ControlState", default, skip_serializing_if = "Vec::is_empty")]
+  pub items: Vec<ControlState>,
 }
 
 /// Клиент-скрипт
@@ -649,7 +662,7 @@ pub struct ClientScript {
 // Информация об открытой форме.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MethodFrame {
-  #[serde(rename = "@FrameID", default)]
+  #[serde(rename = "@FrameID", default, skip_serializing_if = "Option::is_none")]
   pub frame_id: Option<i64>,
 }
 
@@ -660,14 +673,14 @@ pub struct MethodFrame {
 /// Данные представления.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ViewData {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub row: Vec<Row>,
 }
 
 /// Строка данных представления.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Row {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub row_item: Vec<RowItem>,
 }
 
@@ -703,17 +716,27 @@ pub struct Column {
   pub is_invisible: Invisible,
   #[serde(rename = "@AbilityPerformOperation")]
   pub ability_perform_operation: bool,
-  #[serde(rename = "@IsCellStyle", default, with = "string_as_option_bool")]
+  #[serde(
+    rename = "@IsCellStyle",
+    default,
+    with = "string_as_option_bool",
+    skip_serializing_if = "Option::is_none"
+  )]
   pub is_cell_style: Option<bool>,
-  #[serde(rename = "@IsEditable", default, with = "string_as_option_bool")]
+  #[serde(
+    rename = "@IsEditable",
+    default,
+    with = "string_as_option_bool",
+    skip_serializing_if = "Option::is_none"
+  )]
   pub is_editable: Option<bool>,
-  #[serde(rename = "@ReferenceID", default)]
+  #[serde(rename = "@ReferenceID", default, skip_serializing_if = "Option::is_none")]
   pub reference_id: Option<String>,
-  #[serde(rename = "@TargetClassID", default)]
+  #[serde(rename = "@TargetClassID", default, skip_serializing_if = "Option::is_none")]
   pub target_class_id: Option<String>,
-  #[serde(rename = "@ReferenceType", default)]
+  #[serde(rename = "@ReferenceType", default, skip_serializing_if = "Option::is_none")]
   pub reference_type: Option<u8>,
-  #[serde(rename = "@Logging", default)]
+  #[serde(rename = "@Logging", default, skip_serializing_if = "Option::is_none")]
   pub logging: Option<Logging>,
 }
 
@@ -767,7 +790,7 @@ pub enum Logging {
 /// Список колонок.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Columns {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Column>,
 }
 
@@ -793,26 +816,26 @@ pub struct View {
   #[serde(rename = "@ToFile")]
   pub to_file: bool,
 
-  #[serde(rename = "@OrderBy", default)]
+  #[serde(rename = "@OrderBy", default, skip_serializing_if = "Option::is_none")]
   pub order_by: Option<String>,
-  #[serde(rename = "@Hints", default)]
+  #[serde(rename = "@Hints", default, skip_serializing_if = "Option::is_none")]
   pub hints: Option<String>,
-  #[serde(rename = "@CellStyleScript", default)]
+  #[serde(rename = "@CellStyleScript", default, skip_serializing_if = "Option::is_none")]
   pub cell_style_script: Option<String>,
-  #[serde(rename = "@SourceID", default)]
+  #[serde(rename = "@SourceID", default, skip_serializing_if = "Option::is_none")]
   pub source_id: Option<i64>,
-  #[serde(rename = "@ExtensionID", default)]
+  #[serde(rename = "@ExtensionID", default, skip_serializing_if = "Option::is_none")]
   pub extension_id: Option<i64>,
-  #[serde(rename = "@FilterMethodShortName", default)]
+  #[serde(rename = "@FilterMethodShortName", default, skip_serializing_if = "Option::is_none")]
   pub filter_method_short_name: Option<String>,
-  #[serde(rename = "@FilterMethodProperties", default)]
+  #[serde(rename = "@FilterMethodProperties", default, skip_serializing_if = "Option::is_none")]
   pub filter_method_properties: Option<String>,
 }
 
 /// Список представлений.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Views {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<View>,
 }
 
@@ -823,7 +846,7 @@ pub struct Views {
 /// Список справочников.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Guides {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Class>,
 }
 
@@ -839,21 +862,21 @@ pub struct GuidesGroup {
 /// Список групп справочников.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GuidesGroups {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<GuidesGroup>,
 }
 
 /// Список cправочников.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Classes {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Class>,
 }
 
 /// Список ТПБ (не справочников).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Types {
-  #[serde(rename = "$value", default)]
+  #[serde(default, rename = "$value")]
   pub body: Vec<Class>,
 }
 
@@ -875,19 +898,19 @@ pub struct Class {
   #[serde(rename = "@Flags")]
   pub flags: Flags,
 
-  #[serde(rename = "@MenuCaption", default)]
+  #[serde(rename = "@MenuCaption", default, skip_serializing_if = "Option::is_none")]
   pub menu_caption: Option<String>,
-  #[serde(rename = "@IsAccessible", default)]
+  #[serde(rename = "@IsAccessible", default, skip_serializing_if = "Option::is_none")]
   pub is_accessible: Option<bool>,
-  #[serde(rename = "@PadLength", default)]
+  #[serde(rename = "@PadLength", default, skip_serializing_if = "Option::is_none")]
   pub pad_length: Option<u8>,
-  #[serde(rename = "@DataSize", default)]
+  #[serde(rename = "@DataSize", default, skip_serializing_if = "Option::is_none")]
   pub data_size: Option<u32>,
-  #[serde(rename = "@DataPrecision", default)]
+  #[serde(rename = "@DataPrecision", default, skip_serializing_if = "Option::is_none")]
   pub data_precision: Option<u8>,
-  #[serde(rename = "@Properties", default)]
+  #[serde(rename = "@Properties", default, skip_serializing_if = "Option::is_none")]
   pub properties: Option<String>,
-  #[serde(rename = "@GroupID", default)]
+  #[serde(rename = "@GroupID", default, skip_serializing_if = "Option::is_none")]
   pub group_id: Option<String>,
 }
 
@@ -905,7 +928,7 @@ pub enum BaseClassID {
 /// Результат блокировки экземпляра
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LockResult {
-  #[serde(rename = "@Message", default)]
+  #[serde(rename = "@Message", default, skip_serializing_if = "Option::is_none")]
   pub message: Option<String>,
 }
 

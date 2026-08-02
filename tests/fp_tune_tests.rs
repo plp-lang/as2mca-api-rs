@@ -49,13 +49,11 @@ async fn test_fp_tune(#[future] ctx: Context) {
       class_id: CLASS_SHORT_NAME,
       user_filter: Some(UserFilter {
         extra_filter: None,
-        filters: &[Filter::And {
-          filters: &[Filter::CaseInsensitive(&CaseInsensitiveFilter {
-            column_name: "C_2",
-            operator: "=",
-            value: Some(TEST_OBJECT_VALUE),
-          })],
-        }],
+        filters: vec![Filter::And(vec![Filter::CaseInsensitive(CaseInsensitiveFilter {
+          column_name: "C_2",
+          operator: "=",
+          value: Some(TEST_OBJECT_VALUE),
+        })])],
       }),
       ..Default::default()
     })
@@ -117,7 +115,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_create_id,
       info: "%PARAM%.P_CODE",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_818,
         value: TEST_OBJECT_VALUE,
       }],
@@ -131,7 +129,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_create_id,
       info: "%PARAM%.P_NAME",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_820,
         value: TEST_OBJECT_VALUE,
       }],
@@ -145,7 +143,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_create_id,
       info: "%PARAM%.P_GROUP_ID",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_839,
         value: TEST_OBJECT_VALUE,
       }],
@@ -159,7 +157,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_create_id,
       info: "%VAR%.V_VAL_TYPE.0",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_844,
         value: "4",
       }],
@@ -173,7 +171,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       method_id: method_create_id,
       info: "%VAR%.V_VAL_BOOL.0",
-      controls_states: &[ControlState {
+      controls_states: vec![ControlState {
         id: 17_007_835,
         value: "1",
       }],
@@ -190,7 +188,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
     })
     .await
     .unwrap();
-  let object_id = res.value.unwrap();
+  let object_id = res.value.unwrap().parse::<i64>().unwrap();
 
   let prev_frame_id = client.method_end(session_id, frame_id).await.unwrap();
   assert_eq!(prev_frame_id, None);
@@ -200,8 +198,8 @@ async fn test_fp_tune(#[future] ctx: Context) {
   let data = client
     .view_data_get_cancelable(&ViewDataGetCancelable {
       session_id,
-      view_short_name: VIEW_SHORT_NAME,
       class_id: CLASS_SHORT_NAME,
+      view_short_name: VIEW_SHORT_NAME,
       object_filter: Some(ObjectFilter { object_id }),
       ..Default::default()
     })

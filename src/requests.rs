@@ -16,6 +16,8 @@
 //! Все структуры реализуют `Serialize` и рассчитаны на использование внутри [`crate::client::Client`].
 //! Ручная сериализация обычно не требуется.
 
+use core::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::serde_helpers::{comma_separated_numbers, unwrap_list};
@@ -37,7 +39,7 @@ pub struct Request<T> {
 /// Запрос на инициализацию (активацию) сессии.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SessionInit {
-  #[serde(rename = "@AliveActiveSession", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@AliveActiveSession", default, skip_serializing_if = "Option::is_none")]
   /// Флаг, указывающий, следует ли поддерживать активную сессию
   pub alive_active_session: Option<bool>,
 }
@@ -358,7 +360,7 @@ pub struct MethodValidateDefault<'a> {
   pub is_called_from_another_method: bool,
   #[serde(rename = "@ReadOnly")]
   pub read_only: bool,
-  #[serde(rename = "@LockObjectClassID", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@LockObjectClassID", default, skip_serializing_if = "Option::is_none")]
   pub lock_object_class_id: Option<&'a str>,
   #[serde(rename = "@GetDebugText")]
   pub get_debug_text: bool,
@@ -386,7 +388,7 @@ impl Default for MethodValidateDefault<'_> {
 }
 
 /// Запрос на вызов блока `Validate` операции при событии элемента формы.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MethodValidate<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
@@ -402,10 +404,10 @@ pub struct MethodValidate<'a> {
   pub get_debug_text: bool,
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
-  #[serde(rename = "ControlsStates", with = "unwrap_list")]
-  pub controls_states: &'a [ControlState<'a>],
-  #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
-  pub plpcall_parameters: &'a [PLPCallParameter<'a>],
+  #[serde(rename = "ControlsStates", serialize_with = "unwrap_list::serialize")]
+  pub controls_states: Vec<ControlState<'a>>,
+  #[serde(rename = "PLPCallParameters", serialize_with = "unwrap_list::serialize")]
+  pub plpcall_parameters: Vec<PLPCallParameter<'a>>,
 }
 
 impl Default for MethodValidate<'_> {
@@ -415,8 +417,8 @@ impl Default for MethodValidate<'_> {
       method_id: Default::default(),
       info: Default::default(),
       r#type: ValidateType::Validate,
-      controls_states: &[],
-      plpcall_parameters: &[],
+      controls_states: Vec::new(),
+      plpcall_parameters: Vec::new(),
       do_commit: true,
       get_debug_text: true,
       optimized_grid_updates: true,
@@ -430,8 +432,16 @@ pub enum ValidateType {
   Validate,
 }
 
+impl fmt::Display for ValidateType {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      Self::Validate => write!(f, "Validate"),
+    }
+  }
+}
+
 /// Запрос на вызов блока `Execute` операции.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct MethodExecute<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
@@ -442,9 +452,9 @@ pub struct MethodExecute<'a> {
   #[serde(rename = "@OptimizedGridUpdates")]
   pub optimized_grid_updates: bool,
   #[serde(rename = "ControlsStates", with = "unwrap_list")]
-  pub controls_states: &'a [ControlState<'a>],
+  pub controls_states: Vec<ControlState<'a>>,
   #[serde(rename = "PLPCallParameters", with = "unwrap_list")]
-  pub plpcall_parameters: &'a [PLPCallParameter<'a>],
+  pub plpcall_parameters: Vec<PLPCallParameter<'a>>,
 }
 
 impl Default for MethodExecute<'_> {
@@ -452,10 +462,10 @@ impl Default for MethodExecute<'_> {
     Self {
       session_id: Default::default(),
       method_id: Default::default(),
-      controls_states: &[],
-      plpcall_parameters: &[],
       do_commit: true,
-      optimized_grid_updates: true,
+      optimized_grid_updates: false,
+      controls_states: Vec::new(),
+      plpcall_parameters: Vec::new(),
     }
   }
 }
@@ -504,12 +514,12 @@ pub enum PLPEntity<'a> {
 }
 
 /// Параметр PLP-вызова (источник и цель).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PLPCallParameter<'a> {
   #[serde(rename = "TargetPLPCallItem", with = "unwrap_list")]
-  pub target: &'a [PLPEntity<'a>],
+  pub target: Vec<PLPEntity<'a>>,
   #[serde(rename = "SourcePLPCallItem", with = "unwrap_list")]
-  pub source: &'a [PLPEntity<'a>],
+  pub source: Vec<PLPEntity<'a>>,
 }
 
 /// Запрос на завершение выполнения операции (закрытие формы).
@@ -526,7 +536,7 @@ pub struct MethodEnd<'a> {
 //======================================================================================================================
 
 /// Запрос данных представления.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ViewDataGetCancelable<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
@@ -538,13 +548,13 @@ pub struct ViewDataGetCancelable<'a> {
   pub hint: &'a str,
   #[serde(rename = "@AllowTimestampMilliseconds")]
   pub allow_timestamp_milliseconds: bool,
-  #[serde(rename = "@RowsLimit", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@RowsLimit", default, skip_serializing_if = "Option::is_none")]
   pub rows_limit: Option<i64>,
-  #[serde(rename = "AdditionalFilterBind", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "AdditionalFilterBind", default, skip_serializing_if = "Option::is_none")]
   pub additional_filter_bind: Option<AdditionalFilterBind<'a>>,
-  #[serde(rename = "ObjectFilter", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "ObjectFilter", default, skip_serializing_if = "Option::is_none")]
   pub object_filter: Option<ObjectFilter>,
-  #[serde(rename = "UserFilter", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "UserFilter", default, skip_serializing_if = "Option::is_none")]
   pub user_filter: Option<UserFilter<'a>>,
 }
 
@@ -585,7 +595,7 @@ pub struct SimpleFilter<'a> {
   pub column_name: &'a str,
   #[serde(rename = "@Operator")]
   pub operator: &'a str,
-  #[serde(rename = "@Value")]
+  #[serde(rename = "@Value", default, skip_serializing_if = "Option::is_none")]
   pub value: Option<&'a str>,
 }
 
@@ -596,38 +606,32 @@ pub struct CaseInsensitiveFilter<'a> {
   pub column_name: &'a str,
   #[serde(rename = "@Operator")]
   pub operator: &'a str,
-  #[serde(rename = "@Value")]
+  #[serde(rename = "@Value", default, skip_serializing_if = "Option::is_none")]
   pub value: Option<&'a str>,
 }
 
 /// Объединённый тип фильтра для представления.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum Filter<'a> {
   /// Логический фильтр "AND".
-  #[serde(rename = "AND")]
-  And {
-    #[serde(rename = "$value")]
-    filters: &'a [Self],
-  },
+  #[serde(rename = "AND", with = "unwrap_list")]
+  And(Vec<Self>),
   /// Логический фильтр "OR".
-  #[serde(rename = "OR")]
-  Or {
-    #[serde(rename = "$value")]
-    filters: &'a [Self],
-  },
+  #[serde(rename = "OR", with = "unwrap_list")]
+  Or(Vec<Self>),
   #[serde(untagged)]
-  Simple(&'a SimpleFilter<'a>),
+  Simple(SimpleFilter<'a>),
   #[serde(untagged)]
-  CaseInsensitive(&'a CaseInsensitiveFilter<'a>),
+  CaseInsensitive(CaseInsensitiveFilter<'a>),
 }
 
 /// Пользовательский фильтр для представления.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct UserFilter<'a> {
-  #[serde(rename = "@ExtraFilter", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@ExtraFilter", default, skip_serializing_if = "Option::is_none")]
   pub extra_filter: Option<&'a str>,
-  #[serde(rename = "$value")]
-  pub filters: &'a [Filter<'a>],
+  #[serde(rename = "$value", default)]
+  pub filters: Vec<Filter<'a>>,
 }
 
 /// Запрос колонок представления.
@@ -700,6 +704,6 @@ pub struct ObjectsLock<'a> {
 pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
-  #[serde(rename = "@ClearAllLocks", skip_serializing_if = "Option::is_none")]
+  #[serde(rename = "@ClearAllLocks", default, skip_serializing_if = "Option::is_none")]
   pub clear_all_locks: Option<bool>,
 }

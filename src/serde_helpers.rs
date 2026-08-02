@@ -21,7 +21,7 @@
 
 /// Модуль для десериализации пустой строки как отсутствие значения.
 pub mod empty_string_as_none {
-  use serde::{self, Deserialize, Deserializer, Serializer};
+  use serde::{self, Deserialize, Deserializer};
 
   pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
   where
@@ -34,17 +34,6 @@ pub mod empty_string_as_none {
       None => Ok(None),
       Some(ref s) if s.is_empty() => Ok(None),
       Some(s) => s.parse::<T>().map(Some).map_err(serde::de::Error::custom),
-    }
-  }
-
-  pub fn serialize<S, T>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-    T: std::fmt::Display,
-  {
-    match value {
-      Some(v) => serializer.collect_str(v),
-      None => serializer.serialize_str(""),
     }
   }
 }
