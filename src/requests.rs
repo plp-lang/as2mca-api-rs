@@ -378,11 +378,11 @@ impl Default for MethodValidateDefault<'_> {
       do_commit: true,
       object_id: &[],
       debug_level: 0,
-      is_called_from_another_method: true,
+      is_called_from_another_method: false,
       lock_object_class_id: None,
       read_only: false,
-      get_debug_text: true,
-      optimized_grid_updates: true,
+      get_debug_text: false,
+      optimized_grid_updates: false,
     }
   }
 }
@@ -420,8 +420,8 @@ impl Default for MethodValidate<'_> {
       controls_states: Vec::new(),
       plpcall_parameters: Vec::new(),
       do_commit: true,
-      get_debug_text: true,
-      optimized_grid_updates: true,
+      get_debug_text: false,
+      optimized_grid_updates: false,
     }
   }
 }
