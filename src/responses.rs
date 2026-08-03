@@ -66,6 +66,7 @@ pub enum ResponseBody {
   Done(Done),
   Error(Error),
   ServerInfo(ServerInfo),
+  SystemContextInfo(SystemContextInfo),
   CoreInfo(CoreInfo),
   Settings(Settings),
 }
@@ -149,6 +150,20 @@ pub struct CoreInfo {
   pub as_version: String,
   #[serde(rename = "@ASWARDate")]
   pub aswar_date: String,
+}
+
+/// Информация о системе.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemContextInfo {
+  /// Системная дата
+  #[serde(rename = "@SystemDate")]
+  pub system_date: String,
+  /// Системное имя
+  #[serde(rename = "@SystemName")]
+  pub system_name: String,
+  /// Дополнительная информация
+  #[serde(rename = "@SystemInfo")]
+  pub system_info: String,
 }
 
 /// Список системных настроек.

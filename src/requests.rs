@@ -77,6 +77,13 @@ pub struct SystemCoreInfoGet<'a> {
   pub session_id: &'a str,
 }
 
+/// Запрос информации о системе.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemContextInfoGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
 /// Запрос всех системных настроек.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemSettingsGet<'a> {

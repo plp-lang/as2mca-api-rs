@@ -15,7 +15,7 @@ use crate::{
     GuidesGroupsGet, MethodBegin, MethodClientScriptGet, MethodControlsGet, MethodEnd, MethodExecute,
     MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet,
     NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock,
-    PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemCoreInfoGet, SystemNetAddressSet,
+    PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemContextInfoGet, SystemCoreInfoGet, SystemNetAddressSet,
     SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
     TypesGet, UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
     XML_HEADER,
@@ -23,7 +23,7 @@ use crate::{
   responses::{
     BackwardReference, ChildClass, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame, MethodParameter,
     MethodResult, MethodVariable, ObjectClassAndArchiveKey, Response, ResponseBody, Row, Session, Setting, State,
-    Transition, User, UserContent, Validate, View,
+    SystemContextInfo, Transition, User, UserContent, Validate, View,
   },
 };
 
@@ -421,6 +421,28 @@ impl Client {
       ResponseBody::CoreInfo(info) => Ok(info),
       _ => Err(Error::UnexpectedResponse {
         expected: "CoreInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Возвращает информацию о системы.
+  ///
+  /// # Returns
+  /// Структура [`SystemContextInfo`], содержащая:
+  /// - `system_date` – cистемная дата
+  /// - `system_name` – cистемное имя
+  /// - `system_info` – дополнительная информация
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  #[instrument(skip(self), err, fields(method = "system_context_info_get"))]
+  pub async fn system_context_info_get(&self, session_id: &str) -> Result<SystemContextInfo> {
+    let body = self.api(&SystemContextInfoGet { session_id }).await?;
+    match body {
+      ResponseBody::SystemContextInfo(info) => Ok(info),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "SystemContextInfo".to_string(),
         actual: format!("{body:?}"),
       }),
     }

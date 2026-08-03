@@ -23,6 +23,17 @@ async fn test_system_server_version_get(#[future] ctx: Context) {
 }
 
 #[rstest]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn test_system_context_info_get(#[future] ctx: Context) {
+  let Context {
+    ref client,
+    ref session_id,
+    ..
+  } = ctx.await;
+  client.system_context_info_get(session_id).await.unwrap();
+}
+
+#[rstest]
 #[case("UNKNOWN", None)]
 #[case("SHOW_SYSTEM_MENU", Some("YES"))]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
