@@ -205,8 +205,13 @@ pub struct OptionInfo {
 /// Значение системного параметра.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemInfo {
-  #[serde(rename = "@Value")]
-  pub value: String,
+  #[serde(
+    default,
+    rename = "@Value",
+    skip_serializing_if = "Option::is_none",
+    deserialize_with = "empty_string_as_none::deserialize"
+  )]
+  pub value: Option<String>,
 }
 
 /// Значение системного ограничения (лимита).
@@ -219,8 +224,13 @@ pub struct Limit {
 /// Значение атрибута системного контекста.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Attribute {
-  #[serde(rename = "@Value")]
-  pub value: String,
+  #[serde(
+    default,
+    rename = "@Value",
+    skip_serializing_if = "Option::is_none",
+    deserialize_with = "empty_string_as_none::deserialize"
+  )]
+  pub value: Option<String>,
 }
 
 /// Имя приложения

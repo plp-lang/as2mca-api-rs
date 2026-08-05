@@ -245,9 +245,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// client.session_deinit(&session.session_id).await.unwrap();
   /// ```
   #[instrument(skip(self), err, fields(method = "session_deinit"))]
@@ -282,9 +279,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// use as2mca_api::requests::NetworkInformationSet;
   ///
   /// client.network_information_set(&NetworkInformationSet {
@@ -324,9 +318,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// use as2mca_api::requests::SystemNetAddressSet;
   ///
   /// client.system_net_address_set(&SystemNetAddressSet {
@@ -365,9 +356,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// let version = client.protocol_info_get().await.unwrap();
   /// println!("Protocol version: {}", version);
   /// ```
@@ -462,9 +450,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// let settings = client.system_settings_get(&session.session_id).await.unwrap();
   /// for s in settings {
   ///   println!("{} = {:?}", s.name, s.value);
@@ -495,9 +480,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// let value = client.system_setting_get(&session.session_id, "SHOW_SYSTEM_MENU").await.unwrap();
   /// assert_eq!(value, Some("YES".to_string()));
   /// ```
@@ -566,9 +548,6 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
   /// let enabled = client.system_option_enabled_check(&session.session_id, "NAV_SKIN_INTERFACE").await.unwrap();
   /// println!("NAV_SKIN_INTERFACE enabled: {}", enabled);
   /// ```
@@ -604,7 +583,7 @@ impl Client {
   /// println!("System name: {}", sys_name);
   /// ```
   #[instrument(skip(self), err, fields(method = "system_info_get"))]
-  pub async fn system_info_get(&self, session_id: &str, parameter_name: &str) -> Result<String> {
+  pub async fn system_info_get(&self, session_id: &str, parameter_name: &str) -> Result<Option<String>> {
     let body = self
       .api(&SystemInfoGet {
         session_id,
@@ -662,7 +641,12 @@ impl Client {
   /// println!("System version: {}", version);
   /// ```
   #[instrument(skip(self), err, fields(method = "system_context_get"))]
-  pub async fn system_context_get(&self, session_id: &str, namespace: &str, attribute_name: &str) -> Result<String> {
+  pub async fn system_context_get(
+    &self,
+    session_id: &str,
+    namespace: &str,
+    attribute_name: &str,
+  ) -> Result<Option<String>> {
     let body = self
       .api(&SystemContextGet {
         session_id,
@@ -679,7 +663,7 @@ impl Client {
     }
   }
 
-  /// Возвращает имя текущего приложения.
+  /// Возвращает имя текущего приложения, например `"ЦФТ-Банк Каталог Приложений"`.
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
@@ -704,34 +688,12 @@ impl Client {
     }
   }
 
-  /// Проверяет, доступна ли контекстная информация.
-  ///
-  /// # Arguments
-  /// * `session_id` – Идентификатор сессии.
-  ///
-  /// # Errors
-  /// Стандартные ошибки API и сетевые ошибки.
-  ///
-  /// # Examples
-  /// ```ignore
-  /// let available = client.context_information_available_check(&session.session_id).await?;
-  /// if available {
-  ///     // запросить контекстную информацию
-  /// }
-  /// ```
-  #[instrument(skip(self), err, fields(method = "system_help_system_info_get"))]
-  pub async fn system_help_system_info_get(&self, session_id: &str) -> Result<u64> {
-    let body = self.api(&SystemHelpSystemInfoGet { session_id }).await?;
-    match body {
-      ResponseBody::HelpSystemInfo(result) => Ok(result.items_count),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "HelpSystemInfo".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
   /// Возвращает количество элементов в справочной системе.
+  ///
+  /// На серверной стороне (Oracle) это аналогично запросу:
+  /// ```sql
+  /// select count(*) from IBS.VW_CRIT_HELPSYSTEM;
+  /// ```
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
@@ -744,13 +706,13 @@ impl Client {
   /// let count = client.system_help_system_info_get(&session.session_id).await?;
   /// println!("Help items count: {}", count);
   /// ```
-  #[instrument(skip(self), err, fields(method = "embedded_interaction_available_check"))]
-  pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<bool> {
-    let body = self.api(&EmbeddedInteractionAvailableCheck { session_id }).await?;
+  #[instrument(skip(self), err, fields(method = "system_help_system_info_get"))]
+  pub async fn system_help_system_info_get(&self, session_id: &str) -> Result<u64> {
+    let body = self.api(&SystemHelpSystemInfoGet { session_id }).await?;
     match body {
-      ResponseBody::CheckResult(result) => Ok(result.value),
+      ResponseBody::HelpSystemInfo(result) => Ok(result.items_count),
       _ => Err(Error::UnexpectedResponse {
-        expected: "CheckResult".to_string(),
+        expected: "HelpSystemInfo".to_string(),
         actual: format!("{body:?}"),
       }),
     }
@@ -771,9 +733,9 @@ impl Client {
   ///     // использовать
   /// }
   /// ```
-  #[instrument(skip(self), err, fields(method = "embedded_interaction_required_check"))]
-  pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<bool> {
-    let body = self.api(&EmbeddedInteractionRequiredCheck { session_id }).await?;
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_available_check"))]
+  pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<bool> {
+    let body = self.api(&EmbeddedInteractionAvailableCheck { session_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
       _ => Err(Error::UnexpectedResponse {
@@ -782,7 +744,6 @@ impl Client {
       }),
     }
   }
-
   /// Проверяет, требуется ли встроенный в «ЦФТ – Навигатор» WebView-модуль в текущем контексте.
   ///
   /// # Arguments
@@ -797,6 +758,32 @@ impl Client {
   /// if required {
   ///     // показать интерфейс
   /// }
+  /// ```
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_required_check"))]
+  pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<bool> {
+    let body = self.api(&EmbeddedInteractionRequiredCheck { session_id }).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Получает URL-адрес ресурса WebView-модуля.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `error_response_type` – Тип ответа при возникновении ошибки (опционально).
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let url = client.embedded_interaction_get_resource(&session.session_id, None).await?;
+  /// println!("Embedded resource URL: {}", url);
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_get_resource"))]
   pub async fn embedded_interaction_get_resource(
@@ -819,19 +806,20 @@ impl Client {
     }
   }
 
-  /// Получает URL-адрес ресурса WebView-модуля.
+  /// Проверяет, доступна ли контекстная информация.
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
-  /// * `error_response_type` – Тип ответа при возникновении ошибки (опционально).
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
   /// # Examples
   /// ```ignore
-  /// let url = client.embedded_interaction_get_resource(&session.session_id, None).await?;
-  /// println!("Embedded resource URL: {}", url);
+  /// let available = client.context_information_available_check(&session.session_id).await?;
+  /// if available {
+  ///     // запросить контекстную информацию
+  /// }
   /// ```
   #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
   pub async fn context_information_available_check(&self, session_id: &str) -> Result<bool> {
@@ -849,14 +837,14 @@ impl Client {
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
-  /// * `request` – Тип события (опционально), например `"Exit"`.
+  /// * `request` – Тип события (опционально), например `"ExitApplication"`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
   /// # Examples
   /// ```ignore
-  /// client.embedded_interaction_post(&session.session_id, Some("Exit")).await?;
+  /// client.embedded_interaction_post(&session.session_id, Some("ExitApplication")).await?;
   /// println!("Embedded interaction posted.");
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_post"))]

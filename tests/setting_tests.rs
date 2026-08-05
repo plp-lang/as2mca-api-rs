@@ -90,17 +90,19 @@ async fn test_system_option_enabled_check(#[future] ctx: Context, #[case] name: 
 }
 
 #[rstest]
-#[case("SYS_NAME")]
-#[case("NOVO.MINIMUM_VERSION")]
+#[case("UNKNOWN", false)]
+#[case("SYS_NAME", true)]
+#[case("NOVO.MINIMUM_VERSION", true)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_info_get(#[future] ctx: Context, #[case] parameter_name: &str) {
+async fn test_system_info_get(#[future] ctx: Context, #[case] parameter_name: &str, #[case] is_some: bool) {
   let Context {
     ref client,
     ref session_id,
     ..
   } = ctx.await;
 
-  client.system_info_get(session_id, parameter_name).await.unwrap();
+  let res = client.system_info_get(session_id, parameter_name).await.unwrap();
+  assert_eq!(res.is_some(), is_some);
 }
 
 #[rstest]
@@ -117,22 +119,29 @@ async fn test_system_limit_get(#[future] ctx: Context, #[case] limit_name: &str)
 }
 
 #[rstest]
-#[case("IBS_USER", "SYS_VERSION")]
-#[case("IBS_USER", "USER_CONTEXT")]
-#[case("IBS_USER", "USER_LOCK_OPEN")]
-#[case("IBS_USER", "SYS_BUILD_DATE")]
+#[case("IBS_USER", "SYS_VERSION", true)]
+#[case("IBS_USER", "USER_CONTEXT", true)]
+#[case("IBS_USER", "USER_LOCK_OPEN", true)]
+#[case("IBS_USER", "SYS_BUILD_DATE", true)]
+#[case("UNKNOWN", "UNKNOWN", false)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_context_get(#[future] ctx: Context, #[case] namespace: &str, #[case] attribute_name: &str) {
+async fn test_system_context_get(
+  #[future] ctx: Context,
+  #[case] namespace: &str,
+  #[case] attribute_name: &str,
+  #[case] is_some: bool,
+) {
   let Context {
     ref client,
     ref session_id,
     ..
   } = ctx.await;
 
-  client
+  let res = client
     .system_context_get(session_id, namespace, attribute_name)
     .await
     .unwrap();
+  assert_eq!(res.is_some(), is_some);
 }
 
 #[rstest]
