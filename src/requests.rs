@@ -142,7 +142,7 @@ pub struct SystemNetAddressSet<'a> {
   pub ip_address: &'a str,
 }
 
-/// TODO: ???
+/// Запрос значения системного параметра
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemInfoGet<'a> {
   #[serde(rename = "@SessionID")]
@@ -151,7 +151,7 @@ pub struct SystemInfoGet<'a> {
   pub parameter_name: &'a str,
 }
 
-/// TODO: ???
+/// Запрос значения системного ограничения (лимита).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemLimitGet<'a> {
   #[serde(rename = "@SessionID")]
@@ -160,7 +160,7 @@ pub struct SystemLimitGet<'a> {
   pub limit_name: &'a str,
 }
 
-/// TODO: ???
+/// Запрос значения атрибута системного контекста.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemContextGet<'a> {
   #[serde(rename = "@SessionID")]
@@ -171,35 +171,42 @@ pub struct SystemContextGet<'a> {
   pub attribute_name: &'a str,
 }
 
-/// TODO: ???
+/// Запрос имени текущего приложения
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemApplicationNameGet<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
 }
 
-/// TODO: ???
+/// Запрос на доступность контекстной информации.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContextInformationAvailableCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос количества элементов в справочной системе.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemHelpSystemInfoGet<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
 }
 
-/// TODO: ??? Ответ `CheckResult`
+/// Запрос доступности встроенного в "ЦФТ - Нафигатор" WebView-модуля.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionAvailableCheck<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
 }
 
-/// TODO: ???  Ответ `CheckResult`
+/// Запрос на требование WebView-модуля в текущем контексте.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionRequiredCheck<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
 }
 
-/// TODO: ???
+/// Запрос URL-адреса ресурса WebView-модуля.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionGetResource<'a> {
   #[serde(rename = "@SessionID")]
@@ -208,14 +215,7 @@ pub struct EmbeddedInteractionGetResource<'a> {
   pub error_response_type: Option<&'a str>,
 }
 
-/// TODO: ??? Ответ `CheckResult`
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ContextInformationAvailableCheck<'a> {
-  #[serde(rename = "@SessionID")]
-  pub session_id: &'a str,
-}
-
-/// TODO: ??? Ответ `Done`
+/// Отправка лога события WebView-модуля на сервер.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionPost<'a> {
   #[serde(rename = "@SessionID")]

@@ -589,6 +589,20 @@ impl Client {
     }
   }
 
+  /// Возвращает значение указанного системного параметра.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `parameter_name` – Имя параметра (например, `"SYS_NAME"`).
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let sys_name = client.system_info_get(&session.session_id, "SYS_NAME").await?;
+  /// println!("System name: {}", sys_name);
+  /// ```
   #[instrument(skip(self), err, fields(method = "system_info_get"))]
   pub async fn system_info_get(&self, session_id: &str, parameter_name: &str) -> Result<String> {
     let body = self
@@ -606,6 +620,20 @@ impl Client {
     }
   }
 
+  /// Получает значение системного ограничения (лимита) по его имени.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `limit_name` – Имя лимита (например, `"SYS_NAME"`).
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let sys_name = client.system_limit_get(&session.session_id, "SYS_NAME").await?;
+  /// println!("System name: {}", sys_name);
+  /// ```
   #[instrument(skip(self), err, fields(method = "system_limit_get"))]
   pub async fn system_limit_get(&self, session_id: &str, limit_name: &str) -> Result<String> {
     let body = self.api(&SystemLimitGet { session_id, limit_name }).await?;
@@ -618,6 +646,21 @@ impl Client {
     }
   }
 
+  /// Возвращает значение атрибута системного контекста из указанного пространства имён.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `namespace` – Пространство имён (например, `"SYS_NAME"`).
+  /// * `attribute_name` – Имя атрибута (например, `"SYS_VERSION"`).
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let version = client.system_context_get(&session.session_id, "SYS_NAME", "SYS_VERSION").await?;
+  /// println!("System version: {}", version);
+  /// ```
   #[instrument(skip(self), err, fields(method = "system_context_get"))]
   pub async fn system_context_get(&self, session_id: &str, namespace: &str, attribute_name: &str) -> Result<String> {
     let body = self
@@ -636,6 +679,19 @@ impl Client {
     }
   }
 
+  /// Возвращает имя текущего приложения.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let app_name = client.system_application_name_get(&session.session_id).await?;
+  /// println!("Application name: {}", app_name);
+  /// ```
   #[instrument(skip(self), err, fields(method = "system_application_name_get"))]
   pub async fn system_application_name_get(&self, session_id: &str) -> Result<String> {
     let body = self.api(&SystemApplicationNameGet { session_id }).await?;
@@ -648,6 +704,21 @@ impl Client {
     }
   }
 
+  /// Проверяет, доступна ли контекстная информация.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let available = client.context_information_available_check(&session.session_id).await?;
+  /// if available {
+  ///     // запросить контекстную информацию
+  /// }
+  /// ```
   #[instrument(skip(self), err, fields(method = "system_help_system_info_get"))]
   pub async fn system_help_system_info_get(&self, session_id: &str) -> Result<u64> {
     let body = self.api(&SystemHelpSystemInfoGet { session_id }).await?;
@@ -660,6 +731,19 @@ impl Client {
     }
   }
 
+  /// Возвращает количество элементов в справочной системе.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let count = client.system_help_system_info_get(&session.session_id).await?;
+  /// println!("Help items count: {}", count);
+  /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_available_check"))]
   pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<bool> {
     let body = self.api(&EmbeddedInteractionAvailableCheck { session_id }).await?;
@@ -672,6 +756,21 @@ impl Client {
     }
   }
 
+  /// Проверяет, доступен ли встроенный в «ЦФТ – Навигатор» WebView-модуль.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let available = client.embedded_interaction_available_check(&session.session_id).await?;
+  /// if available {
+  ///     // использовать
+  /// }
+  /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_required_check"))]
   pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<bool> {
     let body = self.api(&EmbeddedInteractionRequiredCheck { session_id }).await?;
@@ -684,6 +783,21 @@ impl Client {
     }
   }
 
+  /// Проверяет, требуется ли встроенный в «ЦФТ – Навигатор» WebView-модуль в текущем контексте.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let required = client.embedded_interaction_required_check(&session.session_id).await?;
+  /// if required {
+  ///     // показать интерфейс
+  /// }
+  /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_get_resource"))]
   pub async fn embedded_interaction_get_resource(
     &self,
@@ -705,6 +819,20 @@ impl Client {
     }
   }
 
+  /// Получает URL-адрес ресурса WebView-модуля.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `error_response_type` – Тип ответа при возникновении ошибки (опционально).
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let url = client.embedded_interaction_get_resource(&session.session_id, None).await?;
+  /// println!("Embedded resource URL: {}", url);
+  /// ```
   #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
   pub async fn context_information_available_check(&self, session_id: &str) -> Result<bool> {
     let body = self.api(&ContextInformationAvailableCheck { session_id }).await?;
@@ -717,6 +845,20 @@ impl Client {
     }
   }
 
+  /// Отправляет лог указанного события WebView-модуля на сервер.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `request` – Тип события (опционально), например `"Exit"`.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// client.embedded_interaction_post(&session.session_id, Some("Exit")).await?;
+  /// println!("Embedded interaction posted.");
+  /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_post"))]
   pub async fn embedded_interaction_post(&self, session_id: &str, request: Option<&str>) -> Result<()> {
     let body = self.api(&EmbeddedInteractionPost { session_id, request }).await?;

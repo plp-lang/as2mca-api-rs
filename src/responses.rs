@@ -202,42 +202,42 @@ pub struct OptionInfo {
   pub enabled: bool,
 }
 
-/// Ответ на запрос `SystemInfoGet`
+/// Значение системного параметра.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SystemInfo {
   #[serde(rename = "@Value")]
   pub value: String,
 }
 
-/// Ответ на запрос `SystemLimitGet`
+/// Значение системного ограничения (лимита).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Limit {
   #[serde(rename = "@Value")]
   pub value: String,
 }
 
-/// Ответ на запрос `SystemContextGet`
+/// Значение атрибута системного контекста.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Attribute {
   #[serde(rename = "@Value")]
   pub value: String,
 }
 
-/// Ответ на запрос `SystemApplicationNameGet`
+/// Имя приложения
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Application {
   #[serde(rename = "@Name")]
   pub name: String,
 }
 
-/// Ответ на запрос `SystemHelpSystemInfoGet`
+/// Количество элементов в справочной системе.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HelpSystemInfo {
   #[serde(rename = "@ItemsCount")]
   pub items_count: u64,
 }
 
-/// Ответ на запрос `EmbeddedInteractionGetResource`
+/// URL-адрес ресурса WebView-модуля.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StreamData {
   #[serde(rename = "@URL")]
