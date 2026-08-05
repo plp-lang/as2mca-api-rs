@@ -11,14 +11,16 @@ use crate::{
   error::{Error, Result},
   requests::{
     AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassNeedCollectionIDCheck,
-    ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, DebugTextGet, Disconnect, GuidesGet,
-    GuidesGroupsGet, MethodBegin, MethodClientScriptGet, MethodControlsGet, MethodEnd, MethodExecute,
-    MethodParametersGet, MethodValidate, MethodValidateDefault, MethodVariablesGet, NetworkInformationSet,
-    NovoAllowedCheck, Object, ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock,
-    PipeTextGet, ProtocolInfoGet, Request, SessionInit, SystemContextInfoGet, SystemCoreInfoGet, SystemNetAddressSet,
-    SystemOptionEnabledCheck, SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet,
-    TypesGet, UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable,
-    XML_HEADER,
+    ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, ContextInformationAvailableCheck, DebugTextGet,
+    Disconnect, EmbeddedInteractionAvailableCheck, EmbeddedInteractionGetResource, EmbeddedInteractionPost,
+    EmbeddedInteractionRequiredCheck, GuidesGet, GuidesGroupsGet, MethodBegin, MethodClientScriptGet,
+    MethodControlsGet, MethodEnd, MethodExecute, MethodParametersGet, MethodValidate, MethodValidateDefault,
+    MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, Object, ObjectBackwardReferencesGet,
+    ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionInit,
+    SystemApplicationNameGet, SystemContextGet, SystemContextInfoGet, SystemCoreInfoGet, SystemHelpSystemInfoGet,
+    SystemInfoGet, SystemLimitGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
+    SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
+    UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
   },
   responses::{
     BackwardReference, ChildClass, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame, MethodParameter,
@@ -582,6 +584,146 @@ impl Client {
       ResponseBody::OptionInfo(info) => Ok(info.enabled),
       _ => Err(Error::UnexpectedResponse {
         expected: "OptionInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "system_info_get"))]
+  pub async fn system_info_get(&self, session_id: &str, parameter_name: &str) -> Result<String> {
+    let body = self
+      .api(&SystemInfoGet {
+        session_id,
+        parameter_name,
+      })
+      .await?;
+    match body {
+      ResponseBody::SystemInfo(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "SystemInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "system_limit_get"))]
+  pub async fn system_limit_get(&self, session_id: &str, limit_name: &str) -> Result<String> {
+    let body = self.api(&SystemLimitGet { session_id, limit_name }).await?;
+    match body {
+      ResponseBody::Limit(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Limit".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "system_context_get"))]
+  pub async fn system_context_get(&self, session_id: &str, namespace: &str, attribute_name: &str) -> Result<String> {
+    let body = self
+      .api(&SystemContextGet {
+        session_id,
+        namespace,
+        attribute_name,
+      })
+      .await?;
+    match body {
+      ResponseBody::Attribute(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Attribute".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "system_application_name_get"))]
+  pub async fn system_application_name_get(&self, session_id: &str) -> Result<String> {
+    let body = self.api(&SystemApplicationNameGet { session_id }).await?;
+    match body {
+      ResponseBody::Application(result) => Ok(result.name),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Application".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "system_help_system_info_get"))]
+  pub async fn system_help_system_info_get(&self, session_id: &str) -> Result<u64> {
+    let body = self.api(&SystemHelpSystemInfoGet { session_id }).await?;
+    match body {
+      ResponseBody::HelpSystemInfo(result) => Ok(result.items_count),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "HelpSystemInfo".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_available_check"))]
+  pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<bool> {
+    let body = self.api(&EmbeddedInteractionAvailableCheck { session_id }).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_required_check"))]
+  pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<bool> {
+    let body = self.api(&EmbeddedInteractionRequiredCheck { session_id }).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_get_resource"))]
+  pub async fn embedded_interaction_get_resource(
+    &self,
+    session_id: &str,
+    error_response_type: Option<&str>,
+  ) -> Result<String> {
+    let body = self
+      .api(&EmbeddedInteractionGetResource {
+        session_id,
+        error_response_type,
+      })
+      .await?;
+    match body {
+      ResponseBody::StreamData(result) => Ok(result.url),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "StreamData".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
+  pub async fn context_information_available_check(&self, session_id: &str) -> Result<bool> {
+    let body = self.api(&ContextInformationAvailableCheck { session_id }).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_post"))]
+  pub async fn embedded_interaction_post(&self, session_id: &str, request: Option<&str>) -> Result<()> {
+    let body = self.api(&EmbeddedInteractionPost { session_id, request }).await?;
+    match body {
+      ResponseBody::Done(_) => Ok(()),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "Done".to_string(),
         actual: format!("{body:?}"),
       }),
     }

@@ -69,6 +69,12 @@ pub enum ResponseBody {
   SystemContextInfo(SystemContextInfo),
   CoreInfo(CoreInfo),
   Settings(Settings),
+  SystemInfo(SystemInfo),
+  Limit(Limit),
+  Attribute(Attribute),
+  Application(Application),
+  HelpSystemInfo(HelpSystemInfo),
+  StreamData(StreamData),
 }
 
 /// Ответ "Not Found" (пустой).
@@ -194,6 +200,48 @@ pub struct NovoAllowedCheckResult {
 pub struct OptionInfo {
   #[serde(rename = "@Enabled", with = "string_as_bool")]
   pub enabled: bool,
+}
+
+/// Ответ на запрос `SystemInfoGet`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemInfo {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+/// Ответ на запрос `SystemLimitGet`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Limit {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+/// Ответ на запрос `SystemContextGet`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Attribute {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+/// Ответ на запрос `SystemApplicationNameGet`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Application {
+  #[serde(rename = "@Name")]
+  pub name: String,
+}
+
+/// Ответ на запрос `SystemHelpSystemInfoGet`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HelpSystemInfo {
+  #[serde(rename = "@ItemsCount")]
+  pub items_count: u64,
+}
+
+/// Ответ на запрос `EmbeddedInteractionGetResource`
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StreamData {
+  #[serde(rename = "@URL")]
+  pub url: String,
 }
 
 //======================================================================================================================

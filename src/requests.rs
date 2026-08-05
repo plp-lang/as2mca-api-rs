@@ -142,6 +142,88 @@ pub struct SystemNetAddressSet<'a> {
   pub ip_address: &'a str,
 }
 
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemInfoGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@ParameterName")]
+  pub parameter_name: &'a str,
+}
+
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemLimitGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@LimitName")]
+  pub limit_name: &'a str,
+}
+
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemContextGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Namespace")]
+  pub namespace: &'a str,
+  #[serde(rename = "@AttributeName")]
+  pub attribute_name: &'a str,
+}
+
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemApplicationNameGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemHelpSystemInfoGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// TODO: ??? Ответ `CheckResult`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionAvailableCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// TODO: ???  Ответ `CheckResult`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionRequiredCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// TODO: ???
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionGetResource<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@ErrorResponseType", default, skip_serializing_if = "Option::is_none")]
+  pub error_response_type: Option<&'a str>,
+}
+
+/// TODO: ??? Ответ `CheckResult`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContextInformationAvailableCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// TODO: ??? Ответ `Done`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionPost<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Request", default, skip_serializing_if = "Option::is_none")]
+  pub request: Option<&'a str>,
+}
+
 //======================================================================================================================
 // Информация о пользователе
 //======================================================================================================================
