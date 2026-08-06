@@ -629,14 +629,9 @@ pub struct Control {
   pub validate_name: String,
 
   /// Идентификатор родительского элемента.
-  /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(
-    rename = "@ParentID",
-    default,
-    deserialize_with = "empty_string_as_none::deserialize",
-    skip_serializing_if = "Option::is_none"
-  )]
-  pub parent_id: Option<i64>,
+  /// Это число, но иногда приходит как `ParentID=""`.
+  #[serde(rename = "@ParentID")]
+  pub parent_id: String,
 
   /// ТБП значения.
   #[serde(rename = "@ClassID", default, skip_serializing_if = "Option::is_none")]
