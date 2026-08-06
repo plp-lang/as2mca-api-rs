@@ -734,7 +734,7 @@ impl Client {
   /// }
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_available_check"))]
-  pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<bool> {
+  pub async fn embedded_interaction_available_check(&self, session_id: &str) -> Result<String> {
     let body = self.api(&EmbeddedInteractionAvailableCheck { session_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
@@ -760,7 +760,7 @@ impl Client {
   /// }
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_required_check"))]
-  pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<bool> {
+  pub async fn embedded_interaction_required_check(&self, session_id: &str) -> Result<String> {
     let body = self.api(&EmbeddedInteractionRequiredCheck { session_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
@@ -822,7 +822,7 @@ impl Client {
   /// }
   /// ```
   #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
-  pub async fn context_information_available_check(&self, session_id: &str) -> Result<bool> {
+  pub async fn context_information_available_check(&self, session_id: &str) -> Result<String> {
     let body = self.api(&ContextInformationAvailableCheck { session_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
@@ -968,7 +968,7 @@ impl Client {
   /// println!("is_admin = {}", value);
   /// ```
   #[instrument(skip(self), err, fields(method = "user_belongs_group_check"))]
-  pub async fn user_belongs_group_check(&self, session_id: &str, group_id: &str) -> Result<bool> {
+  pub async fn user_belongs_group_check(&self, session_id: &str, group_id: &str) -> Result<String> {
     let body = self.api(&UserBelongsGroupCheck { session_id, group_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),
@@ -1153,7 +1153,7 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   #[instrument(skip(self), err, fields(method = "class_need_collection_id_check"))]
-  pub async fn class_need_collection_id_check(&self, session_id: &str, class_id: &str) -> Result<bool> {
+  pub async fn class_need_collection_id_check(&self, session_id: &str, class_id: &str) -> Result<String> {
     let body = self.api(&ClassNeedCollectionIDCheck { session_id, class_id }).await?;
     match body {
       ResponseBody::CheckResult(result) => Ok(result.value),

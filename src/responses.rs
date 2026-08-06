@@ -296,8 +296,8 @@ pub struct UserProfileProperty {
 /// Универсальный результат проверки (например, вхождения в группу).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CheckResult {
-  #[serde(rename = "@Value", with = "string_as_bool")]
-  pub value: bool,
+  #[serde(rename = "@Value")]
+  pub value: String,
 }
 
 //======================================================================================================================

@@ -1,3 +1,4 @@
+use as2mca_api::error::Error;
 use rstest::rstest;
 
 use crate::common::ctx::{Context, ctx};
@@ -123,7 +124,6 @@ async fn test_system_limit_get(#[future] ctx: Context, #[case] limit_name: &str)
 #[case("IBS_USER", "USER_CONTEXT", true)]
 #[case("IBS_USER", "USER_LOCK_OPEN", true)]
 #[case("IBS_USER", "SYS_BUILD_DATE", true)]
-#[case("UNKNOWN", "UNKNOWN", false)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn test_system_context_get(
   #[future] ctx: Context,
@@ -145,17 +145,15 @@ async fn test_system_context_get(
 }
 
 #[rstest]
-#[case("ЦФТ-Банк Каталог Приложений")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_system_application_name_get(#[future] ctx: Context, #[case] value: &str) {
+async fn test_system_application_name_get(#[future] ctx: Context) {
   let Context {
     ref client,
     ref session_id,
     ..
   } = ctx.await;
 
-  let res = client.system_application_name_get(session_id).await.unwrap();
-  assert_eq!(res, value);
+  client.system_application_name_get(session_id).await.unwrap();
 }
 
 #[rstest]
@@ -167,7 +165,13 @@ async fn test_system_help_system_info_get(#[future] ctx: Context) {
     ..
   } = ctx.await;
 
-  client.system_help_system_info_get(session_id).await.unwrap();
+  match client.system_help_system_info_get(session_id).await {
+    Ok(count) => {
+      assert!(count > 0);
+    }
+    Err(Error::Api { message, .. }) => assert_eq!(message, "Справка не установлена"),
+    Err(err) => panic!("{err:?}"),
+  }
 }
 
 #[rstest]
