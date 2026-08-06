@@ -215,9 +215,18 @@ pub struct EmbeddedInteractionGetResource<'a> {
   pub error_response_type: Option<&'a str>,
 }
 
-/// Отправка лога события WebView-модуля на сервер.
+/// Отправка сообщения из WebView-модуля.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionPost<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Request", default, skip_serializing_if = "Option::is_none")]
+  pub request: Option<&'a str>,
+}
+
+/// Получние сообщение из WebView-модуля.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionGet<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
   #[serde(rename = "@Request", default, skip_serializing_if = "Option::is_none")]

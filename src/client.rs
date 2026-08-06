@@ -12,15 +12,15 @@ use crate::{
   requests::{
     AuthenticationURLGet, ClassChildrenGet, ClassGet, ClassInfo, ClassMethodsGet, ClassNeedCollectionIDCheck,
     ClassStatesGet, ClassTransitionsGet, ClassViewsGet, ClassesGet, ContextInformationAvailableCheck, DebugTextGet,
-    Disconnect, EmbeddedInteractionAvailableCheck, EmbeddedInteractionGetResource, EmbeddedInteractionPost,
-    EmbeddedInteractionRequiredCheck, GuidesGet, GuidesGroupsGet, MethodBegin, MethodClientScriptGet,
-    MethodControlsGet, MethodEnd, MethodExecute, MethodParametersGet, MethodValidate, MethodValidateDefault,
-    MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, Object, ObjectBackwardReferencesGet,
-    ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet, Request, SessionInit,
-    SystemApplicationNameGet, SystemContextGet, SystemContextInfoGet, SystemCoreInfoGet, SystemHelpSystemInfoGet,
-    SystemInfoGet, SystemLimitGet, SystemNetAddressSet, SystemOptionEnabledCheck, SystemServerVersionGet,
-    SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet, UserBelongsGroupCheck, UserInfoGet,
-    UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
+    Disconnect, EmbeddedInteractionAvailableCheck, EmbeddedInteractionGet, EmbeddedInteractionGetResource,
+    EmbeddedInteractionPost, EmbeddedInteractionRequiredCheck, GuidesGet, GuidesGroupsGet, MethodBegin,
+    MethodClientScriptGet, MethodControlsGet, MethodEnd, MethodExecute, MethodParametersGet, MethodValidate,
+    MethodValidateDefault, MethodVariablesGet, NetworkInformationSet, NovoAllowedCheck, Object,
+    ObjectBackwardReferencesGet, ObjectClassAndArchiveKeyGet, ObjectsLock, ObjectsUnlock, PipeTextGet, ProtocolInfoGet,
+    Request, SessionInit, SystemApplicationNameGet, SystemContextGet, SystemContextInfoGet, SystemCoreInfoGet,
+    SystemHelpSystemInfoGet, SystemInfoGet, SystemLimitGet, SystemNetAddressSet, SystemOptionEnabledCheck,
+    SystemServerVersionGet, SystemSettingGet, SystemSettingsGet, SystemUserPrivilegedGet, TypesGet,
+    UserBelongsGroupCheck, UserInfoGet, UserProfilePropertyGet, ViewColumnsGet, ViewDataGetCancelable, XML_HEADER,
   },
   responses::{
     BackwardReference, ChildClass, Class, Column, Control, CoreInfo, GuidesGroup, Method, MethodFrame, MethodParameter,
@@ -844,16 +844,57 @@ impl Client {
   ///
   /// # Examples
   /// ```ignore
-  /// client.embedded_interaction_post(&session.session_id, Some("ExitApplication")).await?;
+  /// client.embedded_interaction_post(&session.session_id, "ExitApplication")).await?;
   /// println!("Embedded interaction posted.");
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_post"))]
-  pub async fn embedded_interaction_post(&self, session_id: &str, request: Option<&str>) -> Result<()> {
-    let body = self.api(&EmbeddedInteractionPost { session_id, request }).await?;
+  pub async fn embedded_interaction_post(&self, session_id: &str, request: &str) -> Result<()> {
+    let body = self
+      .api(&EmbeddedInteractionPost {
+        session_id,
+        request: Some(request),
+      })
+      .await?;
     match body {
       ResponseBody::Done(_) => Ok(()),
       _ => Err(Error::UnexpectedResponse {
         expected: "Done".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Получить значение сообщения по типу запроса из WebView-модуля.
+  ///
+  /// В ответ обычно получаем JSON, например:
+  /// ```json
+  /// {"version":"28.07.2026 13:25:24","reloaded":"0"}
+  /// ```
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  /// * `request` – Тип сообщения (опционально), например `"VER"`.
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let json = client.embedded_interaction_get(&session.session_id, "VER").await?;
+  /// println!("json: {}", json);
+  /// ```
+  #[instrument(skip(self), err, fields(method = "embedded_interaction_get"))]
+  pub async fn embedded_interaction_get(&self, session_id: &str, request: &str) -> Result<String> {
+    let body = self
+      .api(&EmbeddedInteractionGet {
+        session_id,
+        request: Some(request),
+      })
+      .await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
         actual: format!("{body:?}"),
       }),
     }

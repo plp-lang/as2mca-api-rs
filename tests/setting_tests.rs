@@ -236,7 +236,20 @@ async fn test_embedded_interaction_post(#[future] ctx: Context) {
   } = ctx.await;
 
   client
-    .embedded_interaction_post(session_id, Some("ExitApplication"))
+    .embedded_interaction_post(session_id, "ExitApplication")
     .await
     .unwrap();
+}
+
+#[rstest]
+#[case("VER")]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn embedded_interaction_get(#[future] ctx: Context, #[case] value: &str) {
+  let Context {
+    ref client,
+    ref session_id,
+    ..
+  } = ctx.await;
+
+  client.embedded_interaction_get(session_id, value).await.unwrap();
 }
