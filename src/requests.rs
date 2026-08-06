@@ -20,7 +20,7 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::serde_helpers::{comma_separated_numbers, unwrap_list};
+use crate::serde_helpers::{comma_separated_numbers, string_as_option_bool, unwrap_list};
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -793,6 +793,11 @@ pub struct ObjectsLock<'a> {
 pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
-  #[serde(rename = "@ClearAllLocks", default, skip_serializing_if = "Option::is_none")]
+  #[serde(
+    rename = "@ClearAllLocks",
+    default,
+    skip_serializing_if = "Option::is_none",
+    with = "string_as_option_bool"
+  )]
   pub clear_all_locks: Option<bool>,
 }

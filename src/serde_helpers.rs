@@ -57,9 +57,9 @@ pub mod string_as_bool {
     D: Deserializer<'de>,
   {
     let s = String::deserialize(deserializer)?;
-    match s.as_str() {
-      "true" | "1" => Ok(true),
-      "false" | "0" => Ok(false),
+    match s.to_uppercase().as_str() {
+      "TRUE" | "1" => Ok(true),
+      "FALSE" | "0" => Ok(false),
       _ => Err(serde::de::Error::custom(format!(
         "expected 'true', 'false', '1' or '0', received '{s}'"
       ))),
@@ -88,10 +88,10 @@ pub mod string_as_option_bool {
     D: Deserializer<'de>,
   {
     let opt_s = Option::<String>::deserialize(deserializer)?;
-    match opt_s.as_deref() {
+    match opt_s.map(|s| s.to_uppercase()).as_deref() {
       None => Ok(None),
-      Some("true" | "1") => Ok(Some(true)),
-      Some("false" | "0") => Ok(Some(false)),
+      Some("TRUE" | "1") => Ok(Some(true)),
+      Some("FALSE" | "0") => Ok(Some(false)),
       Some(s) => Err(serde::de::Error::custom(format!(
         "expected 'true', 'false', '1', '0', received '{s}'"
       ))),
