@@ -48,7 +48,7 @@ pub mod string_as_bool {
     S: Serializer,
   {
     // Сериализуем сразу как строковый срез, чтобы избежать аллокаций
-    let s = if *value { "true" } else { "false" };
+    let s = if *value { "1" } else { "0" };
     serializer.serialize_str(s)
   }
 
@@ -77,8 +77,8 @@ pub mod string_as_option_bool {
     S: Serializer,
   {
     match value {
-      Some(true) => serializer.serialize_str("true"),
-      Some(false) => serializer.serialize_str("false"),
+      Some(true) => serializer.serialize_str("1"),
+      Some(false) => serializer.serialize_str("2"),
       None => serializer.serialize_none(),
     }
   }

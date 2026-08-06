@@ -959,7 +959,7 @@ pub struct Class {
   pub base_class_id: String,
   #[serde(rename = "@EntityID")]
   pub entity_id: String,
-  #[serde(rename = "@IsKernelType")]
+  #[serde(rename = "@IsKernelType", with = "string_as_bool")]
   pub is_kernel_type: bool,
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
@@ -968,7 +968,12 @@ pub struct Class {
 
   #[serde(rename = "@MenuCaption", default, skip_serializing_if = "Option::is_none")]
   pub menu_caption: Option<String>,
-  #[serde(rename = "@IsAccessible", default, skip_serializing_if = "Option::is_none")]
+  #[serde(
+    rename = "@IsAccessible",
+    default,
+    skip_serializing_if = "Option::is_none",
+    with = "string_as_option_bool"
+  )]
   pub is_accessible: Option<bool>,
   #[serde(rename = "@PadLength", default, skip_serializing_if = "Option::is_none")]
   pub pad_length: Option<u8>,
