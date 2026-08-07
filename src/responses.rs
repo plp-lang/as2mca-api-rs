@@ -842,17 +842,21 @@ pub enum Align {
 pub enum Invisible {
   #[serde(rename = "0")]
   Visible = 0,
+  #[serde(rename = "1")]
+  Connection = 1,
   #[serde(rename = "2")]
-  Hidden = 2,
+  Invisible = 2,
 }
 
 /// Логирование.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Logging {
   #[serde(rename = "0")]
-  None,
+  No,
+  #[serde(rename = "1")]
+  Yes,
   #[serde(rename = "D")]
-  Delete,
+  D,
 }
 
 /// Список колонок.
