@@ -227,18 +227,16 @@ async fn test_context_information_available_check(#[future] ctx: Context) {
 }
 
 #[rstest]
+#[case("ExitApplication")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_embedded_interaction_post(#[future] ctx: Context) {
+async fn test_embedded_interaction_post(#[future] ctx: Context, #[case] value: &str) {
   let Context {
     ref client,
     ref session_id,
     ..
   } = ctx.await;
 
-  client
-    .embedded_interaction_post(session_id, "ExitApplication")
-    .await
-    .unwrap();
+  client.embedded_interaction_post(session_id, value).await.unwrap();
 }
 
 #[rstest]

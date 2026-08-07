@@ -833,11 +833,11 @@ impl Client {
     }
   }
 
-  /// Отправляет лог указанного события WebView-модуля на сервер.
+  /// Отправляет сообщения по типу запроса WebView-модулю.
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
-  /// * `request` – Тип события (опционально), например `"ExitApplication"`.
+  /// * `request` – Тип запроса, например `"ExitApplication"`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -870,10 +870,11 @@ impl Client {
   /// ```json
   /// {"version":"28.07.2026 13:25:24","reloaded":"0"}
   /// ```
+  /// или строку `"NO REQUEST"`
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
-  /// * `request` – Тип сообщения (опционально), например `"VER"`.
+  /// * `request` – Тип запроса, например `"VER"`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -881,7 +882,7 @@ impl Client {
   /// # Examples
   /// ```ignore
   /// let json = client.embedded_interaction_get(&session.session_id, "VER").await?;
-  /// println!("json: {}", json);
+  /// println!("Result: {}", json);
   /// ```
   #[instrument(skip(self), err, fields(method = "embedded_interaction_get"))]
   pub async fn embedded_interaction_get(&self, session_id: &str, request: &str) -> Result<String> {

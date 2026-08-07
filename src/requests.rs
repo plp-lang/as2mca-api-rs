@@ -215,7 +215,7 @@ pub struct EmbeddedInteractionGetResource<'a> {
   pub error_response_type: Option<&'a str>,
 }
 
-/// Отправка сообщения из WebView-модуля.
+/// Отправка сообщения в WebView-модуль.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddedInteractionPost<'a> {
   #[serde(rename = "@SessionID")]
