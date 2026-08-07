@@ -78,7 +78,7 @@ pub mod string_as_option_bool {
   {
     match value {
       Some(true) => serializer.serialize_str("1"),
-      Some(false) => serializer.serialize_str("2"),
+      Some(false) => serializer.serialize_str("0"),
       None => serializer.serialize_none(),
     }
   }
