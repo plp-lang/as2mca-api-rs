@@ -81,7 +81,7 @@
 ```toml
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-as2mca_api = "0.2"
+as2mca_api = "0.3"
 ```
 
 ### Пример 1
