@@ -540,9 +540,6 @@ impl Client {
   /// # Arguments
   /// * `option_name` – имя опции (например, `"NAV_SKIN_INTERFACE"`).
   ///
-  /// # Returns
-  /// `true`, если опция включена.
-  ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
@@ -663,10 +660,13 @@ impl Client {
     }
   }
 
-  /// Возвращает имя текущего приложения, например `"ЦФТ-Банк Каталог Приложений"`.
+  /// Возвращает имя текущего приложения.
   ///
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Returns
+  /// Возможные ответы: `"ЦФТ-Банк Каталог Приложений"`, `"CFT_BANK_2MCA"`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
@@ -683,6 +683,36 @@ impl Client {
       ResponseBody::Application(result) => Ok(result.name),
       _ => Err(Error::UnexpectedResponse {
         expected: "Application".to_string(),
+        actual: format!("{body:?}"),
+      }),
+    }
+  }
+
+  /// Проверяет, доступна ли контекстная информация.
+  ///
+  /// # Arguments
+  /// * `session_id` – Идентификатор сессии.
+  ///
+  /// # Returns
+  /// Возможные ответы: `"1"`, `"0"` или `"Контекстное информирование недоступно."`
+  ///
+  /// # Errors
+  /// Стандартные ошибки API и сетевые ошибки.
+  ///
+  /// # Examples
+  /// ```ignore
+  /// let available = client.context_information_available_check(&session.session_id).await?;
+  /// if available {
+  ///     // запросить контекстную информацию
+  /// }
+  /// ```
+  #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
+  pub async fn context_information_available_check(&self, session_id: &str) -> Result<String> {
+    let body = self.api(&ContextInformationAvailableCheck { session_id }).await?;
+    match body {
+      ResponseBody::CheckResult(result) => Ok(result.value),
+      _ => Err(Error::UnexpectedResponse {
+        expected: "CheckResult".to_string(),
         actual: format!("{body:?}"),
       }),
     }
@@ -723,13 +753,16 @@ impl Client {
   /// # Arguments
   /// * `session_id` – Идентификатор сессии.
   ///
+  /// # Returns
+  /// Возможные ответы: `"1"`, `"0"`.
+  ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
   /// # Examples
   /// ```ignore
   /// let available = client.embedded_interaction_available_check(&session.session_id).await?;
-  /// if available {
+  /// if available == "1" {
   ///     // использовать
   /// }
   /// ```
@@ -752,10 +785,13 @@ impl Client {
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
+  /// # Returns
+  /// Возможные ответы: `"1"`, `"0"`.
+  ///
   /// # Examples
   /// ```ignore
   /// let required = client.embedded_interaction_required_check(&session.session_id).await?;
-  /// if required {
+  /// if required == "1" {
   ///     // показать интерфейс
   /// }
   /// ```
@@ -801,33 +837,6 @@ impl Client {
       ResponseBody::StreamData(result) => Ok(result.url),
       _ => Err(Error::UnexpectedResponse {
         expected: "StreamData".to_string(),
-        actual: format!("{body:?}"),
-      }),
-    }
-  }
-
-  /// Проверяет, доступна ли контекстная информация.
-  ///
-  /// # Arguments
-  /// * `session_id` – Идентификатор сессии.
-  ///
-  /// # Errors
-  /// Стандартные ошибки API и сетевые ошибки.
-  ///
-  /// # Examples
-  /// ```ignore
-  /// let available = client.context_information_available_check(&session.session_id).await?;
-  /// if available {
-  ///     // запросить контекстную информацию
-  /// }
-  /// ```
-  #[instrument(skip(self), err, fields(method = "context_information_available_check"))]
-  pub async fn context_information_available_check(&self, session_id: &str) -> Result<String> {
-    let body = self.api(&ContextInformationAvailableCheck { session_id }).await?;
-    match body {
-      ResponseBody::CheckResult(result) => Ok(result.value),
-      _ => Err(Error::UnexpectedResponse {
-        expected: "CheckResult".to_string(),
         actual: format!("{body:?}"),
       }),
     }
@@ -995,17 +1004,14 @@ impl Client {
   /// * `group_id` – идентификатор группы (например, `"ADMIN_GRP"`).
   ///
   /// # Returns
-  /// `true`, если пользователь является членом группы.
+  /// Возможные ответы: `"1"`, `"0"`.
   ///
   /// # Errors
   /// Стандартные ошибки API и сетевые ошибки.
   ///
   /// ## Examples
   ///
-  /// ```rust,ignore
-  /// # use as2mca_api::client::Client;
-  /// # let client = Client::new("http://localhost:3000/platform2mca").unwrap();
-  /// # let session = client.session_init(None).await.unwrap();
+  /// ```ignore
   /// let is_admin = client.user_belongs_group_check(session_id, "ADMIN_GRP").await.unwrap();
   /// println!("is_admin = {}", value);
   /// ```
