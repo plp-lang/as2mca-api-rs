@@ -57,9 +57,9 @@ async fn test_user_info_get(#[future] ctx: Context) {
 }
 
 #[rstest]
-#[case("ADMIN_GRP", true)]
+#[case("ADMIN_GRP", "1")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_user_belongs_group_check(#[future] ctx: Context, #[case] name: &str, #[case] value: bool) {
+async fn test_user_belongs_group_check(#[future] ctx: Context, #[case] name: &str, #[case] value: &str) {
   let Context {
     ref client,
     ref session_id,

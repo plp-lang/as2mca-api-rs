@@ -89,9 +89,9 @@ async fn test_class_states_get(#[future] ctx: Context, #[case] class_id: &str, #
 }
 
 #[rstest]
-#[case("VZ_CARDS", false)]
+#[case("VZ_CARDS", "0")]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-async fn test_class_need_collection_id_check(#[future] ctx: Context, #[case] class_id: &str, #[case] expected: bool) {
+async fn test_class_need_collection_id_check(#[future] ctx: Context, #[case] class_id: &str, #[case] expected: &str) {
   let Context {
     ref client,
     ref session_id,

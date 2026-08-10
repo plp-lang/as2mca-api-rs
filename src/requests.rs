@@ -20,7 +20,7 @@ use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::serde_helpers::{comma_separated_numbers, unwrap_list};
+use crate::serde_helpers::{comma_separated_numbers, string_as_option_bool, unwrap_list};
 
 pub const XML_HEADER: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>"#;
 
@@ -140,6 +140,97 @@ pub struct SystemNetAddressSet<'a> {
   pub mac_address: &'a str,
   #[serde(rename = "@IPAddress")]
   pub ip_address: &'a str,
+}
+
+/// Запрос значения системного параметра
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemInfoGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@ParameterName")]
+  pub parameter_name: &'a str,
+}
+
+/// Запрос значения системного ограничения (лимита).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemLimitGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@LimitName")]
+  pub limit_name: &'a str,
+}
+
+/// Запрос значения атрибута системного контекста.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemContextGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Namespace")]
+  pub namespace: &'a str,
+  #[serde(rename = "@AttributeName")]
+  pub attribute_name: &'a str,
+}
+
+/// Запрос имени текущего приложения
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemApplicationNameGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос на доступность контекстной информации.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ContextInformationAvailableCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос количества элементов в справочной системе.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemHelpSystemInfoGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос доступности встроенного в "ЦФТ - Нафигатор" WebView-модуля.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionAvailableCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос на требование WebView-модуля в текущем контексте.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionRequiredCheck<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+}
+
+/// Запрос URL-адреса ресурса WebView-модуля.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionGetResource<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@ErrorResponseType", default, skip_serializing_if = "Option::is_none")]
+  pub error_response_type: Option<&'a str>,
+}
+
+/// Отправка сообщения в WebView-модуль.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionPost<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Request", default, skip_serializing_if = "Option::is_none")]
+  pub request: Option<&'a str>,
+}
+
+/// Получние сообщение из WebView-модуля.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddedInteractionGet<'a> {
+  #[serde(rename = "@SessionID")]
+  pub session_id: &'a str,
+  #[serde(rename = "@Request", default, skip_serializing_if = "Option::is_none")]
+  pub request: Option<&'a str>,
 }
 
 //======================================================================================================================
@@ -711,6 +802,11 @@ pub struct ObjectsLock<'a> {
 pub struct ObjectsUnlock<'a> {
   #[serde(rename = "@SessionID")]
   pub session_id: &'a str,
-  #[serde(rename = "@ClearAllLocks", default, skip_serializing_if = "Option::is_none")]
+  #[serde(
+    rename = "@ClearAllLocks",
+    default,
+    skip_serializing_if = "Option::is_none",
+    with = "string_as_option_bool"
+  )]
   pub clear_all_locks: Option<bool>,
 }

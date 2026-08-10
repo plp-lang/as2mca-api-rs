@@ -69,6 +69,12 @@ pub enum ResponseBody {
   SystemContextInfo(SystemContextInfo),
   CoreInfo(CoreInfo),
   Settings(Settings),
+  SystemInfo(SystemInfo),
+  Limit(Limit),
+  Attribute(Attribute),
+  Application(Application),
+  HelpSystemInfo(HelpSystemInfo),
+  StreamData(StreamData),
 }
 
 /// Ответ "Not Found" (пустой).
@@ -196,6 +202,58 @@ pub struct OptionInfo {
   pub enabled: bool,
 }
 
+/// Значение системного параметра.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SystemInfo {
+  #[serde(
+    default,
+    rename = "@Value",
+    skip_serializing_if = "Option::is_none",
+    deserialize_with = "empty_string_as_none::deserialize"
+  )]
+  pub value: Option<String>,
+}
+
+/// Значение системного ограничения (лимита).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Limit {
+  #[serde(rename = "@Value")]
+  pub value: String,
+}
+
+/// Значение атрибута системного контекста.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Attribute {
+  #[serde(
+    default,
+    rename = "@Value",
+    skip_serializing_if = "Option::is_none",
+    deserialize_with = "empty_string_as_none::deserialize"
+  )]
+  pub value: Option<String>,
+}
+
+/// Имя приложения
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Application {
+  #[serde(rename = "@Name")]
+  pub name: String,
+}
+
+/// Количество элементов в справочной системе.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HelpSystemInfo {
+  #[serde(rename = "@ItemsCount")]
+  pub items_count: u64,
+}
+
+/// URL-адрес ресурса WebView-модуля.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StreamData {
+  #[serde(rename = "@URL")]
+  pub url: String,
+}
+
 //======================================================================================================================
 // Информация о пользователе
 //======================================================================================================================
@@ -238,8 +296,8 @@ pub struct UserProfileProperty {
 /// Универсальный результат проверки (например, вхождения в группу).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CheckResult {
-  #[serde(rename = "@Value", with = "string_as_bool")]
-  pub value: bool,
+  #[serde(rename = "@Value")]
+  pub value: String,
 }
 
 //======================================================================================================================
@@ -571,14 +629,9 @@ pub struct Control {
   pub validate_name: String,
 
   /// Идентификатор родительского элемента.
-  /// Это число, но иногда приходит как `ParentID=""`, считаем что родитель отсутствует.
-  #[serde(
-    rename = "@ParentID",
-    default,
-    deserialize_with = "empty_string_as_none::deserialize",
-    skip_serializing_if = "Option::is_none"
-  )]
-  pub parent_id: Option<i64>,
+  /// Это число, но иногда приходит как `ParentID=""`.
+  #[serde(rename = "@ParentID")]
+  pub parent_id: String,
 
   /// ТБП значения.
   #[serde(rename = "@ClassID", default, skip_serializing_if = "Option::is_none")]
@@ -789,17 +842,21 @@ pub enum Align {
 pub enum Invisible {
   #[serde(rename = "0")]
   Visible = 0,
+  #[serde(rename = "1")]
+  Connection = 1,
   #[serde(rename = "2")]
-  Hidden = 2,
+  Invisible = 2,
 }
 
 /// Логирование.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Logging {
   #[serde(rename = "0")]
-  None,
+  No,
+  #[serde(rename = "1")]
+  Yes,
   #[serde(rename = "D")]
-  Delete,
+  D,
 }
 
 /// Список колонок.
@@ -906,7 +963,7 @@ pub struct Class {
   pub base_class_id: String,
   #[serde(rename = "@EntityID")]
   pub entity_id: String,
-  #[serde(rename = "@IsKernelType")]
+  #[serde(rename = "@IsKernelType", with = "string_as_bool")]
   pub is_kernel_type: bool,
   #[serde(rename = "@ClassInterface")]
   pub class_interface: String,
@@ -915,7 +972,12 @@ pub struct Class {
 
   #[serde(rename = "@MenuCaption", default, skip_serializing_if = "Option::is_none")]
   pub menu_caption: Option<String>,
-  #[serde(rename = "@IsAccessible", default, skip_serializing_if = "Option::is_none")]
+  #[serde(
+    rename = "@IsAccessible",
+    default,
+    skip_serializing_if = "Option::is_none",
+    with = "string_as_option_bool"
+  )]
   pub is_accessible: Option<bool>,
   #[serde(rename = "@PadLength", default, skip_serializing_if = "Option::is_none")]
   pub pad_length: Option<u8>,
