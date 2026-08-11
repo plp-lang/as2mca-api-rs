@@ -2,16 +2,16 @@
 
 <h4 align="center">
   <a href="https://crates.io/crates/as2mca-api">
-    <img src="https://img.shields.io/badge/crates.io-v0.1.0-orange?logo=hack-the-box&logoColor=ea7233" alt="Rust Crate" />
+    <img src="https://img.shields.io/crates/v/as2mca-api?color=orange&logo=hack-the-box&logoColor=ea7233" alt="Rust Crate" />
   </a>
   <a href="https://github.com/plp-lang/as2mca-api-rs">
     <img src="https://img.shields.io/badge/GitHub-repo-dea584?logo=rust" alt="Rust Source" />
   </a>
   <a href="https://www.npmjs.com/package/as2mca-api">
-    <img src="https://img.shields.io/badge/npm-v0.1.0-red?logo=npm" alt="npm" />
+      <img src="https://img.shields.io/npm/v/as2mca-api?color=red&logo=npm" alt="npm" />
   </a>
   <a href="https://github.com/plp-lang/as2mca-api-ts">
-    <img src="https://img.shields.io/badge/GitHub-repo-3178C6?logo=typescript" alt="TypeScript Source" />
+      <img src="https://img.shields.io/badge/GitHub-repo-3178C6?logo=typescript" alt="TypeScript Source" />
   </a>
   <a href="https://github.com/plp-lang/as2mca-api-rs/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" />
