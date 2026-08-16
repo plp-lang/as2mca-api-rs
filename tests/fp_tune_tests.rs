@@ -47,6 +47,7 @@ async fn test_fp_tune(#[future] ctx: Context) {
       session_id,
       view_short_name: VIEW_SHORT_NAME,
       class_id: CLASS_SHORT_NAME,
+      order_by: Some("C_2"),
       user_filter: Some(UserFilter {
         extra_filter: None,
         filters: vec![Filter::And(vec![Filter::CaseInsensitive(CaseInsensitiveFilter {

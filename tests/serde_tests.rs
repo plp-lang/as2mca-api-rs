@@ -143,6 +143,7 @@ fn test_se_de_view_data_get_cancelable() {
       hint: "4",
       allow_timestamp_milliseconds: false,
       rows_limit: None,
+      order_by: None,
       additional_filter_bind: None,
       object_filter: None,
       user_filter: Some(UserFilter {

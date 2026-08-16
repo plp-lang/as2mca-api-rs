@@ -648,6 +648,9 @@ pub struct ViewDataGetCancelable<'a> {
   pub allow_timestamp_milliseconds: bool,
   #[serde(rename = "@RowsLimit", default, skip_serializing_if = "Option::is_none")]
   pub rows_limit: Option<i64>,
+  /// Сортировка по колонке (опционально, например, `"C_2 ASC"`).
+  #[serde(rename = "@OrderBy", default, skip_serializing_if = "Option::is_none")]
+  pub order_by: Option<&'a str>,
   #[serde(rename = "AdditionalFilterBind", default, skip_serializing_if = "Option::is_none")]
   pub additional_filter_bind: Option<AdditionalFilterBind<'a>>,
   #[serde(rename = "ObjectFilter", default, skip_serializing_if = "Option::is_none")]
@@ -665,6 +668,7 @@ impl Default for ViewDataGetCancelable<'_> {
       hint: "FIRST_ROWS",
       allow_timestamp_milliseconds: true,
       rows_limit: Some(10),
+      order_by: None,
       additional_filter_bind: None,
       object_filter: None,
       user_filter: None,
