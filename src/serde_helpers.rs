@@ -47,8 +47,7 @@ pub mod string_as_bool {
   where
     S: Serializer,
   {
-    // Сериализуем сразу как строковый срез, чтобы избежать аллокаций
-    let s = if *value { "1" } else { "0" };
+    let s = if *value { "true" } else { "false" };
     serializer.serialize_str(s)
   }
 
