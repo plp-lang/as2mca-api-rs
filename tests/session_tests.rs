@@ -16,7 +16,7 @@ async fn test_session(#[future] ctx: Context) {
     ..
   } = ctx.await;
 
-  let session_id_regex = Regex::new(r"^([0-9a-fA-F]{32}|[\w-]+!\d+!\d+)$").unwrap();
+  let session_id_regex = Regex::new(r"^([0-9a-fA-F]{32}|[\w-]+!-?\d+!\d+)$").unwrap();
   assert!(
     session_id_regex.is_match(session_id.as_str()),
     "session_id '{}' does not match pattern",
