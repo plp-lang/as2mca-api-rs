@@ -163,7 +163,7 @@ async fn test_guides_get(#[future] ctx: Context) {
   } = ctx.await;
 
   let result = client.guides_get(session_id).await.unwrap();
-  assert!(!result.is_empty());
+  assert_ne!(result, [] as [as2mca_api::responses::Class; 0]);
 }
 
 #[rstest]
@@ -176,7 +176,7 @@ async fn test_types_get(#[future] ctx: Context) {
   } = ctx.await;
 
   let result = client.types_get(session_id).await.unwrap();
-  assert!(!result.is_empty());
+  assert_ne!(result, [] as [as2mca_api::responses::Class; 0]);
 }
 
 #[rstest]
@@ -189,5 +189,5 @@ async fn test_guides_groups_get(#[future] ctx: Context) {
   } = ctx.await;
 
   let result = client.guides_groups_get(session_id).await.unwrap();
-  assert!(!result.is_empty());
+  assert_ne!(result, [] as [as2mca_api::responses::GuidesGroup; 0]);
 }

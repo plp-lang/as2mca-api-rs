@@ -49,7 +49,7 @@ async fn test_system_setting(#[future] ctx: Context, #[case] name: &str, #[case]
   assert_eq!(res, value.map(ToString::to_string));
 
   let settings = client.system_settings_get(session_id).await.unwrap();
-  assert!(!settings.is_empty());
+  assert_ne!(settings, [] as [as2mca_api::responses::Setting; 0]);
 
   let res = settings.iter().find(|s| s.name == name).and_then(|v| v.value.clone());
   assert_eq!(res, value.map(ToString::to_string));

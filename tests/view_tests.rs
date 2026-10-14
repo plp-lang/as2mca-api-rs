@@ -18,10 +18,10 @@ async fn test_view_columns_and_data(#[future] ctx: Context, #[case] class_short_
   } = ctx.await;
 
   let views = client.class_views_get(session_id, class_short_name).await.unwrap();
-  assert!(!views.is_empty());
+  assert_ne!(views, [] as [as2mca_api::responses::View; 0]);
 
   for view in views {
     let columns = client.view_columns_get(session_id, view.id).await.unwrap();
-    assert!(!columns.is_empty());
+    assert_ne!(columns, [] as [as2mca_api::responses::Column; 0]);
   }
 }
